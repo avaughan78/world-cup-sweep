@@ -79,7 +79,7 @@ export async function upsertTeamStats(stats: {
       own_goals_against = ${stats.own_goals_against},
       is_eliminated = ${stats.is_eliminated},
       eliminated_at = CASE
-        WHEN ${eliminatedAt} IS NOT NULL THEN ${eliminatedAt}::timestamptz
+        WHEN ${eliminatedAt}::timestamptz IS NOT NULL THEN ${eliminatedAt}::timestamptz
         WHEN ${stats.is_eliminated} AND team_stats.eliminated_at IS NULL THEN NOW()
         WHEN NOT ${stats.is_eliminated} THEN NULL
         ELSE team_stats.eliminated_at
