@@ -111,8 +111,8 @@ export default async function Home() {
               </div>
             ) : (
               <GroupsGrid
-                participantMap={participantMap}
-                eliminatedTeams={eliminatedTeams}
+                participantMap={Object.fromEntries(participantMap)}
+                eliminatedTeams={[...eliminatedTeams]}
                 prizes={prizes}
               />
             )}
