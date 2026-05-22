@@ -82,13 +82,21 @@ export async function getFinishedMatches(): Promise<ApiMatch[]> {
 }
 
 export async function getTopScorers(): Promise<ApiScorer[]> {
-  const data = await footballFetch(`/competitions/WC/scorers?season=${season()}&limit=10`);
-  return (data.scorers as ApiScorer[]) ?? [];
+  try {
+    const data = await footballFetch(`/competitions/WC/scorers?season=${season()}&limit=10`);
+    return (data.scorers as ApiScorer[]) ?? [];
+  } catch {
+    return [];
+  }
 }
 
 export async function getStandings(): Promise<ApiStanding[]> {
-  const data = await footballFetch(`/competitions/WC/standings?season=${season()}`);
-  return (data.standings as ApiStanding[]) ?? [];
+  try {
+    const data = await footballFetch(`/competitions/WC/standings?season=${season()}`);
+    return (data.standings as ApiStanding[]) ?? [];
+  } catch {
+    return [];
+  }
 }
 
 // Map API team names → spreadsheet names where they differ

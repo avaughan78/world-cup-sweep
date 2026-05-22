@@ -33,6 +33,8 @@ export async function POST(req: NextRequest) {
       getStandings(),
     ]);
 
+    const statNotes: string[] = [];
+
     const cards = computeCardTotals(matches);
     const ownGoals = computeOwnGoals(matches);
     const eliminated = computeEliminations(standings);
@@ -53,6 +55,7 @@ export async function POST(req: NextRequest) {
         is_eliminated: eliminated.has(teamName),
       });
     }
+    statNotes.push(`${matches.length} matches, ${teamNames.size} teams`);
 
     if (scorers.length > 0) {
       const top = scorers[0];
@@ -62,10 +65,15 @@ export async function POST(req: NextRequest) {
         goals: top.goals,
         nationality: top.player.nationality,
       });
+      statNotes.push(`top scorer: ${top.player.name} (${top.goals})`);
+    } else {
+      statNotes.push('scorers: unavailable');
     }
 
-    await logSync('stats', 'success', `${matches.length} matches processed`);
-    results.stats = `ok (${matches.length} matches, ${teamNames.size} teams)`;
+    if (standings.length === 0) statNotes.push('standings: unavailable (eliminations not updated)');
+
+    await logSync('stats', 'success', statNotes.join(', '));
+    results.stats = `ok (${statNotes.join(' · ')})`;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     await logSync('stats', 'error', msg);
