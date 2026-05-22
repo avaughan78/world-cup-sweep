@@ -1,9 +1,9 @@
 import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
 import { timeAgo } from '@/lib/format';
+import Image from 'next/image';
 import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
-import TrophyIcon from '@/components/TrophyIcon';
 import GroupsGrid from '@/components/GroupsGrid';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -39,10 +39,19 @@ export default async function Home() {
           <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             FIFA World Cup · 2026 · Office Sweepstake
           </p>
-          <div className="flex items-baseline justify-between mt-1.5">
-            <h1 className="album-title text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-              The Draw
-            </h1>
+          <div className="flex items-end justify-between mt-1.5">
+            <div className="flex items-end gap-4">
+              <Image
+                src="/world-cup-trophy.jpg"
+                alt="FIFA World Cup Trophy"
+                width={56}
+                height={72}
+                style={{ objectFit: 'contain' }}
+              />
+              <h1 className="album-title text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                The Draw
+              </h1>
+            </div>
             <div className="flex items-center gap-3">
               <span className="text-base flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                 <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
@@ -69,11 +78,8 @@ export default async function Home() {
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                 >
                   <div className="flex justify-between items-start mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="prize-ordinal text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
-                        {ordinal}<sup className="text-3xl">{sup}</sup>
-                      </div>
-                      {ordinal === '1' && <TrophyIcon size={52} />}
+                    <div className="prize-ordinal text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
+                      {ordinal}<sup className="text-3xl">{sup}</sup>
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       {amount && <TicketBadge amount={amount} />}
