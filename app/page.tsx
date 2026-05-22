@@ -3,6 +3,7 @@ import { computePrizes } from '@/lib/prizes';
 import { timeAgo } from '@/lib/format';
 import PrizeCard from '@/components/PrizeCard';
 import SweepstakeTable from '@/components/SweepstakeTable';
+import GroupsGrid from '@/components/GroupsGrid';
 
 export const dynamic = 'force-dynamic';
 
@@ -90,11 +91,18 @@ export default async function Home() {
             </div>
           </section>
 
-          {/* The draw */}
+          {/* Groups */}
           <section>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-              The Draw · {participants.length} Teams
-            </p>
+            <div className="flex items-baseline justify-between mb-3">
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                The Groups · {participants.length} Teams
+              </p>
+              {inRunning > 0 && (
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                  {inRunning} still in the running
+                </span>
+              )}
+            </div>
             {participants.length === 0 ? (
               <div
                 className="rounded-xl p-10 text-center text-sm"
@@ -103,13 +111,25 @@ export default async function Home() {
                 Sync the Google Sheet to populate team names.
               </div>
             ) : (
-              <SweepstakeTable
-                participants={participants}
-                prizes={prizes}
+              <GroupsGrid
+                participantMap={participantMap}
                 eliminatedTeams={eliminatedTeams}
-                inRunning={inRunning}
+                prizes={prizes}
               />
             )}
+          </section>
+
+          {/* All entries (flat draw table) */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+              All Entries
+            </p>
+            <SweepstakeTable
+              participants={participants}
+              prizes={prizes}
+              eliminatedTeams={eliminatedTeams}
+              inRunning={inRunning}
+            />
           </section>
 
         </div>
