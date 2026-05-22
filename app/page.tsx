@@ -2,7 +2,6 @@ import { getParticipants, getLastSync, getAllTeamStats } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
 import { timeAgo } from '@/lib/format';
 import PrizeCard from '@/components/PrizeCard';
-import SweepstakeTable from '@/components/SweepstakeTable';
 import GroupsGrid from '@/components/GroupsGrid';
 
 export const dynamic = 'force-dynamic';
@@ -33,14 +32,14 @@ export default async function Home() {
 
         {/* Header */}
         <header className="pt-10 pb-0">
-          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+          <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             FIFA World Cup · 2026 · Office Sweepstake
           </p>
           <div className="flex items-baseline justify-between mt-1.5">
-            <h1 className="text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
               The Draw
             </h1>
-            <span className="text-sm flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-base flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
               <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
               {syncedAgo ? `Synced ${syncedAgo}` : 'Not yet synced'}
             </span>
@@ -52,7 +51,7 @@ export default async function Home() {
 
           {/* Main prizes */}
           <section>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-sm font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
               Main Prizes
             </p>
             <div className="grid grid-cols-2 gap-4">
@@ -73,7 +72,7 @@ export default async function Home() {
                       {label}
                     </span>
                   </div>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
+                  <p className="text-base" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
                 </div>
               ))}
             </div>
@@ -81,7 +80,7 @@ export default async function Home() {
 
           {/* Novelty prizes */}
           <section>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+            <p className="text-sm font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
               Novelty Prizes
             </p>
             <div className="grid grid-cols-5 gap-3">
@@ -94,11 +93,11 @@ export default async function Home() {
           {/* Groups */}
           <section>
             <div className="flex items-baseline justify-between mb-3">
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+              <p className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
                 The Groups · {participants.length} Teams
               </p>
               {inRunning > 0 && (
-                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {inRunning} still in the running
                 </span>
               )}
@@ -117,19 +116,6 @@ export default async function Home() {
                 prizes={prizes}
               />
             )}
-          </section>
-
-          {/* All entries (flat draw table) */}
-          <section>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-              All Entries
-            </p>
-            <SweepstakeTable
-              participants={participants}
-              prizes={prizes}
-              eliminatedTeams={eliminatedTeams}
-              inRunning={inRunning}
-            />
           </section>
 
         </div>

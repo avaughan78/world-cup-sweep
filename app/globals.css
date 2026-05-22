@@ -16,4 +16,5 @@ body {
   color: var(--text-primary);
   font-family: var(--font-geist-sans), 'Inter', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
+  font-size: 18px;
 }
