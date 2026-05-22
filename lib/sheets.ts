@@ -1,5 +1,4 @@
-const SHEETS_CSV_URL =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vQLMQfk2cAKmi6FmPkwCkFexAVqrSyUKyq2MeraUzdzo6OCtG-eU1yrRMC0-Y-dqWHWpidcx2kmJ0qG/pub?output=csv';
+const SHEETS_CSV_URL = process.env.GOOGLE_SHEETS_CSV_URL!;
 
 export interface SheetRow {
   team: string;
