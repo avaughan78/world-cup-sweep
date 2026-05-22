@@ -77,8 +77,8 @@ export async function computePrizes(
     },
     {
       slug: 'longest_shot',
-      name: 'Long-Range Rocket',
-      description: "Furthest-distance goal scored in the tournament",
+      name: 'Thunderbastard',
+      description: "Longest range goal scored in the tournament",
       icon: '🚀',
       current_team: shotOverride?.team_name ?? null,
       current_participant: participant(shotOverride?.team_name ?? null),
