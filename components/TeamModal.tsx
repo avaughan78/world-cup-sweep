@@ -236,8 +236,7 @@ export default function TeamModal({ team, participant, onClose }: {
                       className="leading-relaxed"
                       style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}
                     >
-                      {info.wikiExtract.slice(0, 520)}
-                      {info.wikiExtract.length > 520 ? '…' : ''}
+                      {info.wikiExtract}
                     </p>
                   </div>
                 </>
