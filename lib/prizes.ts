@@ -53,7 +53,7 @@ export async function computePrizes(
   return [
     {
       slug: 'most_cards',
-      name: 'Card King',
+      name: 'The Gareth Barry Award',
       description: 'Most yellow + red cards (red counts double)',
       icon: '🟨',
       current_team: topCardsTotal > 0 ? topCards!.team_name : null,
@@ -65,8 +65,8 @@ export async function computePrizes(
     },
     {
       slug: 'first_eliminated',
-      name: 'First Out',
-      description: 'First team eliminated from the tournament',
+      name: 'Early Bath',
+      description: 'The first team eliminated from the tournament',
       icon: '✈️',
       current_team: firstOut?.team_name ?? null,
       current_participant: participant(firstOut?.team_name ?? null),
@@ -77,8 +77,8 @@ export async function computePrizes(
     },
     {
       slug: 'longest_shot',
-      name: 'Thunderbastard',
-      description: "Longest range goal scored in the tournament",
+      name: 'The Thunderbastard',
+      description: "The longest range goal scored in the tournament",
       icon: '🚀',
       current_team: shotOverride?.team_name ?? null,
       current_participant: participant(shotOverride?.team_name ?? null),
@@ -87,8 +87,8 @@ export async function computePrizes(
     },
     {
       slug: 'most_own_goals',
-      name: 'Unlucky OG',
-      description: 'Most own goals conceded',
+      name: 'Oooops',
+      description: 'The team who conceded the most own goals',
       icon: '😬',
       current_team: (topOGs?.own_goals_against ?? 0) > 0 ? topOGs!.team_name : null,
       current_participant: (topOGs?.own_goals_against ?? 0) > 0 ? participant(topOGs!.team_name) : null,
@@ -99,8 +99,8 @@ export async function computePrizes(
     },
     {
       slug: 'top_scorer_team',
-      name: 'Golden Boot Nation',
-      description: "Team of the tournament's leading scorer",
+      name: 'The Chosen One',
+      description: "Team of the tournament's leading goal scorer",
       icon: '👟',
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
