@@ -18,3 +18,130 @@ body {
   -webkit-font-smoothing: antialiased;
   font-size: 18px;
 }
+
+/* Album section labels hidden by default */
+.album-section-label { display: none; }
+
+/* ── Album theme ──────────────────────────────────────────── */
+
+[data-theme="album"] {
+  --bg: #e8d9b8;
+  --card: #fff7e6;
+  --border: #b8975f;
+  --separator: #b8975f;
+  --text-primary: #2a1f15;
+  --text-secondary: #4a3020;
+  --text-muted: #8a4a1c;
+  --green: #c9402a;
+}
+
+[data-theme="album"] body {
+  background-image:
+    radial-gradient(rgba(120,85,40,0.06) 1px, transparent 1.5px),
+    radial-gradient(rgba(120,85,40,0.04) 1px, transparent 1px);
+  background-size: 9px 9px, 13px 13px;
+  background-position: 0 0, 4px 4px;
+}
+
+/* Headings use Bungee */
+[data-theme="album"] .album-title {
+  font-family: var(--font-bungee), 'Bungee', sans-serif;
+  letter-spacing: -0.01em;
+}
+
+/* Section label with dashed line extension */
+[data-theme="album"] .album-section-label {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+[data-theme="album"] .album-section-label .label-text {
+  font-family: var(--font-bungee), 'Bungee', sans-serif;
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+[data-theme="album"] .album-section-label .label-line {
+  flex: 1;
+  border-top: 2px dashed var(--border);
+  transform: translateY(-4px);
+}
+[data-theme="album"] .album-section-label .label-note {
+  font-family: var(--font-caveat), 'Caveat', cursive;
+  font-size: 1rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* Default section labels hidden in album mode */
+[data-theme="album"] .default-section-label { display: none !important; }
+
+/* Group cards */
+[data-theme="album"] .group-card {
+  border: 1.5px solid var(--border) !important;
+  box-shadow: 0 2px 0 #c9a96c, 0 8px 20px rgba(60,40,20,0.10) !important;
+}
+[data-theme="album"] .group-header {
+  background: var(--card) !important;
+  border-bottom: 1.5px dashed var(--border) !important;
+}
+[data-theme="album"] .group-header .group-letter {
+  font-family: var(--font-bungee), 'Bungee', sans-serif;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.05em !important;
+}
+[data-theme="album"] .team-row {
+  background: #f7eccc !important;
+  border-bottom: 1.5px dashed var(--border) !important;
+}
+[data-theme="album"] .team-row:last-child { border-bottom: none !important; }
+[data-theme="album"] .team-row:hover { background: #f3e4b4 !important; }
+[data-theme="album"] .team-row.has-prize {
+  background: #f9d97a !important;
+  border-left: 3px solid #c9402a !important;
+}
+[data-theme="album"] .team-name {
+  font-family: var(--font-bungee), 'Bungee', sans-serif;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.02em;
+}
+[data-theme="album"] .participant-name {
+  font-family: var(--font-caveat), 'Caveat', cursive;
+  font-size: 0.95rem !important;
+  font-style: italic;
+}
+
+/* Prize cards */
+[data-theme="album"] .prize-card {
+  border: 1.5px dashed var(--border) !important;
+  box-shadow: 0 2px 0 #c9a96c !important;
+}
+[data-theme="album"] .prize-card .prize-name {
+  font-family: var(--font-bungee), 'Bungee', sans-serif;
+  font-size: 0.85rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+[data-theme="album"] .prize-card .prize-description {
+  font-family: var(--font-caveat), 'Caveat', cursive;
+  font-size: 1rem !important;
+}
+[data-theme="album"] .prize-card .prize-leader {
+  font-family: var(--font-bungee), 'Bungee', sans-serif;
+}
+
+/* Main prize cards */
+[data-theme="album"] .main-prize-card {
+  border: 1.5px solid var(--border) !important;
+  box-shadow: 0 2px 0 #c9a96c, 0 12px 24px rgba(60,40,20,0.12) !important;
+}
+[data-theme="album"] .main-prize-card .prize-ordinal {
+  font-family: var(--font-bungee), 'Bungee', sans-serif;
+  color: #c9402a !important;
+}
+
+/* TicketBadge in album mode */
+[data-theme="album"] .ticket-badge rect,
+[data-theme="album"] .ticket-badge path { fill: #f9d97a !important; stroke: #c9402a !important; }
+[data-theme="album"] .ticket-badge text { fill: #2a1f15 !important; }

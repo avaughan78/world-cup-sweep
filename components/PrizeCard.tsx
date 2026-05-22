@@ -7,7 +7,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
   return (
     <div
-      className="rounded-xl p-4 flex flex-col"
+      className="prize-card rounded-xl p-4 flex flex-col"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
       <div className="flex-1">
@@ -15,10 +15,10 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           <span className="text-2xl leading-none">{prize.icon}</span>
           {prizeAmount && <TicketBadge amount={prizeAmount} />}
         </div>
-        <p className="font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)' }}>
+        <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)' }}>
           {prize.name}
         </p>
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
           {prize.description}
         </p>
       </div>

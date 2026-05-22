@@ -4,6 +4,7 @@ import { timeAgo } from '@/lib/format';
 import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
 import GroupsGrid from '@/components/GroupsGrid';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,13 +39,16 @@ export default async function Home() {
             FIFA World Cup · 2026 · Office Sweepstake
           </p>
           <div className="flex items-baseline justify-between mt-1.5">
-            <h1 className="text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <h1 className="album-title text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
               The Draw
             </h1>
-            <span className="text-base flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
-              {syncedAgo ? `Synced ${syncedAgo}` : 'Not yet synced'}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-base flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
+                {syncedAgo ? `Synced ${syncedAgo}` : 'Not yet synced'}
+              </span>
+              <ThemeToggle />
+            </div>
           </div>
           <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
         </header>
@@ -53,6 +57,11 @@ export default async function Home() {
 
           {/* Main prizes */}
           <section>
+            <div className="album-section-label">
+              <span className="label-text">Main Prizes</span>
+              <span className="label-line" />
+              <span className="label-note">revealed at full time!</span>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               {[
                 { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: process.env.PRIZE_1ST ?? null },
@@ -60,11 +69,11 @@ export default async function Home() {
               ].map(({ ordinal, sup, label, amount }) => (
                 <div
                   key={ordinal}
-                  className="rounded-xl p-6"
+                  className="main-prize-card rounded-xl p-6"
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                 >
                   <div className="flex justify-between items-start mb-8">
-                    <div className="text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
+                    <div className="prize-ordinal text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
                       {ordinal}<sup className="text-3xl">{sup}</sup>
                     </div>
                     <div className="flex flex-col items-end gap-2">
@@ -82,6 +91,11 @@ export default async function Home() {
 
           {/* Novelty prizes */}
           <section>
+            <div className="album-section-label">
+              <span className="label-text">Novelty Prizes</span>
+              <span className="label-line" />
+              <span className="label-note">five silly trophies</span>
+            </div>
             <div className="grid grid-cols-5 gap-3">
               {prizes.map(prize => {
                 const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
@@ -94,9 +108,14 @@ export default async function Home() {
           {/* Groups */}
           <section>
             <div className="flex items-baseline justify-between mb-3">
-              <p className="text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+              <p className="default-section-label text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
                 The Groups · {participants.length} Teams
               </p>
+              <div className="album-section-label" style={{ marginBottom: 0 }}>
+                <span className="label-text">The Draw</span>
+                <span className="label-line" />
+                <span className="label-note">forty-eight teams · forty-eight names</span>
+              </div>
               {inRunning > 0 && (
                 <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
                   {inRunning} still in the running

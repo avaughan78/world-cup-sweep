@@ -82,15 +82,15 @@ export default function GroupsGrid({
           return (
             <div
               key={letter}
-              className="rounded-xl overflow-hidden"
+              className="group-card rounded-xl overflow-hidden"
               style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
             >
               {/* Group header */}
               <div
-                className="flex items-center justify-between px-4 py-2.5"
+                className="group-header flex items-center justify-between px-4 py-2.5"
                 style={{ borderBottom: '1px solid var(--border)' }}
               >
-                <span className="font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+                <span className="group-letter font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)', fontSize: '0.8rem' }}>
                   Group {letter}
                 </span>
                 {/* Column headers */}
@@ -118,7 +118,7 @@ export default function GroupsGrid({
                   <button
                     key={team}
                     onClick={() => setSelectedTeam(team)}
-                    className="w-full text-left transition-colors"
+                    className={`team-row w-full text-left transition-colors${wonPrizes.length ? ' has-prize' : ''}`}
                     style={{
                       borderBottom: isLast ? 'none' : '1px solid var(--border)',
                       opacity: eliminated ? 0.4 : 1,
@@ -145,7 +145,7 @@ export default function GroupsGrid({
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 min-w-0">
                             <span
-                              className="font-semibold truncate"
+                              className="team-name font-semibold truncate"
                               style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}
                             >
                               {team}
@@ -165,7 +165,7 @@ export default function GroupsGrid({
                           </div>
                           {participant && (
                             <div
-                              className="truncate"
+                              className="participant-name truncate"
                               style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}
                             >
                               {participant}
