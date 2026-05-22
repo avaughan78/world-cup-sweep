@@ -83,8 +83,8 @@ export default async function Home() {
           <section>
             <div className="grid grid-cols-5 gap-3">
               {prizes.map(prize => {
-                const envKey = `PRIZE_${prize.slug.toUpperCase()}`;
-                const amount = process.env[envKey] ?? null;
+                const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
+                const amount = process.env[`PRIZE_${slug.toUpperCase()}`] ?? null;
                 return <PrizeCard key={prize.slug} prize={prize} prizeAmount={amount} />;
               })}
             </div>

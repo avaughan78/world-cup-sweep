@@ -13,7 +13,23 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         <div className="flex items-start justify-between">
           <span className="text-2xl leading-none">{prize.icon}</span>
           {prizeAmount && (
-            <span className="font-black text-base leading-none" style={{ color: 'var(--green)' }}>{prizeAmount}</span>
+            <div style={{ transform: 'rotate(12deg)', flexShrink: 0 }}>
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  background: 'var(--green)',
+                  clipPath: 'polygon(50% 0%,61% 20%,79% 9%,70% 29%,95% 25%,80% 45%,100% 50%,80% 55%,95% 75%,70% 71%,79% 91%,61% 80%,50% 100%,39% 80%,21% 91%,30% 71%,5% 75%,20% 55%,0% 50%,20% 45%,5% 25%,30% 29%,21% 9%,39% 20%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <span style={{ transform: 'rotate(-12deg)', color: '#fff', fontSize: '0.65rem', fontWeight: 900, lineHeight: 1, textAlign: 'center' }}>
+                  {prizeAmount}
+                </span>
+              </div>
+            </div>
           )}
         </div>
         <p className="font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)' }}>
