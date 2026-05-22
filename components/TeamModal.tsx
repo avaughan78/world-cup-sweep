@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getFlag } from '@/lib/flags';
+import { getWCHistory } from '@/lib/wc-history';
 
 interface TeamInfo {
   team: string;
@@ -95,6 +96,7 @@ export default function TeamModal({ team, participant, onClose }: {
   }, [onClose]);
 
   const flag = getFlag(team);
+  const wcHistory = getWCHistory(team);
 
   const stats: Stat[] = [
     info?.capital ? { label: 'Capital', value: info.capital } : null,
@@ -224,6 +226,49 @@ export default function TeamModal({ team, participant, onClose }: {
                       </p>
                     </div>
                   ))}
+                </div>
+              )}
+
+              {/* World Cup history */}
+              {wcHistory && (
+                <div
+                  className="rounded-xl p-4"
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+                >
+                  <p className="font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>
+                    World Cup History
+                  </p>
+                  <div className="flex items-start gap-4 flex-wrap">
+                    {wcHistory.titles > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span style={{ fontSize: '1.8rem' }}>🏆</span>
+                        <div>
+                          <p className="font-black leading-none" style={{ color: 'var(--text-primary)', fontSize: '1.8rem' }}>
+                            {wcHistory.titles}×
+                          </p>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                            {wcHistory.titles === 1 ? 'Title' : 'Titles'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      {wcHistory.debut ? (
+                        <p className="font-bold" style={{ color: 'var(--green)', fontSize: '0.95rem' }}>
+                          ⭐ First World Cup appearance
+                        </p>
+                      ) : (
+                        <>
+                          <p className="font-bold" style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                            {wcHistory.best}
+                          </p>
+                          <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', marginTop: '0.15rem' }}>
+                            {wcHistory.appearances} appearance{wcHistory.appearances !== 1 ? 's' : ''} (through 2022)
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
 
