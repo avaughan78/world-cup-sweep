@@ -52,7 +52,15 @@ export async function getAllTeamStats(): Promise<TeamStats[]> {
   return rows as TeamStats[];
 }
 
-export async function upsertTeamStats(stats: { team_name: string; yellow_cards: number; red_cards: number; own_goals_against: number; is_eliminated: boolean }) {
+export async function upsertTeamStats(stats: {
+  team_name: string;
+  yellow_cards: number;
+  red_cards: number;
+  own_goals_against: number;
+  is_eliminated: boolean;
+  eliminated_at?: string;
+}) {
+  const eliminatedAt = stats.eliminated_at ?? null;
   await sql`
     INSERT INTO team_stats (team_name, yellow_cards, red_cards, own_goals_against, is_eliminated, eliminated_at, updated_at)
     VALUES (
@@ -61,7 +69,7 @@ export async function upsertTeamStats(stats: { team_name: string; yellow_cards: 
       ${stats.red_cards},
       ${stats.own_goals_against},
       ${stats.is_eliminated},
-      ${stats.is_eliminated ? sql`NOW()` : sql`NULL`},
+      ${eliminatedAt},
       NOW()
     )
     ON CONFLICT (team_name) DO UPDATE
@@ -71,6 +79,7 @@ export async function upsertTeamStats(stats: { team_name: string; yellow_cards: 
       own_goals_against = ${stats.own_goals_against},
       is_eliminated = ${stats.is_eliminated},
       eliminated_at = CASE
+        WHEN ${eliminatedAt} IS NOT NULL THEN ${eliminatedAt}::timestamptz
         WHEN ${stats.is_eliminated} AND team_stats.eliminated_at IS NULL THEN NOW()
         WHEN NOT ${stats.is_eliminated} THEN NULL
         ELSE team_stats.eliminated_at

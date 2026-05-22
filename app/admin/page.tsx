@@ -32,6 +32,23 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function handleSeed() {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/admin/seed', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      setStatus({ ok: res.ok && data.ok, message: data.message ?? JSON.stringify(data) });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
   async function handleSync() {
     setLoading(true);
     setStatus(null);
@@ -117,13 +134,23 @@ export default function AdminPage() {
           <p className="text-slate-400 text-sm">
             Pulls from Google Sheets (names) + football-data.org (live stats) and saves to the database.
           </p>
-          <button
-            onClick={handleSync}
-            disabled={loading}
-            className="bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
-          >
-            {loading ? 'Syncing…' : 'Sync Now'}
-          </button>
+          <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={handleSync}
+              disabled={loading}
+              className="bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
+            >
+              {loading ? 'Syncing…' : 'Sync Now'}
+            </button>
+            <button
+              onClick={handleSeed}
+              disabled={loading}
+              className="bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
+              title="Seed database with approximate 2022 World Cup stats for testing"
+            >
+              {loading ? 'Seeding…' : 'Seed 2022 Test Data'}
+            </button>
+          </div>
         </div>
 
         {/* Longest shot override */}
