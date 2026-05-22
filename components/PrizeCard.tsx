@@ -1,7 +1,7 @@
 import type { Prize } from '@/lib/prizes';
 import { getFlag } from '@/lib/flags';
 
-export default function PrizeCard({ prize }: { prize: Prize }) {
+export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   const hasLeader = !!prize.current_team;
 
   return (
@@ -9,13 +9,20 @@ export default function PrizeCard({ prize }: { prize: Prize }) {
       className="rounded-xl p-4 flex flex-col"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
-      <span className="text-2xl leading-none">{prize.icon}</span>
-      <p className="font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)' }}>
-        {prize.name}
-      </p>
-      <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-        {prize.description}
-      </p>
+      <div className="flex-1">
+        <div className="flex items-start justify-between">
+          <span className="text-2xl leading-none">{prize.icon}</span>
+          {prizeAmount && (
+            <span className="font-black text-base leading-none" style={{ color: 'var(--green)' }}>{prizeAmount}</span>
+          )}
+        </div>
+        <p className="font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)' }}>
+          {prize.name}
+        </p>
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          {prize.description}
+        </p>
+      </div>
 
       <hr className="my-3" style={{ borderColor: 'var(--border)' }} />
 

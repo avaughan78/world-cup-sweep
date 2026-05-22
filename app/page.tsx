@@ -52,14 +52,11 @@ export default async function Home() {
 
           {/* Main prizes */}
           <section>
-            <p className="text-sm font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-              Main Prizes
-            </p>
             <div className="grid grid-cols-2 gap-4">
               {[
-                { ordinal: '1', sup: 'st', label: 'Tournament Winner' },
-                { ordinal: '2', sup: 'nd', label: 'Runner-up' },
-              ].map(({ ordinal, sup, label }) => (
+                { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: process.env.PRIZE_1ST ?? null },
+                { ordinal: '2', sup: 'nd', label: 'Runner-up',         amount: process.env.PRIZE_2ND ?? null },
+              ].map(({ ordinal, sup, label, amount }) => (
                 <div
                   key={ordinal}
                   className="rounded-xl p-6"
@@ -73,6 +70,9 @@ export default async function Home() {
                       {label}
                     </span>
                   </div>
+                  {amount && (
+                    <p className="text-2xl font-black mb-1" style={{ color: 'var(--green)' }}>{amount}</p>
+                  )}
                   <p className="text-base" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
                 </div>
               ))}
@@ -81,13 +81,12 @@ export default async function Home() {
 
           {/* Novelty prizes */}
           <section>
-            <p className="text-sm font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
-              Novelty Prizes
-            </p>
             <div className="grid grid-cols-5 gap-3">
-              {prizes.map(prize => (
-                <PrizeCard key={prize.slug} prize={prize} />
-              ))}
+              {prizes.map(prize => {
+                const envKey = `PRIZE_${prize.slug.toUpperCase()}`;
+                const amount = process.env[envKey] ?? null;
+                return <PrizeCard key={prize.slug} prize={prize} prizeAmount={amount} />;
+              })}
             </div>
           </section>
 

@@ -52,12 +52,18 @@ const WIKI_MAP: Record<string, string> = {
   'Curaçao':                 'Curaçao',
 };
 
+function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = 6000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { ...opts, signal: controller.signal }).finally(() => clearTimeout(timer));
+}
+
 async function wikiData(title: string): Promise<{ image: string | null; extract: string | null }> {
   try {
     const url =
       `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}` +
-      `&prop=pageimages|extracts&format=json&exintro=true&exchars=900&pithumbsize=1400&origin=*`;
-    const res = await fetch(url, { next: { revalidate: 86400 } });
+      `&prop=pageimages|extracts&format=json&exintro=true&pithumbsize=1400&origin=*`;
+    const res = await fetchWithTimeout(url, { cache: 'no-store' });
     if (!res.ok) return { image: null, extract: null };
     const data = await res.json();
     const page = Object.values((data.query?.pages ?? {}) as Record<string, unknown>)[0] as Record<string, unknown> | null;
@@ -65,7 +71,9 @@ async function wikiData(title: string): Promise<{ image: string | null; extract:
     const raw = (page?.extract as string | undefined) ?? null;
     const extract = raw
       ?.replace(/<[^>]+>/g, '')
-      .replace(/\s*\([^)]*\/[^)]*\/[^)]*\)/g, '')  // strip IPA pronunciations like (/ˈɪŋɡlənd/ ⓘ)
+      .replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(Number(code)))
+      .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+      .replace(/\s*\([^)]*\/[^)]*\/[^)]*\)/g, '')
       .replace(/\[\d+\]/g, '')
       .replace(/\s+/g, ' ')
       .trim() ?? null;
@@ -83,89 +91,92 @@ export async function GET(req: NextRequest) {
   const wikiName = WIKI_MAP[team] ?? team;
   const wikiImageTitle = WIKI_IMAGE_TITLE[team] ?? null;
 
-  // REST Countries — try exact match first, then partial
+  // Fetch REST Countries + Wikipedia extract in parallel
   type CountryRaw = Record<string, unknown>;
-  let country: CountryRaw | null = null;
-  for (const suffix of ['?fullText=true', '']) {
-    if (country) break;
+
+  async function fetchCountry(): Promise<CountryRaw | null> {
+    for (const suffix of ['?fullText=true', '']) {
+      try {
+        const res = await fetchWithTimeout(
+          `https://restcountries.com/v3.1/name/${encodeURIComponent(restName)}${suffix}`,
+          { cache: 'no-store' }
+        );
+        if (res.ok) {
+          const arr = await res.json() as CountryRaw[];
+          if (arr[0]) return arr[0];
+        }
+      } catch { /* ignore */ }
+    }
+    return null;
+  }
+
+  async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null }>> {
+    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    if (!apiKey) return [];
     try {
-      const res = await fetch(
-        `https://restcountries.com/v3.1/name/${encodeURIComponent(restName)}${suffix}`,
-        { next: { revalidate: 86400 } }
+      const season = process.env.FOOTBALL_SEASON ?? '2026';
+      const headers = { 'X-Auth-Token': apiKey };
+      const listRes = await fetchWithTimeout(
+        `https://api.football-data.org/v4/competitions/WC/teams?season=${season}`,
+        { headers, cache: 'no-store' }
       );
-      if (res.ok) {
-        const arr = await res.json() as CountryRaw[];
-        country = arr[0] ?? null;
+      if (!listRes.ok) return [];
+      type ApiTeamBasic = {
+        id: number; name: string; shortName: string;
+        squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
+      };
+      const listData = await listRes.json() as { teams: ApiTeamBasic[] };
+      const matched = listData.teams.find(t =>
+        normaliseTeamName(t.name) === team ||
+        normaliseTeamName(t.shortName) === team ||
+        t.name.toLowerCase().includes(team.toLowerCase()) ||
+        team.toLowerCase().includes(t.name.toLowerCase())
+      );
+      if (!matched) return [];
+      const teamRes = await fetchWithTimeout(
+        `https://api.football-data.org/v4/teams/${matched.id}`,
+        { headers, cache: 'no-store' }
+      );
+      if (teamRes.ok) {
+        const teamData = await teamRes.json() as {
+          squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
+        };
+        const sq = (teamData.squad ?? []).map(p => ({
+          name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
+        }));
+        if (sq.length) return sq;
+      }
+      if (matched.squad?.length) {
+        return matched.squad.map(p => ({
+          name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
+        }));
       }
     } catch { /* ignore */ }
+    return [];
   }
+
+  // Run country data + Wikipedia extract + squad fetch in parallel
+  const [country, countryWiki, squad] = await Promise.all([
+    fetchCountry(),
+    wikiData(wikiName),
+    fetchSquad(),
+  ]);
 
   const capital =
     CAPITAL_OVERRIDE[team] ??
     (country?.capital as string[] | undefined)?.[0] ??
     null;
 
-  // Fetch hero image — prefer city landmark, then fall back to country article
+  // Hero image: prefer city landmark article, fall back to country article
   const imageSource = wikiImageTitle ?? capital ?? wikiName;
-  const imageData = await wikiData(imageSource);
-  let wikiImage = imageData.image;
+  let wikiImage: string | null = null;
+  let wikiExtract: string | null = countryWiki.extract;
 
-  // Fetch About extract from the country article
-  const countryData = await wikiData(wikiName);
-  const wikiExtract = countryData.extract;
-
-  // If city image failed, try the country article image
-  if (!wikiImage) wikiImage = countryData.image;
-
-  // Squad from football-data.org
-  let squad: Array<{ name: string; position: string; shirtNumber: number | null }> = [];
-  const apiKey = process.env.FOOTBALL_DATA_API_KEY;
-  if (apiKey) {
-    try {
-      const season = process.env.FOOTBALL_SEASON ?? '2026';
-      const headers = { 'X-Auth-Token': apiKey };
-
-      const listRes = await fetch(
-        `https://api.football-data.org/v4/competitions/WC/teams?season=${season}`,
-        { headers, next: { revalidate: 3600 } }
-      );
-      if (listRes.ok) {
-        type ApiTeamBasic = {
-          id: number; name: string; shortName: string;
-          squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
-        };
-        const listData = await listRes.json() as { teams: ApiTeamBasic[] };
-        const matched = listData.teams.find(t =>
-          normaliseTeamName(t.name) === team ||
-          normaliseTeamName(t.shortName) === team ||
-          t.name.toLowerCase().includes(team.toLowerCase()) ||
-          team.toLowerCase().includes(t.name.toLowerCase())
-        );
-        if (matched) {
-          const teamRes = await fetch(
-            `https://api.football-data.org/v4/teams/${matched.id}`,
-            { headers, next: { revalidate: 3600 } }
-          );
-          if (teamRes.ok) {
-            const teamData = await teamRes.json() as {
-              squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
-            };
-            squad = (teamData.squad ?? []).map(p => ({
-              name: p.name,
-              position: p.position,
-              shirtNumber: p.shirtNumber ?? null,
-            }));
-          }
-          if (!squad.length && matched.squad?.length) {
-            squad = matched.squad.map(p => ({
-              name: p.name,
-              position: p.position,
-              shirtNumber: p.shirtNumber ?? null,
-            }));
-          }
-        }
-      }
-    } catch { /* ignore */ }
+  if (imageSource === wikiName) {
+    wikiImage = countryWiki.image;
+  } else {
+    const imageData = await wikiData(imageSource);
+    wikiImage = imageData.image ?? countryWiki.image;
   }
 
   const currencies = country?.currencies
