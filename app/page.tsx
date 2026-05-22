@@ -68,9 +68,12 @@ export default async function Home() {
                   className="main-prize-card rounded-xl p-6"
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="prize-ordinal text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
-                      {ordinal}<sup className="text-3xl">{sup}</sup>
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="prize-ordinal text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
+                        {ordinal}<sup className="text-3xl">{sup}</sup>
+                      </div>
+                      {ordinal === '1' && <TrophyIcon size={52} />}
                     </div>
                     <div className="flex flex-col items-end gap-2">
                       {amount && <TicketBadge amount={amount} />}
@@ -79,11 +82,6 @@ export default async function Home() {
                       </span>
                     </div>
                   </div>
-                  {ordinal === '1' && (
-                    <div className="trophy-icon flex justify-center my-4" style={{ color: 'var(--text-primary)', opacity: 0.85 }}>
-                      <TrophyIcon size={72} />
-                    </div>
-                  )}
                   <p className="text-base" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
                 </div>
               ))}
