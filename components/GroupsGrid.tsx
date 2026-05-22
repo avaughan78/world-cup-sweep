@@ -75,7 +75,7 @@ export default function GroupsGrid({
 
   return (
     <>
-      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(2, 1fr)' }}>
         {Object.entries(GROUPS_2026).map(([letter, teams]) => {
           const rows = getRows(letter, teams);
 

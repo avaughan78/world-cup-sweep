@@ -168,6 +168,13 @@ export async function upsertGroupStanding(s: GroupStanding) {
   `;
 }
 
+export async function resetStatsForNewSeason() {
+  await sql`UPDATE team_stats SET yellow_cards=0, red_cards=0, own_goals_against=0, is_eliminated=false, eliminated_at=NULL, updated_at=NOW()`;
+  await sql`UPDATE group_standings SET played=0, won=0, drawn=0, lost=0, goals_for=0, goals_against=0, goal_difference=0, points=0, updated_at=NOW()`;
+  await sql`DELETE FROM top_scorer`;
+  await sql`DELETE FROM prize_overrides`;
+}
+
 export async function logSync(syncType: string, status: string, message?: string) {
   await sql`
     INSERT INTO sync_log (sync_type, status, message)
