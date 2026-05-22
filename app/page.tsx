@@ -58,11 +58,6 @@ export default async function Home() {
 
           {/* Main prizes */}
           <section>
-            <div className="album-section-label">
-              <span className="label-text">Main Prizes</span>
-              <span className="label-line" />
-              <span className="label-note">revealed at full time!</span>
-            </div>
             <div className="grid grid-cols-2 gap-4">
               {[
                 { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: process.env.PRIZE_1ST ?? null },
@@ -97,11 +92,6 @@ export default async function Home() {
 
           {/* Novelty prizes */}
           <section>
-            <div className="album-section-label">
-              <span className="label-text">Novelty Prizes</span>
-              <span className="label-line" />
-              <span className="label-note">five silly trophies</span>
-            </div>
             <div className="grid grid-cols-5 gap-3">
               {prizes.map(prize => {
                 const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
