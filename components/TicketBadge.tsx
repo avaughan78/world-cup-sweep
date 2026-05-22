@@ -1,14 +1,13 @@
 export default function TicketBadge({ amount }: { amount: string }) {
   return (
-    <svg width="68" height="40" viewBox="0 0 68 40" style={{ flexShrink: 0 }}>
+    <svg width="52" height="26" viewBox="0 0 52 26" style={{ flexShrink: 0 }}>
       <path
-        d="M 8,0 L 60,0 Q 68,0 68,8 L 68,15 Q 62,20 68,25 L 68,32 Q 68,40 60,40 L 8,40 Q 0,40 0,32 L 0,25 Q 6,20 0,15 L 0,8 Q 0,0 8,0 Z"
-        fill="var(--green)"
+        d="M 5,0 L 47,0 Q 52,0 52,5 L 52,10 Q 48,13 52,16 L 52,21 Q 52,26 47,26 L 5,26 Q 0,26 0,21 L 0,16 Q 4,13 0,10 L 0,5 Q 0,0 5,0 Z"
+        fill="#f5f0e4"
+        stroke="#c8c0ac"
+        strokeWidth="1"
       />
-      <text x="34" y="14" textAnchor="middle" fill="rgba(255,255,255,0.65)" fontSize="7.5" fontWeight="700" fontFamily="system-ui,sans-serif" letterSpacing="1.5">
-        PRIZE
-      </text>
-      <text x="34" y="29" textAnchor="middle" fill="white" fontSize="13" fontWeight="900" fontFamily="system-ui,sans-serif">
+      <text x="26" y="14" textAnchor="middle" dominantBaseline="middle" fill="#1a1a17" fontSize="11" fontWeight="900" fontFamily="system-ui,sans-serif">
         {amount}
       </text>
     </svg>

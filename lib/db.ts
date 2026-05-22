@@ -38,6 +38,40 @@ export async function getParticipants(): Promise<Participant[]> {
   return rows as Participant[];
 }
 
+export async function getParticipantsWithTokens(): Promise<(Participant & { claim_token: string | null })[]> {
+  const rows = await sql`SELECT team_name, participant_name, claim_token FROM participants ORDER BY team_name`;
+  return rows as (Participant & { claim_token: string | null })[];
+}
+
+export async function generateClaimTokens() {
+  const rows = await sql`SELECT team_name FROM participants WHERE claim_token IS NULL`;
+  for (const row of rows) {
+    const token = crypto.randomUUID();
+    await sql`UPDATE participants SET claim_token = ${token} WHERE team_name = ${row.team_name}`;
+  }
+  const all = await sql`SELECT COUNT(*) as n FROM participants WHERE claim_token IS NOT NULL`;
+  return Number((all[0] as { n: string }).n);
+}
+
+export async function getParticipantByToken(token: string): Promise<(Participant & { claim_token: string }) | null> {
+  const rows = await sql`SELECT team_name, participant_name, claim_token FROM participants WHERE claim_token = ${token}`;
+  return (rows[0] as (Participant & { claim_token: string })) ?? null;
+}
+
+export async function claimTeam(token: string, participantName: string) {
+  await sql`
+    UPDATE participants SET participant_name = ${participantName}, synced_at = NOW()
+    WHERE claim_token = ${token}
+  `;
+}
+
+export async function adminSetParticipant(teamName: string, participantName: string) {
+  await sql`
+    UPDATE participants SET participant_name = ${participantName}, synced_at = NOW()
+    WHERE team_name = ${teamName}
+  `;
+}
+
 export async function upsertParticipant(teamName: string, participantName: string | null) {
   await sql`
     INSERT INTO participants (team_name, participant_name, synced_at)

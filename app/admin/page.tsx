@@ -18,6 +18,8 @@ export default function AdminPage() {
   const [shotTeam, setShotTeam] = useState('');
   const [shotLabel, setShotLabel] = useState('');
   const [shotNotes, setShotNotes] = useState('');
+  const [assignTeam, setAssignTeam] = useState('');
+  const [assignName, setAssignName] = useState('');
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -72,6 +74,43 @@ export default function AdminPage() {
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
       setStatus({ ok: ok && !!d?.ok, message: (d?.message as string) ?? raw });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
+  async function handleGenerateTokens() {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/admin/generate-tokens', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      setStatus({ ok: ok && !!d?.ok, message: (d?.message as string) ?? raw });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
+  async function handleAssign() {
+    if (!assignTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/admin/assign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, team_name: assignTeam, participant_name: assignName }),
+      });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? `${assignTeam} assigned to ${assignName || '(cleared)'}` : raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -194,6 +233,63 @@ export default function AdminPage() {
                 style={{ background: '#fee2e2', color: '#991b1b', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
               >
                 {loading ? 'Resetting…' : 'Reset for 2026'}
+              </button>
+            </div>
+          </div>
+
+          {/* Draw tickets */}
+          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Draw Tickets</h2>
+            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+              Generate a unique QR code for each team, then print the tickets to use in the hat draw.
+              Each QR links to a page where the drawer enters their name.
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={handleGenerateTokens}
+                disabled={loading}
+                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
+                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+              >
+                {loading ? 'Generating…' : 'Generate Tokens'}
+              </button>
+              <a
+                href="/print"
+                target="_blank"
+                className="font-bold px-6 py-2.5 rounded-lg"
+                style={{ background: 'var(--green)', color: '#fff', fontSize: '1rem' }}
+              >
+                Print Tickets ↗
+              </a>
+            </div>
+          </div>
+
+          {/* Manual assign */}
+          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Manual Assignment</h2>
+            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+              Override or clear any team's participant. Team name must match exactly.
+            </p>
+            <div className="space-y-3">
+              <input
+                placeholder="Team name (e.g. Brazil)"
+                value={assignTeam}
+                onChange={e => setAssignTeam(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                placeholder="Participant name (leave blank to clear)"
+                value={assignName}
+                onChange={e => setAssignName(e.target.value)}
+                style={inputStyle}
+              />
+              <button
+                onClick={handleAssign}
+                disabled={loading}
+                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
+                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+              >
+                {loading ? 'Saving…' : 'Assign'}
               </button>
             </div>
           </div>
