@@ -59,7 +59,7 @@ export async function computePrizes(
       current_team: topCardsTotal > 0 ? topCards!.team_name : null,
       current_participant: topCardsTotal > 0 ? participant(topCards!.team_name) : null,
       value_label: topCardsTotal > 0
-        ? `${topCards!.yellow_cards}Y + ${topCards!.red_cards}R = ${topCardsTotal} pts`
+        ? `${topCards!.yellow_cards + topCards!.red_cards} cards`
         : null,
       is_manual: false,
     },
@@ -71,7 +71,7 @@ export async function computePrizes(
       current_team: firstOut?.team_name ?? null,
       current_participant: participant(firstOut?.team_name ?? null),
       value_label: firstOut?.eliminated_at
-        ? `Out ${new Date(firstOut.eliminated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
+        ? `Eliminated · ${new Date(firstOut.eliminated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
         : null,
       is_manual: false,
     },
@@ -93,7 +93,7 @@ export async function computePrizes(
       current_team: (topOGs?.own_goals_against ?? 0) > 0 ? topOGs!.team_name : null,
       current_participant: (topOGs?.own_goals_against ?? 0) > 0 ? participant(topOGs!.team_name) : null,
       value_label: (topOGs?.own_goals_against ?? 0) > 0
-        ? `${topOGs!.own_goals_against} own goal${topOGs!.own_goals_against !== 1 ? 's' : ''}`
+        ? `${topOGs!.own_goals_against} OG${topOGs!.own_goals_against !== 1 ? 's' : ''}`
         : null,
       is_manual: false,
     },

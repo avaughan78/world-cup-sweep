@@ -1,84 +1,118 @@
-import { getParticipants, getLastSync } from '@/lib/db';
+import { getParticipants, getLastSync, getAllTeamStats } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
+import { timeAgo } from '@/lib/format';
 import PrizeCard from '@/components/PrizeCard';
 import SweepstakeTable from '@/components/SweepstakeTable';
 
-export const dynamic = 'force-dynamic'; // always fetch fresh data from DB
+export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const participants = await getParticipants();
-  const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
-  const [prizes, lastSync] = await Promise.all([
-    computePrizes(participantMap),
+  const [participants, lastSync, allTeamStats] = await Promise.all([
+    getParticipants(),
     getLastSync('stats'),
+    getAllTeamStats(),
   ]);
 
-  const lastUpdated = lastSync
-    ? new Date(lastSync).toLocaleString('en-GB', {
-        day: 'numeric',
-        month: 'short',
-        hour: '2-digit',
-        minute: '2-digit',
-      })
-    : null;
+  const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
+  const prizes = await computePrizes(participantMap);
+
+  const eliminatedTeams = new Set(
+    allTeamStats.filter(t => t.is_eliminated).map(t => t.team_name)
+  );
+
+  const inRunning = participants.filter(
+    p => p.participant_name && !eliminatedTeams.has(p.team_name)
+  ).length;
+
+  const syncedAgo = lastSync ? timeAgo(lastSync) : null;
 
   return (
-    <main className="min-h-screen bg-slate-900 text-white">
-      <header className="bg-gradient-to-b from-green-900 to-green-950 border-b border-green-800 py-10 px-4">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="text-5xl mb-3">⚽</div>
-          <h1 className="text-4xl font-black tracking-tight">World Cup 2026</h1>
-          <p className="text-green-300 text-lg font-medium mt-1">Office Sweepstake</p>
-          <p className="text-green-600 text-xs mt-3">
-            {lastUpdated ? `Stats updated ${lastUpdated}` : 'Waiting for first sync'}
+    <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
+      <div className="max-w-5xl mx-auto px-6">
+
+        {/* Header */}
+        <header className="pt-10 pb-0">
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+            FIFA World Cup · 2026 · Office Sweepstake
           </p>
-        </div>
-      </header>
+          <div className="flex items-baseline justify-between mt-1.5">
+            <h1 className="text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              The Draw
+            </h1>
+            <span className="text-sm flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+              <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
+              {syncedAgo ? `Synced ${syncedAgo}` : 'Not yet synced'}
+            </span>
+          </div>
+          <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
+        </header>
 
-      <div className="max-w-5xl mx-auto px-4 py-10 space-y-12">
-        <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
-            🏆 Main Prizes
-          </h2>
-          <div className="grid grid-cols-2 gap-4">
-            {['1st Place', '2nd Place'].map(label => (
-              <div
-                key={label}
-                className="bg-slate-800/30 border border-slate-700/50 rounded-2xl p-6 text-center"
-              >
-                <div className="text-2xl mb-2">🏆</div>
-                <div className="text-amber-400 text-xs font-bold uppercase tracking-widest mb-2">
-                  {label}
+        <div className="py-10 space-y-10">
+
+          {/* Main prizes */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+              Main Prizes
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { ordinal: '1', sup: 'st', label: 'Tournament Winner' },
+                { ordinal: '2', sup: 'nd', label: 'Runner-up' },
+              ].map(({ ordinal, sup, label }) => (
+                <div
+                  key={ordinal}
+                  className="rounded-xl p-6"
+                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+                >
+                  <div className="flex justify-between items-start mb-8">
+                    <div className="text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
+                      {ordinal}<sup className="text-3xl">{sup}</sup>
+                    </div>
+                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                      {label}
+                    </span>
+                  </div>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
                 </div>
-                <div className="text-slate-500 font-semibold">Revealed at full time</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
-            🎯 Novelty Prizes
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {prizes.map(prize => (
-              <PrizeCard key={prize.slug} prize={prize} />
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-4">
-            📋 The Draw
-          </h2>
-          {participants.length === 0 ? (
-            <div className="text-slate-500 text-center py-8 rounded-2xl border border-slate-700">
-              Waiting for draw data — sync the Google Sheet to populate names.
+              ))}
             </div>
-          ) : (
-            <SweepstakeTable participants={participants} prizes={prizes} />
-          )}
-        </section>
+          </section>
+
+          {/* Novelty prizes */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+              Novelty Prizes
+            </p>
+            <div className="grid grid-cols-5 gap-3">
+              {prizes.map(prize => (
+                <PrizeCard key={prize.slug} prize={prize} />
+              ))}
+            </div>
+          </section>
+
+          {/* The draw */}
+          <section>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+              The Draw · {participants.length} Teams
+            </p>
+            {participants.length === 0 ? (
+              <div
+                className="rounded-xl p-10 text-center text-sm"
+                style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+              >
+                Sync the Google Sheet to populate team names.
+              </div>
+            ) : (
+              <SweepstakeTable
+                participants={participants}
+                prizes={prizes}
+                eliminatedTeams={eliminatedTeams}
+                inRunning={inRunning}
+              />
+            )}
+          </section>
+
+        </div>
       </div>
     </main>
   );
