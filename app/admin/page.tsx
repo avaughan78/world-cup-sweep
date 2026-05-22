@@ -5,7 +5,6 @@ import { useState } from 'react';
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
-  const [syncKey, setSyncKey] = useState('');
   const [shotTeam, setShotTeam] = useState('');
   const [shotLabel, setShotLabel] = useState('');
   const [shotNotes, setShotNotes] = useState('');
@@ -13,13 +12,13 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(false);
 
   async function handleSync() {
-    if (!syncKey) { setStatus('Enter sync key first'); return; }
     setLoading(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/sync', {
+      const res = await fetch('/api/admin/sync', {
         method: 'POST',
-        headers: { 'x-sync-key': syncKey },
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
       });
       const data = await res.json();
       setStatus(JSON.stringify(data.results ?? data, null, 2));
@@ -89,13 +88,6 @@ export default function AdminPage() {
           <p className="text-slate-400 text-sm">
             Pulls from Google Sheets (names) + football-data.org (live stats) and saves to the database.
           </p>
-          <input
-            type="password"
-            placeholder="SYNC_SECRET value"
-            value={syncKey}
-            onChange={e => setSyncKey(e.target.value)}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-blue-600"
-          />
           <button
             onClick={handleSync}
             disabled={loading}
