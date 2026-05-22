@@ -84,8 +84,9 @@ async function wikiData(title: string): Promise<{ image: string | null; extract:
 }
 
 export async function GET(req: NextRequest) {
-  const team = req.nextUrl.searchParams.get('team');
-  if (!team) return NextResponse.json({ error: 'Missing team' }, { status: 400 });
+  const teamParam = req.nextUrl.searchParams.get('team');
+  if (!teamParam) return NextResponse.json({ error: 'Missing team' }, { status: 400 });
+  const team: string = teamParam;
 
   const restName = REST_MAP[team] ?? team;
   const wikiName = WIKI_MAP[team] ?? team;
