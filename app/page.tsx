@@ -3,7 +3,7 @@ import { computePrizes } from '@/lib/prizes';
 import PrizeCard from '@/components/PrizeCard';
 import SweepstakeTable from '@/components/SweepstakeTable';
 
-export const revalidate = 900; // ISR: rebuild every 15 minutes
+export const dynamic = 'force-dynamic'; // always fetch fresh data from DB
 
 export default async function Home() {
   const participants = await getParticipants();
