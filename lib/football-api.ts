@@ -70,8 +70,15 @@ export interface ApiStanding {
 }
 
 export async function getFinishedMatches(): Promise<ApiMatch[]> {
-  const data = await footballFetch(`/competitions/WC/matches?season=${season()}&status=FINISHED`);
-  return (data.matches as ApiMatch[]) ?? [];
+  const s = season();
+  // For past seasons all matches are finished — the status filter causes a 400
+  const currentYear = new Date().getFullYear().toString();
+  const params = s === currentYear
+    ? `season=${s}&status=FINISHED`
+    : `season=${s}`;
+  const data = await footballFetch(`/competitions/WC/matches?${params}`);
+  const matches = (data.matches as ApiMatch[]) ?? [];
+  return matches.filter(m => m.status === 'FINISHED');
 }
 
 export async function getTopScorers(): Promise<ApiScorer[]> {

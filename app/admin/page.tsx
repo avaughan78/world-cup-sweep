@@ -5,11 +5,32 @@ import { useState } from 'react';
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
+  const [loginError, setLoginError] = useState('');
   const [shotTeam, setShotTeam] = useState('');
   const [shotLabel, setShotLabel] = useState('');
   const [shotNotes, setShotNotes] = useState('');
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+
+  async function handleLogin() {
+    setLoginError('');
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (res.ok) {
+        setAuthed(true);
+      } else {
+        setLoginError('Wrong password');
+      }
+    } catch {
+      setLoginError('Could not connect to server');
+    }
+    setLoading(false);
+  }
 
   async function handleSync() {
     setLoading(true);
@@ -21,14 +42,18 @@ export default function AdminPage() {
         body: JSON.stringify({ password }),
       });
       const data = await res.json();
-      setStatus(JSON.stringify(data.results ?? data, null, 2));
+      setStatus({ ok: res.ok, message: JSON.stringify(data.results ?? data, null, 2) });
     } catch (e) {
-      setStatus(String(e));
+      setStatus({ ok: false, message: String(e) });
     }
     setLoading(false);
   }
 
   async function handleShotOverride() {
+    if (!shotTeam.trim()) {
+      setStatus({ ok: false, message: 'Team name is required' });
+      return;
+    }
     setLoading(true);
     setStatus(null);
     try {
@@ -43,9 +68,9 @@ export default function AdminPage() {
         }),
       });
       const data = await res.json();
-      setStatus(data.ok ? '✓ Saved!' : `Error: ${JSON.stringify(data)}`);
+      setStatus({ ok: res.ok && data.ok, message: data.ok ? '✓ Saved!' : JSON.stringify(data) });
     } catch (e) {
-      setStatus(String(e));
+      setStatus({ ok: false, message: String(e) });
     }
     setLoading(false);
   }
@@ -59,15 +84,19 @@ export default function AdminPage() {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && setAuthed(true)}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2.5 mb-4 outline-none focus:ring-2 focus:ring-green-600"
+            onChange={e => { setPassword(e.target.value); setLoginError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleLogin()}
+            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2.5 mb-2 outline-none focus:ring-2 focus:ring-green-600"
           />
+          {loginError && (
+            <p className="text-red-400 text-sm mb-3">{loginError}</p>
+          )}
           <button
-            onClick={() => setAuthed(true)}
-            className="w-full bg-green-700 hover:bg-green-600 text-white font-bold py-2.5 rounded-lg transition-colors"
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg transition-colors mt-2"
           >
-            Enter
+            {loading ? 'Checking…' : 'Enter'}
           </button>
         </div>
       </div>
@@ -131,9 +160,13 @@ export default function AdminPage() {
         </div>
 
         {status && (
-          <pre className="bg-slate-800 border border-slate-700 rounded-xl p-4 text-sm text-green-300 overflow-auto whitespace-pre-wrap">
-            {status}
-          </pre>
+          <div className={`rounded-xl border p-4 text-sm font-mono whitespace-pre-wrap overflow-auto ${
+            status.ok
+              ? 'bg-green-950 border-green-800 text-green-300'
+              : 'bg-red-950 border-red-800 text-red-300'
+          }`}>
+            {status.message}
+          </div>
         )}
       </div>
     </div>
