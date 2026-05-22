@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { GROUPS_2026 } from '@/lib/groups';
 import type { Prize } from '@/lib/prizes';
+import type { GroupStanding } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import TeamModal from './TeamModal';
 
@@ -14,14 +15,28 @@ const BADGE: Record<string, { label: string; style: React.CSSProperties }> = {
   top_scorer_team:  { label: 'BOOT', style: { background: 'var(--green)', color: '#fff' } },
 };
 
+function gdLabel(gd: number): string {
+  if (gd > 0) return `+${gd}`;
+  return String(gd);
+}
+
+const COL: React.CSSProperties = {
+  flexShrink: 0,
+  width: '1.6rem',
+  textAlign: 'right',
+  fontVariantNumeric: 'tabular-nums',
+};
+
 export default function GroupsGrid({
   participantMap,
   eliminatedTeams,
   prizes,
+  groupStandings,
 }: {
   participantMap: Record<string, string | null>;
   eliminatedTeams: string[];
   prizes: Prize[];
+  groupStandings: GroupStanding[];
 }) {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const eliminatedSet = new Set(eliminatedTeams);
@@ -34,99 +49,151 @@ export default function GroupsGrid({
     teamPrizes.set(prize.current_team, existing);
   }
 
+  // Build standings lookup: group_name → sorted rows
+  const standingsMap = new Map<string, GroupStanding[]>();
+  for (const row of groupStandings) {
+    const existing = standingsMap.get(row.group_name) ?? [];
+    existing.push(row);
+    standingsMap.set(row.group_name, existing);
+  }
+  for (const [g, rows] of standingsMap) {
+    standingsMap.set(g, rows.sort((a, b) => a.position - b.position));
+  }
+
+  // For groups not yet in DB, fall back to GROUPS_2026 order with zero stats
+  function getRows(letter: string, teams: string[]): GroupStanding[] {
+    const dbRows = standingsMap.get(letter);
+    if (dbRows?.length) return dbRows;
+    return teams.map((team_name, i) => ({
+      group_name: letter, position: i + 1, team_name,
+      played: 0, won: 0, drawn: 0, lost: 0,
+      goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+    }));
+  }
+
+  const anyMatchesPlayed = groupStandings.some(r => r.played > 0);
+
   return (
     <>
-      <div className="grid gap-3" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
-        {Object.entries(GROUPS_2026).map(([letter, teams]) => (
-          <div
-            key={letter}
-            className="rounded-xl overflow-hidden"
-            style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-          >
-            {/* Group header */}
-            <div className="px-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-              <span
-                className="font-bold uppercase tracking-widest"
-                style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}
+      <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+        {Object.entries(GROUPS_2026).map(([letter, teams]) => {
+          const rows = getRows(letter, teams);
+
+          return (
+            <div
+              key={letter}
+              className="rounded-xl overflow-hidden"
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+            >
+              {/* Group header */}
+              <div
+                className="flex items-center justify-between px-4 py-2.5"
+                style={{ borderBottom: '1px solid var(--border)' }}
               >
-                Group {letter}
-              </span>
-            </div>
+                <span className="font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+                  Group {letter}
+                </span>
+                {/* Column headers */}
+                <div className="flex items-center gap-0" style={{ color: 'var(--text-muted)', fontSize: '0.62rem', fontWeight: 700 }}>
+                  <span style={COL}>P</span>
+                  <span style={COL}>W</span>
+                  <span style={COL}>D</span>
+                  <span style={COL}>L</span>
+                  <span style={{ ...COL, width: '2rem' }}>GD</span>
+                  <span style={{ ...COL, width: '2rem' }}>Pts</span>
+                </div>
+              </div>
 
-            {/* Teams */}
-            {teams.map((team, i) => {
-              const participant = participantMap[team] ?? null;
-              const eliminated = eliminatedSet.has(team);
-              const wonPrizes = teamPrizes.get(team) ?? [];
-              const isLast = i === teams.length - 1;
+              {/* Team rows */}
+              {rows.map((row, i) => {
+                const team = row.team_name;
+                const participant = participantMap[team] ?? null;
+                const eliminated = eliminatedSet.has(team);
+                const wonPrizes = teamPrizes.get(team) ?? [];
+                const isLast = i === rows.length - 1;
+                const gd = row.goal_difference;
+                const gdColor = gd > 0 ? 'var(--green)' : gd < 0 ? '#ef4444' : 'var(--text-muted)';
 
-              return (
-                <button
-                  key={team}
-                  onClick={() => setSelectedTeam(team)}
-                  className="w-full text-left flex flex-col px-3 py-2.5 transition-colors"
-                  style={{
-                    borderBottom: isLast ? 'none' : '1px solid var(--border)',
-                    opacity: eliminated ? 0.4 : 1,
-                    cursor: 'pointer',
-                    background: 'transparent',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                >
-                  {/* Country row */}
-                  <div className="flex items-center gap-1.5 w-full">
-                    <span className="leading-none flex-shrink-0" style={{ fontSize: '1rem' }}>
-                      {getFlag(team)}
-                    </span>
-                    <span
-                      className="font-semibold truncate flex-1 min-w-0"
-                      style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}
-                    >
-                      {team}
-                    </span>
-                    {wonPrizes.map(prize => {
-                      const b = BADGE[prize.slug];
-                      return b ? (
-                        <span
-                          key={prize.slug}
-                          className="font-bold rounded-sm uppercase flex-shrink-0"
-                          style={{
-                            ...b.style,
-                            fontSize: '0.6rem',
-                            padding: '2px 5px',
-                            letterSpacing: '0.05em',
-                          }}
-                        >
-                          {b.label}
+                return (
+                  <button
+                    key={team}
+                    onClick={() => setSelectedTeam(team)}
+                    className="w-full text-left transition-colors"
+                    style={{
+                      borderBottom: isLast ? 'none' : '1px solid var(--border)',
+                      opacity: eliminated ? 0.4 : 1,
+                      background: 'transparent',
+                      display: 'block',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                  >
+                    <div className="flex items-center gap-1 px-4 py-2">
+                      {/* Position */}
+                      <span
+                        style={{ color: 'var(--text-muted)', fontSize: '0.7rem', width: '1rem', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}
+                      >
+                        {row.position}
+                      </span>
+
+                      {/* Flag + name + participant + badges */}
+                      <div className="flex-1 min-w-0 flex items-center gap-1.5 mr-1">
+                        <span style={{ fontSize: '0.95rem', lineHeight: 1, flexShrink: 0 }}>
+                          {getFlag(team)}
                         </span>
-                      ) : null;
-                    })}
-                  </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1 min-w-0">
+                            <span
+                              className="font-semibold truncate"
+                              style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                            >
+                              {team}
+                            </span>
+                            {wonPrizes.map(prize => {
+                              const b = BADGE[prize.slug];
+                              return b ? (
+                                <span
+                                  key={prize.slug}
+                                  className="font-bold rounded-sm uppercase flex-shrink-0"
+                                  style={{ ...b.style, fontSize: '0.55rem', padding: '1px 4px', letterSpacing: '0.05em' }}
+                                >
+                                  {b.label}
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                          {participant && (
+                            <div
+                              className="truncate"
+                              style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}
+                            >
+                              {participant}
+                            </div>
+                          )}
+                        </div>
+                      </div>
 
-                  {/* Participant — smaller, muted, beneath */}
-                  <div className="mt-0.5 pl-[1.375rem]">
-                    {participant ? (
-                      <span
-                        className="font-medium truncate block"
-                        style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}
-                      >
-                        {participant}
-                      </span>
-                    ) : (
-                      <span
-                        className="italic"
-                        style={{ color: 'var(--border)', fontSize: '0.78rem' }}
-                      >
-                        TBD
-                      </span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-        ))}
+                      {/* Stats */}
+                      <div className="flex items-center flex-shrink-0" style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                        <span style={COL}>{row.played}</span>
+                        <span style={COL}>{row.won}</span>
+                        <span style={COL}>{row.drawn}</span>
+                        <span style={COL}>{row.lost}</span>
+                        <span style={{ ...COL, width: '2rem', color: anyMatchesPlayed ? gdColor : 'var(--text-muted)' }}>
+                          {anyMatchesPlayed ? gdLabel(gd) : '–'}
+                        </span>
+                        <span style={{ ...COL, width: '2rem', fontWeight: 800, color: 'var(--text-primary)', fontSize: '0.85rem' }}>
+                          {anyMatchesPlayed ? row.points : '–'}
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
       </div>
 
       {selectedTeam && (

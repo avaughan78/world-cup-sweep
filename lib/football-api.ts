@@ -60,6 +60,9 @@ export interface ApiStandingRow {
   draw: number;
   lost: number;
   points: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
 }
 
 export interface ApiStanding {
@@ -70,13 +73,9 @@ export interface ApiStanding {
 }
 
 export async function getFinishedMatches(): Promise<ApiMatch[]> {
-  const s = season();
-  // For past seasons all matches are finished — the status filter causes a 400
-  const currentYear = new Date().getFullYear().toString();
-  const params = s === currentYear
-    ? `season=${s}&status=FINISHED`
-    : `season=${s}`;
-  const data = await footballFetch(`/competitions/WC/matches?${params}`);
+  // Never use status=FINISHED in the URL — it causes a 400 when no matches exist yet
+  // (pre-tournament or historical seasons on the free tier). Filter in code instead.
+  const data = await footballFetch(`/competitions/WC/matches?season=${season()}`);
   const matches = (data.matches as ApiMatch[]) ?? [];
   return matches.filter(m => m.status === 'FINISHED');
 }

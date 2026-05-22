@@ -123,6 +123,51 @@ export async function setPrizeOverride(override: PrizeOverride) {
   `;
 }
 
+export interface GroupStanding {
+  group_name: string;
+  position: number;
+  team_name: string;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goals_for: number;
+  goals_against: number;
+  goal_difference: number;
+  points: number;
+}
+
+export async function getGroupStandings(): Promise<GroupStanding[]> {
+  try {
+    const rows = await sql`
+      SELECT * FROM group_standings ORDER BY group_name, position
+    `;
+    return rows as GroupStanding[];
+  } catch {
+    return []; // table may not exist yet
+  }
+}
+
+export async function upsertGroupStanding(s: GroupStanding) {
+  await sql`
+    INSERT INTO group_standings
+      (group_name, position, team_name, played, won, drawn, lost, goals_for, goals_against, goal_difference, points, updated_at)
+    VALUES
+      (${s.group_name}, ${s.position}, ${s.team_name}, ${s.played}, ${s.won}, ${s.drawn}, ${s.lost}, ${s.goals_for}, ${s.goals_against}, ${s.goal_difference}, ${s.points}, NOW())
+    ON CONFLICT (group_name, team_name) DO UPDATE SET
+      position        = ${s.position},
+      played          = ${s.played},
+      won             = ${s.won},
+      drawn           = ${s.drawn},
+      lost            = ${s.lost},
+      goals_for       = ${s.goals_for},
+      goals_against   = ${s.goals_against},
+      goal_difference = ${s.goal_difference},
+      points          = ${s.points},
+      updated_at      = NOW()
+  `;
+}
+
 export async function logSync(syncType: string, status: string, message?: string) {
   await sql`
     INSERT INTO sync_log (sync_type, status, message)

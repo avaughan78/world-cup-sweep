@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchSheetData } from '@/lib/sheets';
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from '@/lib/football-api';
-import { upsertParticipant, upsertTeamStats, setTopScorer, logSync, getParticipants } from '@/lib/db';
+import { upsertParticipant, upsertTeamStats, setTopScorer, logSync, getParticipants, upsertGroupStanding } from '@/lib/db';
+import { GROUPS_2026 } from '@/lib/groups';
 import { computeCardTotals, computeOwnGoals, computeEliminations } from '@/lib/prizes';
 
 export async function POST(req: NextRequest) {
@@ -76,6 +77,44 @@ export async function POST(req: NextRequest) {
     }
 
     if (standings.length === 0) statNotes.push('standings: unavailable (eliminations not updated)');
+
+    // Sync group standings table
+    const apiGroups = standings.filter(s => s.type === 'TOTAL' && s.group);
+    if (apiGroups.length > 0) {
+      for (const g of apiGroups) {
+        const letter = (g.group ?? '').replace('GROUP_', '');
+        for (const row of g.table) {
+          await upsertGroupStanding({
+            group_name: letter,
+            position: row.position,
+            team_name: normaliseTeamName(row.team.name),
+            played: row.playedGames,
+            won: row.won,
+            drawn: row.draw,
+            lost: row.lost,
+            goals_for: row.goalsFor ?? 0,
+            goals_against: row.goalsAgainst ?? 0,
+            goal_difference: row.goalDifference ?? 0,
+            points: row.points,
+          });
+        }
+      }
+      statNotes.push(`group standings: ${apiGroups.length} groups saved`);
+    } else {
+      // Pre-tournament fallback: write all groups with zero stats so the table shows structure
+      for (const [letter, teams] of Object.entries(GROUPS_2026)) {
+        for (let i = 0; i < teams.length; i++) {
+          await upsertGroupStanding({
+            group_name: letter,
+            position: i + 1,
+            team_name: teams[i],
+            played: 0, won: 0, drawn: 0, lost: 0,
+            goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+          });
+        }
+      }
+      statNotes.push('group standings: initialised from draw (no matches yet)');
+    }
 
     await logSync('stats', 'success', statNotes.join(', '));
     results.stats = `ok (${statNotes.join(' · ')})`;

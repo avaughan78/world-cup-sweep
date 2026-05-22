@@ -1,4 +1,4 @@
-import { getParticipants, getLastSync, getAllTeamStats } from '@/lib/db';
+import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
 import { timeAgo } from '@/lib/format';
 import PrizeCard from '@/components/PrizeCard';
@@ -7,10 +7,11 @@ import GroupsGrid from '@/components/GroupsGrid';
 export const dynamic = 'force-dynamic';
 
 export default async function Home() {
-  const [participants, lastSync, allTeamStats] = await Promise.all([
+  const [participants, lastSync, allTeamStats, groupStandings] = await Promise.all([
     getParticipants(),
     getLastSync('stats'),
     getAllTeamStats(),
+    getGroupStandings(),
   ]);
 
   const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
@@ -114,6 +115,7 @@ export default async function Home() {
                 participantMap={Object.fromEntries(participantMap)}
                 eliminatedTeams={[...eliminatedTeams]}
                 prizes={prizes}
+                groupStandings={groupStandings}
               />
             )}
           </section>
