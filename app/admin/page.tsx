@@ -21,6 +21,13 @@ export default function AdminPage() {
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // Auto-dismiss status toast after 6 seconds
+  useEffect(() => {
+    if (!status) return;
+    const t = setTimeout(() => setStatus(null), 6000);
+    return () => clearTimeout(t);
+  }, [status]);
+
   // Participants state
   const [names, setNames] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<Record<string, string>>({}); // committed values
@@ -206,6 +213,22 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
+      {/* Fixed toast notification */}
+      {status && (
+        <div
+          className="fixed top-4 right-4 z-50 rounded-xl px-4 py-3 text-sm shadow-xl flex items-start gap-3 max-w-sm"
+          style={{
+            background: status.ok ? '#f0fdf4' : '#fef2f2',
+            border: `1px solid ${status.ok ? '#bbf7d0' : '#fecaca'}`,
+            color: status.ok ? '#166534' : '#991b1b',
+          }}
+        >
+          <span className="text-base leading-none mt-0.5">{status.ok ? '✓' : '✗'}</span>
+          <span className="font-mono whitespace-pre-wrap flex-1" style={{ fontSize: '0.8rem' }}>{status.message}</span>
+          <button onClick={() => setStatus(null)} style={{ opacity: 0.5, fontSize: '1rem', lineHeight: 1, flexShrink: 0 }}>✕</button>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-6">
 
         <header className="pt-10 pb-0">
@@ -296,20 +319,6 @@ export default function AdminPage() {
               </button>
             </div>
           </div>
-
-          {/* Status */}
-          {status && (
-            <div
-              className="rounded-xl p-4 text-sm font-mono whitespace-pre-wrap overflow-auto"
-              style={{
-                background: status.ok ? '#f0fdf4' : '#fef2f2',
-                border: `1px solid ${status.ok ? '#bbf7d0' : '#fecaca'}`,
-                color: status.ok ? '#166534' : '#991b1b',
-              }}
-            >
-              {status.message}
-            </div>
-          )}
 
           {/* Participants */}
           <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
