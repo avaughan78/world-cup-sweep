@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Bungee, Caveat } from "next/font/google";
+import { Geist, Geist_Mono, Bungee, Kalam } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,7 +18,7 @@ const bungee = Bungee({
   weight: "400",
 });
 
-const caveat = Caveat({
+const kalam = Kalam({
   variable: "--font-caveat",
   subsets: ["latin"],
   weight: ["400", "700"],
@@ -37,7 +37,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${bungee.variable} ${caveat.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${bungee.variable} ${kalam.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

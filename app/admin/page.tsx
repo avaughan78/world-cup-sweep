@@ -220,64 +220,6 @@ export default function AdminPage() {
 
         <div className="py-10 space-y-8">
 
-          {/* Participants */}
-          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Participants</h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-              Edit names directly — changes save automatically on blur.
-            </p>
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
-              {Object.entries(GROUPS_2026).map(([letter, teams]) => (
-                <div key={letter} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                  <div
-                    className="px-3 py-2 font-black uppercase tracking-widest"
-                    style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--text-muted)' }}
-                  >
-                    Group {letter}
-                  </div>
-                  {teams.map(team => (
-                    <div
-                      key={team}
-                      className="flex items-center gap-2 px-3 py-2"
-                      style={{ borderBottom: `1px solid var(--border)` }}
-                    >
-                      <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{getFlag(team)}</span>
-                      <span className="font-semibold" style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flexShrink: 0, width: '5.5rem' }}>
-                        {team}
-                      </span>
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          placeholder="No one yet"
-                          value={names[team] ?? ''}
-                          onChange={e => setNames(prev => ({ ...prev, [team]: e.target.value }))}
-                          onBlur={() => saveName(team)}
-                          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                          style={{
-                            width: '100%',
-                            background: 'transparent',
-                            border: 'none',
-                            borderBottom: `1px solid ${(names[team] ?? '') !== (saved[team] ?? '') ? 'var(--green)' : 'var(--border)'}`,
-                            padding: '0.2rem 0.1rem',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.85rem',
-                            outline: 'none',
-                          }}
-                        />
-                        {saving.has(team) && (
-                          <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--text-muted)' }}>…</span>
-                        )}
-                        {justSaved.has(team) && !saving.has(team) && (
-                          <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--green)' }}>✓</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Sync */}
           <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sync Live Stats</h2>
@@ -364,6 +306,64 @@ export default function AdminPage() {
               {status.message}
             </div>
           )}
+
+          {/* Participants */}
+          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Participants</h2>
+            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+              Edit names directly — changes save automatically on blur.
+            </p>
+            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+              {Object.entries(GROUPS_2026).map(([letter, teams]) => (
+                <div key={letter} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                  <div
+                    className="px-3 py-2 font-black uppercase tracking-widest"
+                    style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--text-muted)' }}
+                  >
+                    Group {letter}
+                  </div>
+                  {teams.map(team => (
+                    <div
+                      key={team}
+                      className="flex items-center gap-2 px-3 py-2"
+                      style={{ borderBottom: `1px solid var(--border)` }}
+                    >
+                      <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{getFlag(team)}</span>
+                      <span className="font-semibold" style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flexShrink: 0, width: '5.5rem' }}>
+                        {team}
+                      </span>
+                      <div className="flex-1 relative">
+                        <input
+                          type="text"
+                          placeholder="No one yet"
+                          value={names[team] ?? ''}
+                          onChange={e => setNames(prev => ({ ...prev, [team]: e.target.value }))}
+                          onBlur={() => saveName(team)}
+                          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          style={{
+                            width: '100%',
+                            background: 'transparent',
+                            border: 'none',
+                            borderBottom: `1px solid ${(names[team] ?? '') !== (saved[team] ?? '') ? 'var(--green)' : 'var(--border)'}`,
+                            padding: '0.2rem 0.1rem',
+                            color: 'var(--text-primary)',
+                            fontSize: '0.85rem',
+                            outline: 'none',
+                          }}
+                        />
+                        {saving.has(team) && (
+                          <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--text-muted)' }}>…</span>
+                        )}
+                        {justSaved.has(team) && !saving.has(team) && (
+                          <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--green)' }}>✓</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+          </div>
 
         </div>
       </div>

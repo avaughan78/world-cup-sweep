@@ -3,6 +3,7 @@ import { computePrizes } from '@/lib/prizes';
 import { timeAgo } from '@/lib/format';
 import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
+import TrophyIcon from '@/components/TrophyIcon';
 import GroupsGrid from '@/components/GroupsGrid';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -72,7 +73,7 @@ export default async function Home() {
                   className="main-prize-card rounded-xl p-6"
                   style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                 >
-                  <div className="flex justify-between items-start mb-8">
+                  <div className="flex justify-between items-start mb-4">
                     <div className="prize-ordinal text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
                       {ordinal}<sup className="text-3xl">{sup}</sup>
                     </div>
@@ -83,6 +84,11 @@ export default async function Home() {
                       </span>
                     </div>
                   </div>
+                  {ordinal === '1' && (
+                    <div className="trophy-icon flex justify-center my-4" style={{ color: 'var(--text-primary)', opacity: 0.85 }}>
+                      <TrophyIcon size={72} />
+                    </div>
+                  )}
                   <p className="text-base" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
                 </div>
               ))}

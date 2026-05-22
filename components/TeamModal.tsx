@@ -269,6 +269,21 @@ export default function TeamModal({ team, participant, onClose }: {
                       )}
                     </div>
                   </div>
+                  {(wcHistory.legends?.length || wcHistory.note) && (
+                    <div className="mt-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                      {wcHistory.legends && wcHistory.legends.length > 0 && (
+                        <p className="text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                          <span style={{ fontWeight: 700 }}>Famous for: </span>
+                          {wcHistory.legends.join(' · ')}
+                        </p>
+                      )}
+                      {wcHistory.note && (
+                        <p className="text-sm leading-relaxed" style={{ color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                          {wcHistory.note}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 

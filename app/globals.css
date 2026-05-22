@@ -145,3 +145,6 @@ body {
 [data-theme="album"] .ticket-badge rect,
 [data-theme="album"] .ticket-badge path { fill: #f9d97a !important; stroke: #c9402a !important; }
 [data-theme="album"] .ticket-badge text { fill: #2a1f15 !important; }
+
+/* Trophy icon golden in album mode */
+[data-theme="album"] .trophy-icon { color: #c9a600 !important; }
