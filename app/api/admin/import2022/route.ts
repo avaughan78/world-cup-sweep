@@ -63,17 +63,26 @@ export async function POST(req: NextRequest) {
   }
 
   // Mark Qatar as first eliminated (known from 2022 tournament)
-  await upsertTeamStats({
-    team_name: 'Qatar',
-    yellow_cards: 1,
-    red_cards: 0,
-    own_goals_against: 0,
-    is_eliminated: true,
-    eliminated_at: '2022-11-25T22:00:00Z',
-  });
-  notes.push('Qatar marked as first eliminated (25 Nov 2022)');
+  try {
+    await upsertTeamStats({
+      team_name: 'Qatar',
+      yellow_cards: 1,
+      red_cards: 0,
+      own_goals_against: 0,
+      is_eliminated: true,
+      eliminated_at: '2022-11-25T22:00:00Z',
+    });
+    notes.push('Qatar marked as first eliminated (25 Nov 2022)');
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    notes.push(`Qatar update failed: ${msg}`);
+  }
 
-  await logSync('stats', 'success', notes.join(' | '));
+  try {
+    await logSync('stats', 'success', notes.join(' | '));
+  } catch {
+    // non-fatal
+  }
 
   return NextResponse.json({ ok: true, notes });
 }

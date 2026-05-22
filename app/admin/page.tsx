@@ -2,6 +2,15 @@
 
 import { useState } from 'react';
 
+async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknown; raw: string }> {
+  const raw = await res.text();
+  try {
+    return { ok: res.ok, data: JSON.parse(raw), raw };
+  } catch {
+    return { ok: false, data: null, raw: raw || `HTTP ${res.status}` };
+  }
+}
+
 export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
@@ -41,8 +50,9 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      const data = await res.json();
-      setStatus({ ok: res.ok && data.ok, message: data.message ?? JSON.stringify(data) });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      setStatus({ ok: ok && !!d?.ok, message: (d?.message as string) ?? raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -58,8 +68,9 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      const data = await res.json();
-      setStatus({ ok: res.ok, message: JSON.stringify(data.results ?? data, null, 2) });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      setStatus({ ok, message: d ? JSON.stringify(d.results ?? d, null, 2) : raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -75,8 +86,10 @@ export default function AdminPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       });
-      const data = await res.json();
-      setStatus({ ok: res.ok && data.ok, message: data.notes?.join('\n') ?? JSON.stringify(data) });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      const notes = d?.notes as string[] | undefined;
+      setStatus({ ok: ok && !!d?.ok, message: notes?.join('\n') ?? raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -101,8 +114,9 @@ export default function AdminPage() {
           notes: shotNotes,
         }),
       });
-      const data = await res.json();
-      setStatus({ ok: res.ok && data.ok, message: data.ok ? '✓ Saved!' : JSON.stringify(data) });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved!' : raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
