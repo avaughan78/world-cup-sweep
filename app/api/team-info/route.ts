@@ -89,25 +89,53 @@ export async function GET(req: NextRequest) {
   }
 
   // Squad from football-data.org
+  // Step 1: find the team's numeric ID from the WC teams list
+  // Step 2: fetch the individual /teams/{id} endpoint which includes squad[]
   let squad: Array<{ name: string; position: string; shirtNumber: number | null }> = [];
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
   if (apiKey) {
     try {
       const season = process.env.FOOTBALL_SEASON ?? '2026';
-      const res = await fetch(
+      const headers = { 'X-Auth-Token': apiKey };
+
+      const listRes = await fetch(
         `https://api.football-data.org/v4/competitions/WC/teams?season=${season}`,
-        { headers: { 'X-Auth-Token': apiKey }, next: { revalidate: 3600 } }
+        { headers, next: { revalidate: 3600 } }
       );
-      if (res.ok) {
-        const data = await res.json() as { teams: Array<{ name: string; shortName: string; squad?: Array<{ name: string; position: string; shirtNumber?: number }> }> };
-        const match = data.teams.find(t =>
-          normaliseTeamName(t.name) === team || normaliseTeamName(t.shortName) === team
+      if (listRes.ok) {
+        type ApiTeamBasic = { id: number; name: string; shortName: string; squad?: Array<{ name: string; position: string; shirtNumber?: number }> };
+        const listData = await listRes.json() as { teams: ApiTeamBasic[] };
+
+        const matched = listData.teams.find(t =>
+          normaliseTeamName(t.name) === team ||
+          normaliseTeamName(t.shortName) === team ||
+          t.name.toLowerCase().includes(team.toLowerCase()) ||
+          team.toLowerCase().includes(t.name.toLowerCase())
         );
-        squad = (match?.squad ?? []).map(p => ({
-          name: p.name,
-          position: p.position,
-          shirtNumber: p.shirtNumber ?? null,
-        }));
+
+        if (matched) {
+          // Try the individual team endpoint — it includes the full squad array
+          const teamRes = await fetch(
+            `https://api.football-data.org/v4/teams/${matched.id}`,
+            { headers, next: { revalidate: 3600 } }
+          );
+          if (teamRes.ok) {
+            const teamData = await teamRes.json() as { squad?: Array<{ name: string; position: string; shirtNumber?: number }> };
+            squad = (teamData.squad ?? []).map(p => ({
+              name: p.name,
+              position: p.position,
+              shirtNumber: p.shirtNumber ?? null,
+            }));
+          }
+          // Fallback: squad embedded in the list response (some tiers include it)
+          if (!squad.length && matched.squad?.length) {
+            squad = matched.squad.map(p => ({
+              name: p.name,
+              position: p.position,
+              shirtNumber: p.shirtNumber ?? null,
+            }));
+          }
+        }
       }
     } catch { /* ignore */ }
   }

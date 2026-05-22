@@ -244,16 +244,16 @@ export default function TeamModal({ team, participant, onClose }: {
               )}
 
               {/* Squad */}
-              {hasSquad && (
-                <>
-                  <hr style={{ borderColor: 'var(--border)' }} />
-                  <div>
-                    <p
-                      className="font-bold uppercase tracking-widest mb-4"
-                      style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}
-                    >
-                      Squad
-                    </p>
+              <>
+                <hr style={{ borderColor: 'var(--border)' }} />
+                <div>
+                  <p
+                    className="font-bold uppercase tracking-widest mb-4"
+                    style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}
+                  >
+                    Squad
+                  </p>
+                  {hasSquad ? (
                     <div className="grid grid-cols-2 gap-x-8 gap-y-5">
                       {POS_ORDER.filter(pos => byPos[pos]?.length).map(pos => (
                         <div key={pos}>
@@ -283,9 +283,13 @@ export default function TeamModal({ team, participant, onClose }: {
                         </div>
                       ))}
                     </div>
-                  </div>
-                </>
-              )}
+                  ) : (
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontStyle: 'italic' }}>
+                      Squad not yet announced
+                    </p>
+                  )}
+                </div>
+              </>
 
               {!info && (
                 <p className="text-center py-8" style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>

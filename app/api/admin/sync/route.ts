@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchSheetData } from '@/lib/sheets';
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from '@/lib/football-api';
-import { upsertParticipant, upsertTeamStats, setTopScorer, logSync } from '@/lib/db';
+import { upsertParticipant, upsertTeamStats, setTopScorer, logSync, getParticipants } from '@/lib/db';
 import { computeCardTotals, computeOwnGoals, computeEliminations } from '@/lib/prizes';
 
 export async function POST(req: NextRequest) {
@@ -39,13 +39,18 @@ export async function POST(req: NextRequest) {
     const ownGoals = computeOwnGoals(matches);
     const eliminated = computeEliminations(standings);
 
-    const teamNames = new Set<string>();
+    // Build the set of teams seen in matches
+    const matchTeams = new Set<string>();
     for (const m of matches) {
-      teamNames.add(normaliseTeamName(m.homeTeam.name));
-      teamNames.add(normaliseTeamName(m.awayTeam.name));
+      matchTeams.add(normaliseTeamName(m.homeTeam.name));
+      matchTeams.add(normaliseTeamName(m.awayTeam.name));
     }
 
-    for (const teamName of teamNames) {
+    // Always update ALL participant teams so old-season data gets reset to zero
+    const participants = await getParticipants();
+    const allTeams = new Set([...matchTeams, ...participants.map(p => p.team_name)]);
+
+    for (const teamName of allTeams) {
       const c = cards.get(teamName) ?? { yellow: 0, red: 0 };
       await upsertTeamStats({
         team_name: teamName,
@@ -55,7 +60,7 @@ export async function POST(req: NextRequest) {
         is_eliminated: eliminated.has(teamName),
       });
     }
-    statNotes.push(`${matches.length} matches, ${teamNames.size} teams`);
+    statNotes.push(`${matches.length} matches, ${allTeams.size} teams reset`);
 
     if (scorers.length > 0) {
       const top = scorers[0];
