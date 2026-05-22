@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchSheetData } from '@/lib/sheets';
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from '@/lib/football-api';
-import { upsertParticipant, upsertTeamStats, setTopScorer, logSync, getParticipants, upsertGroupStanding } from '@/lib/db';
+import { upsertTeamStats, setTopScorer, logSync, getParticipants, upsertGroupStanding } from '@/lib/db';
 import { GROUPS_2026 } from '@/lib/groups';
 import { computeCardTotals, computeOwnGoals, computeEliminations } from '@/lib/prizes';
 
@@ -13,19 +12,6 @@ export async function POST(req: NextRequest) {
   }
 
   const results: Record<string, string> = {};
-
-  try {
-    const rows = await fetchSheetData();
-    for (const row of rows) {
-      await upsertParticipant(row.team, row.name);
-    }
-    await logSync('sheets', 'success', `${rows.length} rows`);
-    results.sheets = `ok (${rows.length} rows)`;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    await logSync('sheets', 'error', msg);
-    results.sheets = `error: ${msg}`;
-  }
 
   try {
     const [matches, scorers, standings] = await Promise.all([
