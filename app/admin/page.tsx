@@ -77,25 +77,6 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleImport2022() {
-    setLoading(true);
-    setStatus(null);
-    try {
-      const res = await fetch('/api/admin/import2022', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      const { ok, data, raw } = await parseResponse(res);
-      const d = data as Record<string, unknown> | null;
-      const notes = d?.notes as string[] | undefined;
-      setStatus({ ok: ok && !!d?.ok, message: notes?.join('\n') ?? raw });
-    } catch (e) {
-      setStatus({ ok: false, message: String(e) });
-    }
-    setLoading(false);
-  }
-
   async function handleShotOverride() {
     if (!shotTeam.trim()) {
       setStatus({ ok: false, message: 'Team name is required' });
@@ -123,118 +104,151 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  const inputStyle: React.CSSProperties = {
+    width: '100%',
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '0.5rem',
+    padding: '0.625rem 0.875rem',
+    color: 'var(--text-primary)',
+    fontSize: '1rem',
+    outline: 'none',
+  };
+
   if (!authed) {
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-8 w-full max-w-sm">
-          <h1 className="text-white font-bold text-xl mb-6 text-center">Admin Panel</h1>
+      <main className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
+        <div
+          className="rounded-xl p-8 w-full max-w-sm"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>
+            Office Sweepstake
+          </p>
+          <h1 className="text-3xl font-black tracking-tight mb-6" style={{ color: 'var(--text-primary)' }}>
+            Admin
+          </h1>
           <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={e => { setPassword(e.target.value); setLoginError(''); }}
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2.5 mb-2 outline-none focus:ring-2 focus:ring-green-600"
+            style={inputStyle}
           />
           {loginError && (
-            <p className="text-red-400 text-sm mb-3">{loginError}</p>
+            <p className="text-sm mt-2" style={{ color: '#ef4444' }}>{loginError}</p>
           )}
           <button
             onClick={handleLogin}
             disabled={loading}
-            className="w-full bg-green-700 hover:bg-green-600 disabled:opacity-50 text-white font-bold py-2.5 rounded-lg transition-colors mt-2"
+            className="w-full font-bold py-2.5 rounded-lg mt-4 transition-opacity"
+            style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
           >
             {loading ? 'Checking…' : 'Enter'}
           </button>
         </div>
-      </div>
+      </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white px-4 py-10">
-      <div className="max-w-2xl mx-auto space-y-8">
-        <div className="flex items-center gap-4">
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
-          <a href="/" className="text-slate-400 text-sm hover:text-white">← Back to site</a>
-        </div>
+    <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
+      <div className="max-w-2xl mx-auto px-6">
 
-        {/* Sync */}
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
-          <h2 className="font-bold text-lg">Sync Data</h2>
-          <p className="text-slate-400 text-sm">
-            Pulls from Google Sheets (names) + football-data.org (live stats) and saves to the database.
+        <header className="pt-10 pb-0">
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+            Office Sweepstake
           </p>
-          <div className="flex gap-3 flex-wrap">
-            <button
-              onClick={handleSync}
-              disabled={loading}
-              className="bg-blue-700 hover:bg-blue-600 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
-            >
-              {loading ? 'Syncing…' : 'Sync Now'}
-            </button>
-            <button
-              onClick={handleSeed}
-              disabled={loading}
-              className="bg-slate-600 hover:bg-slate-500 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
-              title="Seed database with approximate 2022 World Cup stats for testing"
-            >
-              {loading ? 'Seeding…' : 'Seed 2022 Test Data'}
-            </button>
-            <button
-              onClick={handleImport2022}
-              disabled={loading}
-              className="bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
-              title="Scrape real 2022 World Cup stats from FBRef (one-time import)"
-            >
-              {loading ? 'Importing…' : 'Import 2022 from FBRef'}
-            </button>
+          <div className="flex items-baseline justify-between mt-1.5">
+            <h1 className="text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              Admin
+            </h1>
+            <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
           </div>
-        </div>
+          <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
+        </header>
 
-        {/* Longest shot override */}
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-6 space-y-4">
-          <h2 className="font-bold text-lg">🚀 Longest Range Shot</h2>
-          <p className="text-slate-400 text-sm">
-            Manually set the current record holder. Team name must match the spreadsheet exactly.
-          </p>
-          <input
-            placeholder="Team name (e.g. Brazil)"
-            value={shotTeam}
-            onChange={e => setShotTeam(e.target.value)}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-600"
-          />
-          <input
-            placeholder="Label (e.g. 38.2m — Rüdiger vs USA)"
-            value={shotLabel}
-            onChange={e => setShotLabel(e.target.value)}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-600"
-          />
-          <input
-            placeholder="Notes (optional)"
-            value={shotNotes}
-            onChange={e => setShotNotes(e.target.value)}
-            className="w-full bg-slate-700 text-white rounded-lg px-3 py-2.5 outline-none focus:ring-2 focus:ring-amber-600"
-          />
-          <button
-            onClick={handleShotOverride}
-            disabled={loading}
-            className="bg-amber-700 hover:bg-amber-600 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
-          >
-            {loading ? 'Saving…' : 'Save Shot Override'}
-          </button>
-        </div>
+        <div className="py-10 space-y-8">
 
-        {status && (
-          <div className={`rounded-xl border p-4 text-sm font-mono whitespace-pre-wrap overflow-auto ${
-            status.ok
-              ? 'bg-green-950 border-green-800 text-green-300'
-              : 'bg-red-950 border-red-800 text-red-300'
-          }`}>
-            {status.message}
+          {/* Sync */}
+          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sync Data</h2>
+            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+              Pulls from Google Sheets (names) + football-data.org (live stats) and saves to the database.
+            </p>
+            <div className="flex gap-3 flex-wrap">
+              <button
+                onClick={handleSync}
+                disabled={loading}
+                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
+                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+              >
+                {loading ? 'Syncing…' : 'Sync Now'}
+              </button>
+              <button
+                onClick={handleSeed}
+                disabled={loading}
+                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
+                style={{ background: 'var(--border)', color: 'var(--text-secondary)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+              >
+                {loading ? 'Seeding…' : 'Seed 2022 Test Data'}
+              </button>
+            </div>
           </div>
-        )}
+
+          {/* Longest shot override */}
+          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Longest Range Shot</h2>
+            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
+              Manually set the current record holder. Team name must match the spreadsheet exactly.
+            </p>
+            <div className="space-y-3">
+              <input
+                placeholder="Team name (e.g. Brazil)"
+                value={shotTeam}
+                onChange={e => setShotTeam(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                placeholder="Label (e.g. 38.2m — Rüdiger vs USA)"
+                value={shotLabel}
+                onChange={e => setShotLabel(e.target.value)}
+                style={inputStyle}
+              />
+              <input
+                placeholder="Notes (optional)"
+                value={shotNotes}
+                onChange={e => setShotNotes(e.target.value)}
+                style={inputStyle}
+              />
+              <button
+                onClick={handleShotOverride}
+                disabled={loading}
+                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
+                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+              >
+                {loading ? 'Saving…' : 'Save Shot Override'}
+              </button>
+            </div>
+          </div>
+
+          {/* Status */}
+          {status && (
+            <div
+              className="rounded-xl p-4 text-sm font-mono whitespace-pre-wrap overflow-auto"
+              style={{
+                background: status.ok ? '#f0fdf4' : '#fef2f2',
+                border: `1px solid ${status.ok ? '#bbf7d0' : '#fecaca'}`,
+                color: status.ok ? '#166534' : '#991b1b',
+              }}
+            >
+              {status.message}
+            </div>
+          )}
+
+        </div>
       </div>
-    </div>
+    </main>
   );
 }

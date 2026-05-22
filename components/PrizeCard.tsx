@@ -1,6 +1,5 @@
 import type { Prize } from '@/lib/prizes';
 import { getFlag } from '@/lib/flags';
-import { abbreviateName } from '@/lib/format';
 
 export default function PrizeCard({ prize }: { prize: Prize }) {
   const hasLeader = !!prize.current_team;
@@ -27,7 +26,7 @@ export default function PrizeCard({ prize }: { prize: Prize }) {
             {prize.current_team}
           </p>
           <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {[prize.value_label, abbreviateName(prize.current_participant)].filter(Boolean).join(' · ')}
+            {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
           </p>
         </div>
       ) : (
