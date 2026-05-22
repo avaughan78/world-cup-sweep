@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { GROUPS_2026 } from '@/lib/groups';
 import { getFlag } from '@/lib/flags';
+import ThemeToggle from '@/components/ThemeToggle';
 
 async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknown; raw: string }> {
   const raw = await res.text();
@@ -211,9 +212,12 @@ export default function AdminPage() {
           <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             Office Sweepstake
           </p>
-          <div className="flex items-baseline justify-between mt-1.5">
+          <div className="flex items-center justify-between mt-1.5">
             <h1 className="text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Admin</h1>
-            <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
+            <div className="flex items-center gap-4">
+              <ThemeToggle />
+              <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
+            </div>
           </div>
           <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
         </header>
