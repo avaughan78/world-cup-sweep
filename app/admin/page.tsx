@@ -66,6 +66,23 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function handleImport2022() {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/admin/import2022', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      setStatus({ ok: res.ok && data.ok, message: data.notes?.join('\n') ?? JSON.stringify(data) });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
   async function handleShotOverride() {
     if (!shotTeam.trim()) {
       setStatus({ ok: false, message: 'Team name is required' });
@@ -149,6 +166,14 @@ export default function AdminPage() {
               title="Seed database with approximate 2022 World Cup stats for testing"
             >
               {loading ? 'Seeding…' : 'Seed 2022 Test Data'}
+            </button>
+            <button
+              onClick={handleImport2022}
+              disabled={loading}
+              className="bg-purple-700 hover:bg-purple-600 disabled:opacity-50 text-white font-bold px-6 py-2.5 rounded-lg transition-colors"
+              title="Scrape real 2022 World Cup stats from FBRef (one-time import)"
+            >
+              {loading ? 'Importing…' : 'Import 2022 from FBRef'}
             </button>
           </div>
         </div>
