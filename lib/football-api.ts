@@ -1,5 +1,10 @@
 const BASE_URL = 'https://api.football-data.org/v4';
 
+// Set FOOTBALL_SEASON=2022 in .env.local to test against the completed Qatar World Cup
+function season() {
+  return process.env.FOOTBALL_SEASON ?? '2026';
+}
+
 async function footballFetch(path: string) {
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
   if (!apiKey) throw new Error('FOOTBALL_DATA_API_KEY not set');
@@ -65,17 +70,17 @@ export interface ApiStanding {
 }
 
 export async function getFinishedMatches(): Promise<ApiMatch[]> {
-  const data = await footballFetch('/competitions/WC/matches?status=FINISHED');
+  const data = await footballFetch(`/competitions/WC/matches?season=${season()}&status=FINISHED`);
   return (data.matches as ApiMatch[]) ?? [];
 }
 
 export async function getTopScorers(): Promise<ApiScorer[]> {
-  const data = await footballFetch('/competitions/WC/scorers?limit=10');
+  const data = await footballFetch(`/competitions/WC/scorers?season=${season()}&limit=10`);
   return (data.scorers as ApiScorer[]) ?? [];
 }
 
 export async function getStandings(): Promise<ApiStanding[]> {
-  const data = await footballFetch('/competitions/WC/standings');
+  const data = await footballFetch(`/competitions/WC/standings?season=${season()}`);
   return (data.standings as ApiStanding[]) ?? [];
 }
 
