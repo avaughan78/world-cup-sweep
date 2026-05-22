@@ -2,6 +2,7 @@ import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings } from
 import { computePrizes } from '@/lib/prizes';
 import { timeAgo } from '@/lib/format';
 import PrizeCard from '@/components/PrizeCard';
+import TicketBadge from '@/components/TicketBadge';
 import GroupsGrid from '@/components/GroupsGrid';
 
 export const dynamic = 'force-dynamic';
@@ -66,13 +67,13 @@ export default async function Home() {
                     <div className="text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
                       {ordinal}<sup className="text-3xl">{sup}</sup>
                     </div>
-                    <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                      {label}
-                    </span>
+                    <div className="flex flex-col items-end gap-2">
+                      {amount && <TicketBadge amount={amount} />}
+                      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                        {label}
+                      </span>
+                    </div>
                   </div>
-                  {amount && (
-                    <p className="text-2xl font-black mb-1" style={{ color: 'var(--green)' }}>{amount}</p>
-                  )}
                   <p className="text-base" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
                 </div>
               ))}

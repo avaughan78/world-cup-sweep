@@ -35,6 +35,40 @@ const POS_LABEL: Record<string, string> = {
 
 interface Stat { label: string; value: string }
 
+const BLURB_LIMIT = 400;
+
+function AboutBlurb({ title, text }: { title: string; text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const needsTrunc = text.length > BLURB_LIMIT;
+  const displayed = !expanded && needsTrunc ? text.slice(0, BLURB_LIMIT).trimEnd() : text;
+
+  return (
+    <>
+      <hr style={{ borderColor: 'var(--border)' }} />
+      <div>
+        <p className="font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>
+          About {title}
+        </p>
+        <p className="leading-relaxed" style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+          {displayed}
+          {!expanded && needsTrunc && (
+            <>
+              {'… '}
+              <button
+                onClick={() => setExpanded(true)}
+                className="font-semibold"
+                style={{ color: 'var(--green)', fontSize: '0.9rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+              >
+                more
+              </button>
+            </>
+          )}
+        </p>
+      </div>
+    </>
+  );
+}
+
 export default function TeamModal({ team, participant, onClose }: {
   team: string;
   participant: string | null;
@@ -223,23 +257,7 @@ export default function TeamModal({ team, participant, onClose }: {
 
               {/* About */}
               {info?.wikiExtract && (
-                <>
-                  <hr style={{ borderColor: 'var(--border)' }} />
-                  <div>
-                    <p
-                      className="font-bold uppercase tracking-widest mb-3"
-                      style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}
-                    >
-                      About {info.capital ?? team}
-                    </p>
-                    <p
-                      className="leading-relaxed"
-                      style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}
-                    >
-                      {info.wikiExtract}
-                    </p>
-                  </div>
-                </>
+                <AboutBlurb title={info.capital ?? team} text={info.wikiExtract} />
               )}
 
               {/* Squad */}

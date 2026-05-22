@@ -41,24 +41,6 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleSeed() {
-    setLoading(true);
-    setStatus(null);
-    try {
-      const res = await fetch('/api/admin/seed', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      const { ok, data, raw } = await parseResponse(res);
-      const d = data as Record<string, unknown> | null;
-      setStatus({ ok: ok && !!d?.ok, message: (d?.message as string) ?? raw });
-    } catch (e) {
-      setStatus({ ok: false, message: String(e) });
-    }
-    setLoading(false);
-  }
-
   async function handleSync() {
     setLoading(true);
     setStatus(null);
@@ -204,14 +186,6 @@ export default function AdminPage() {
                 style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
               >
                 {loading ? 'Syncing…' : 'Sync Now'}
-              </button>
-              <button
-                onClick={handleSeed}
-                disabled={loading}
-                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
-                style={{ background: 'var(--border)', color: 'var(--text-secondary)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
-              >
-                {loading ? 'Seeding…' : 'Seed 2022 Test Data'}
               </button>
               <button
                 onClick={handleReset}
