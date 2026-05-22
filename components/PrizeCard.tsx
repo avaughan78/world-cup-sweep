@@ -1,4 +1,5 @@
 import type { Prize } from '@/lib/prizes';
+import { getFlag } from '@/lib/flags';
 
 export default function PrizeCard({ prize }: { prize: Prize }) {
   const hasLeader = !!prize.current_team;
@@ -21,7 +22,9 @@ export default function PrizeCard({ prize }: { prize: Prize }) {
 
       {hasLeader ? (
         <div className="mt-3 pt-3 border-t border-slate-700">
-          <div className="text-lg font-bold text-white">{prize.current_team}</div>
+          <div className="text-lg font-bold text-white">
+            <span className="mr-1.5">{getFlag(prize.current_team!)}</span>{prize.current_team}
+          </div>
           {prize.current_participant ? (
             <div className="text-amber-400 font-semibold text-sm">{prize.current_participant}</div>
           ) : (

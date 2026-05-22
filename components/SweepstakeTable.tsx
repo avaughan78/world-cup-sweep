@@ -1,5 +1,6 @@
 import type { Prize } from '@/lib/prizes';
 import type { Participant } from '@/lib/db';
+import { getFlag } from '@/lib/flags';
 
 const PRIZE_ICONS: Record<string, string> = {
   most_cards: '🟨',
@@ -50,7 +51,7 @@ export default function SweepstakeTable({
                 ].join(' ')}
               >
                 <td className="px-4 py-2.5 font-medium text-white whitespace-nowrap">
-                  {p.team_name}
+                  <span className="mr-2">{getFlag(p.team_name)}</span>{p.team_name}
                 </td>
                 <td className="px-4 py-2.5 text-slate-300">
                   {p.participant_name ?? (
