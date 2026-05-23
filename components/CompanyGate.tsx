@@ -125,6 +125,10 @@ export default function CompanyGate({ invalidCode = false, redirectPath = '/' }:
           >
             {loading ? 'Checking…' : 'View the Draw →'}
           </button>
+          <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
+            No code yet?{' '}
+            <a href="/setup" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>Set up your own draw</a>
+          </p>
         </div>
       </div>
     </main>
