@@ -88,7 +88,7 @@ export default function TrophyEasterEgg() {
             {/* Video */}
             <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#000' }}>
               <iframe
-                src="https://www.youtube-nocookie.com/embed/CWzGg4OLzGg?autoplay=1&rel=0"
+                src="https://drive.google.com/file/d/1_QXaiu8Uac8g2S_c8FxALsp96zxVbPF8/preview?autoplay=1"
                 allow="autoplay; encrypted-media; fullscreen"
                 allowFullScreen
                 style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
