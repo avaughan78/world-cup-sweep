@@ -17,7 +17,6 @@ async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknow
 }
 
 export default function AdminPage() {
-  const router = useRouter();
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
   const [loginError, setLoginError] = useState('');
