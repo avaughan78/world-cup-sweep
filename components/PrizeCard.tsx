@@ -17,6 +17,8 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
             ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc="/joecole.mp4" fontSize="1.5rem" />
             : prize.slug === 'most_cards'
             ? <VideoEasterEgg icon="🟨" label="The Gareth Barry Award" videoSrc="/zidane.mp4" fontSize="1.5rem" />
+            : prize.slug === 'most_own_goals'
+            ? <VideoEasterEgg icon="😬" label="Oooops" videoSrc="/haiti-own-goal.mp4" fontSize="1.5rem" />
             : (
               <span
                 className="text-2xl leading-none"
