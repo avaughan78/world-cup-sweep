@@ -188,55 +188,85 @@ export default function CompanyGate({
             background: 'linear-gradient(105deg, rgba(15,0,80,0.88) 0%, rgba(15,0,60,0.65) 55%, rgba(0,0,0,0.25) 100%)',
           }}
         >
-          <div className="max-w-2xl mx-auto px-6 py-16 sm:py-24 text-center">
-            <p
-              className="text-xs font-bold uppercase tracking-widest mb-4"
-              style={{ color: 'rgba(255,255,255,0.55)' }}
-            >
-              FIFA World Cup · USA · Canada · Mexico · 2026
-            </p>
-            <h1
-              className="album-title font-black tracking-tight"
-              style={{ color: '#fff', fontSize: 'clamp(3.5rem, 10vw, 6rem)', lineHeight: 0.9 }}
-            >
-              The Draw
-            </h1>
-            <p className="text-lg sm:text-xl font-bold mt-5 mb-2" style={{ color: 'rgba(255,255,255,0.92)' }}>
-              The office sweepstake, done right.
-            </p>
-            <p
-              className="text-sm leading-relaxed mb-7 max-w-sm mx-auto"
-              style={{ color: 'rgba(255,255,255,0.58)' }}
-            >
-              48 teams. QR codes, live stats, and automatic prize tracking — from the group stage to the final on 19 July 2026.
-            </p>
-            <button
-              onClick={() => setShowModal(true)}
-              className="inline-flex items-center gap-1.5 font-semibold transition-opacity hover:opacity-80"
-              style={{
-                background: 'rgba(255,255,255,0.12)',
-                border: '1px solid rgba(255,255,255,0.22)',
-                borderRadius: '999px',
-                padding: '0.4rem 1rem',
-                color: 'rgba(255,255,255,0.78)',
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-              }}
-            >
-              <span
-                className="inline-flex items-center justify-center rounded-full font-black"
-                style={{
-                  background: 'rgba(255,255,255,0.2)',
-                  width: '1rem',
-                  height: '1rem',
-                  fontSize: '0.6rem',
-                  flexShrink: 0,
-                }}
-              >
-                ?
-              </span>
-              How it works
-            </button>
+          <div className="max-w-5xl mx-auto px-6 py-12 sm:py-20">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-10 items-center">
+
+              {/* Left: title + tagline */}
+              <div>
+                <p
+                  className="text-xs font-bold uppercase tracking-widest mb-4"
+                  style={{ color: 'rgba(255,255,255,0.55)' }}
+                >
+                  FIFA World Cup · USA · Canada · Mexico · 2026
+                </p>
+                <h1
+                  className="album-title font-black tracking-tight"
+                  style={{ color: '#fff', fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', lineHeight: 0.9 }}
+                >
+                  The Draw
+                </h1>
+                <p className="text-lg sm:text-xl font-bold mt-5 mb-2" style={{ color: 'rgba(255,255,255,0.92)' }}>
+                  The office sweepstake, done right.
+                </p>
+                <p
+                  className="text-sm leading-relaxed mb-7 max-w-sm"
+                  style={{ color: 'rgba(255,255,255,0.58)' }}
+                >
+                  48 teams. QR codes, live stats, and automatic prize tracking — from the group stage to the final on 19 July 2026.
+                </p>
+                <button
+                  onClick={() => setShowModal(true)}
+                  className="inline-flex items-center gap-1.5 font-semibold transition-opacity hover:opacity-80"
+                  style={{
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.22)',
+                    borderRadius: '999px',
+                    padding: '0.4rem 1rem',
+                    color: 'rgba(255,255,255,0.78)',
+                    fontSize: '0.8rem',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span
+                    className="inline-flex items-center justify-center rounded-full font-black"
+                    style={{
+                      background: 'rgba(255,255,255,0.2)',
+                      width: '1rem',
+                      height: '1rem',
+                      fontSize: '0.6rem',
+                      flexShrink: 0,
+                    }}
+                  >
+                    ?
+                  </span>
+                  How it works
+                </button>
+              </div>
+
+              {/* Right: stacked cards */}
+              <div className="space-y-4">
+                {formCard}
+                <div
+                  className="rounded-2xl p-6 text-center"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  <p className="font-black text-base mb-1" style={{ color: '#fff' }}>
+                    Running your own sweepstake?
+                  </p>
+                  <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                    Set up The Draw for your office or group in under two minutes. Free, no account needed.
+                  </p>
+                  <a
+                    href="/setup"
+                    className="inline-block font-bold px-6 py-2.5 rounded-xl transition-opacity hover:opacity-90"
+                    style={{ background: '#fff', color: '#4D10C8', fontSize: '0.95rem' }}
+                  >
+                    Set up your draw →
+                  </a>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
       </div>
@@ -257,33 +287,6 @@ export default function CompanyGate({
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Stacked cards */}
-      <div className="max-w-sm mx-auto px-4 py-10 space-y-4">
-
-        {formCard}
-
-        {/* Setup CTA */}
-        <div
-          className="rounded-2xl p-6 text-center"
-          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-        >
-          <p className="font-black text-base mb-1" style={{ color: 'var(--text-primary)' }}>
-            Running your own sweepstake?
-          </p>
-          <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-            Set up The Draw for your office or group in under two minutes. Free, no account needed.
-          </p>
-          <a
-            href="/setup"
-            className="inline-block font-bold px-6 py-2.5 rounded-xl transition-opacity hover:opacity-90"
-            style={{ background: '#4D10C8', color: '#fff', fontSize: '0.95rem' }}
-          >
-            Set up your draw →
-          </a>
-        </div>
-
       </div>
 
       {/* How it works modal */}
