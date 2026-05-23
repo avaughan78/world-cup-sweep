@@ -37,12 +37,10 @@ export default function CompanyGate({
   invalidCode = false,
   redirectPath = '/',
   marketing = false,
-  logout = false,
 }: {
   invalidCode?: boolean;
   redirectPath?: string;
   marketing?: boolean;
-  logout?: boolean;
 }) {
   const router = useRouter();
   const [code, setCode] = useState('');
@@ -52,11 +50,6 @@ export default function CompanyGate({
   const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
-    if (logout) {
-      localStorage.removeItem('company_code');
-      setChecking(false);
-      return;
-    }
     if (invalidCode) {
       localStorage.removeItem('company_code');
       setError('Company code not recognised');
@@ -69,7 +62,7 @@ export default function CompanyGate({
     } else {
       setChecking(false);
     }
-  }, [router, invalidCode, redirectPath, logout]);
+  }, [router, invalidCode, redirectPath]);
 
   async function handleSubmit() {
     const trimmed = code.trim().toUpperCase();

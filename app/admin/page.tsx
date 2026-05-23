@@ -453,7 +453,16 @@ export default function AdminPage() {
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
-              <a href="/api/admin/logout" className="text-sm" style={{ color: 'var(--text-muted)' }}>Log out</a>
+              <button
+                type="button"
+                className="text-sm"
+                style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                onClick={() => {
+                  document.cookie = 'admin_pw=; max-age=0; path=/; SameSite=Strict';
+                  const code = localStorage.getItem('company_code');
+                  window.location.href = code ? `/?code=${code}` : '/';
+                }}
+              >Log out</button>
             </div>
           </div>
           <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
