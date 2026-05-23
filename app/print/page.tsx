@@ -56,7 +56,7 @@ export default async function PrintPage({ searchParams }: { searchParams: Promis
           </h1>
           {!hasTokens && (
             <p className="text-sm mt-0.5" style={{ color: '#ef4444' }}>
-              No QR codes generated yet — go to Admin → select this company → Generate QR Codes first.
+              No QR codes generated yet — go to your <a href={`/manage?code=${company.code}`} style={{ color: '#ef4444', textDecoration: 'underline' }}>organiser manage page</a> and click Generate QR Codes.
             </p>
           )}
         </div>
