@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
   if (!company_id) return NextResponse.json({ error: 'company_id required' }, { status: 400 });
   try {
     const count = await generateClaimTokens(company_id);
-    await logSync('tokens', 'success', `generated tokens for ${count} teams`);
-    return NextResponse.json({ ok: true, message: `Tokens ready for ${count} teams. You can now print tickets.` });
+    await logSync('tokens', 'success', `generated codes for ${count} teams`);
+    return NextResponse.json({ ok: true, message: `Codes ready for ${count} teams. You can now print tickets.` });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ ok: false, message: msg }, { status: 500 });

@@ -12,7 +12,7 @@ const HOW_IT_WORKS = [
   {
     icon: '🎲',
     title: 'The draw',
-    body: 'Teams are randomly assigned. Hand out the tickets and let fate decide who gets Argentina.',
+    body: 'Tickets are folded and then drawn from the hat. The organiser collects the entry fee.',
   },
   {
     icon: '📱',

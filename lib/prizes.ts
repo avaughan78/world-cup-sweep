@@ -55,7 +55,7 @@ export async function computePrizes(
     {
       slug: 'most_cards',
       name: 'The Gareth Barry Award',
-      description: 'Filthiest team (yellow cards + red cards)',
+      description: 'Filthiest team (yellow + red cards)',
       icon: '🟨',
       current_team: topCardsTotal > 0 ? topCards!.team_name : null,
       current_participant: topCardsTotal > 0 ? participant(topCards!.team_name) : null,
