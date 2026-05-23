@@ -161,9 +161,13 @@ export async function generateClaimTokens(companyId: number) {
   return Number((all[0] as { n: string }).n);
 }
 
-export async function getParticipantByToken(token: string): Promise<(Participant & { claim_token: string }) | null> {
-  const rows = await sql`SELECT team_name, participant_name, claim_token FROM participants WHERE claim_token = ${token}`;
-  return (rows[0] as (Participant & { claim_token: string })) ?? null;
+export async function getParticipantByToken(token: string): Promise<(Participant & { claim_token: string; company_code: string }) | null> {
+  const rows = await sql`
+    SELECT p.team_name, p.participant_name, p.claim_token, c.code AS company_code
+    FROM participants p JOIN companies c ON c.id = p.company_id
+    WHERE p.claim_token = ${token}
+  `;
+  return (rows[0] as (Participant & { claim_token: string; company_code: string })) ?? null;
 }
 
 export async function claimTeam(token: string, participantName: string) {

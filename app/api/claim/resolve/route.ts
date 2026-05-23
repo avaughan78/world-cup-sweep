@@ -6,5 +6,5 @@ export async function GET(req: NextRequest) {
   if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
   const p = await getParticipantByToken(token);
   if (!p) return NextResponse.json({ error: 'Invalid ticket' }, { status: 404 });
-  return NextResponse.json({ team: p.team_name, name: p.participant_name ?? null });
+  return NextResponse.json({ team: p.team_name, name: p.participant_name ?? null, company_code: p.company_code });
 }

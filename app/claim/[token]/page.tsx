@@ -7,6 +7,7 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
   const { token } = use(params);
   const [name, setName] = useState('');
   const [team, setTeam] = useState<string | null>(null);
+  const [companyCode, setCompanyCode] = useState<string | null>(null);
   const [existing, setExisting] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
@@ -15,9 +16,16 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
   useEffect(() => {
     fetch(`/api/claim/resolve?token=${encodeURIComponent(token)}`)
       .then(r => r.json())
-      .then((d: { team?: string; name?: string; error?: string }) => {
+      .then((d: { team?: string; name?: string; error?: string; company_code?: string }) => {
         if (d.error) setError(d.error);
-        else { setTeam(d.team ?? null); setExisting(d.name ?? null); }
+        else {
+          setTeam(d.team ?? null);
+          setExisting(d.name ?? null);
+          if (d.company_code) {
+            setCompanyCode(d.company_code);
+            localStorage.setItem('company_code', d.company_code);
+          }
+        }
       })
       .catch(() => setError('Could not load ticket.'));
   }, [token]);
@@ -32,8 +40,14 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, name }),
       });
-      const d = await res.json() as { ok?: boolean; error?: string };
-      if (d.ok) setDone(true);
+      const d = await res.json() as { ok?: boolean; error?: string; company_code?: string };
+      if (d.ok) {
+        if (d.company_code) {
+          setCompanyCode(d.company_code);
+          localStorage.setItem('company_code', d.company_code);
+        }
+        setDone(true);
+      }
       else setError(d.error ?? 'Something went wrong.');
     } catch {
       setError('Could not connect.');
@@ -53,7 +67,7 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
           </h1>
           <p className="text-lg" style={{ color: 'var(--text-muted)' }}>Good luck, {name.trim()}.</p>
           <a
-            href="/"
+            href={companyCode ? `/?code=${companyCode}` : '/'}
             className="inline-block mt-8 font-bold px-6 py-3 rounded-xl"
             style={{ background: 'var(--green)', color: '#fff', fontSize: '1rem' }}
           >

@@ -33,6 +33,7 @@ export default function SetupPage() {
       });
       const data = await res.json() as { ok?: boolean; error?: string; company?: { code: string } };
       if (data.ok && data.company) {
+        localStorage.setItem(`manage_pw_${data.company.code}`, adminPw);
         router.replace(`/manage?code=${data.company.code}`);
       } else {
         setError(data.error ?? 'Something went wrong');

@@ -12,5 +12,5 @@ export async function POST(req: NextRequest) {
   if (!participant) return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
 
   await claimTeam(token, trimmed);
-  return NextResponse.json({ ok: true, team: participant.team_name, name: trimmed });
+  return NextResponse.json({ ok: true, team: participant.team_name, name: trimmed, company_code: participant.company_code });
 }
