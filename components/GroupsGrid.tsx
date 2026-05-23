@@ -6,6 +6,7 @@ import type { Prize } from '@/lib/prizes';
 import type { GroupStanding } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import TeamModal from './TeamModal';
+import RocketEasterEgg from './RocketEasterEgg';
 
 
 function gdLabel(gd: number): string {
@@ -144,13 +145,17 @@ export default function GroupsGrid({
                               {team}
                             </span>
                             {wonPrizes.map(prize => (
-                              <span
-                                key={prize.slug}
-                                title={prize.name}
-                                style={{ fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}
-                              >
-                                {prize.icon}
-                              </span>
+                              prize.slug === 'longest_shot'
+                                ? <RocketEasterEgg key={prize.slug} />
+                                : (
+                                  <span
+                                    key={prize.slug}
+                                    title={prize.name}
+                                    style={{ fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}
+                                  >
+                                    {prize.icon}
+                                  </span>
+                                )
                             ))}
                           </div>
                           {participant && (

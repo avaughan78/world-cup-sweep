@@ -19,6 +19,22 @@ body {
   font-size: 18px;
 }
 
+@keyframes rocket-shake {
+  0%   { transform: translate(0, 0) rotate(0deg); }
+  15%  { transform: translate(-2px, -1px) rotate(-4deg); }
+  30%  { transform: translate(2px, 1px) rotate(4deg); }
+  45%  { transform: translate(-2px, 1px) rotate(-3deg); }
+  60%  { transform: translate(2px, -1px) rotate(3deg); }
+  75%  { transform: translate(-1px, 2px) rotate(-2deg); }
+  90%  { transform: translate(1px, -2px) rotate(2deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.rocket-shaking {
+  animation: rocket-shake 0.35s ease-in-out infinite;
+  display: inline-block;
+}
+
 /* Album section labels hidden by default */
 .album-section-label { display: none; }
 
