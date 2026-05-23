@@ -52,47 +52,80 @@ export default function CompanyGate({ invalidCode = false }: { invalidCode?: boo
   if (checking) return null;
 
   return (
-    <main className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
+    <main
+      className="min-h-screen flex items-center justify-center px-4"
+      style={{ background: 'var(--bg)' }}
+    >
       <div
-        className="w-full max-w-sm rounded-2xl p-8"
-        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+        className="w-full max-w-sm rounded-2xl overflow-hidden"
+        style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}
       >
-        <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>
-          FIFA World Cup · 2026
-        </p>
-        <h1 className="text-3xl font-black tracking-tight mb-6" style={{ color: 'var(--text-primary)' }}>
-          Enter your company code
-        </h1>
-        <input
-          type="text"
-          placeholder="e.g. ACME26"
-          value={code}
-          onChange={e => { setCode(e.target.value.toUpperCase()); setError(''); }}
-          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
-          autoFocus
+        {/* Branded header */}
+        <div
+          className="px-7 pt-7 pb-6"
           style={{
-            width: '100%',
-            background: 'var(--bg)',
-            border: '1px solid var(--border)',
-            borderRadius: '0.5rem',
-            padding: '0.75rem 1rem',
-            color: 'var(--text-primary)',
-            fontSize: '1.1rem',
-            outline: 'none',
-            textAlign: 'center',
-            letterSpacing: '0.1em',
-            fontWeight: 700,
+            backgroundColor: '#4D10C8',
+            backgroundImage: 'url(/wc2026-header.webp)',
+            backgroundSize: 'auto 100%',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right center',
           }}
-        />
-        {error && <p className="text-sm mt-2" style={{ color: '#ef4444' }}>{error}</p>}
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="w-full font-bold py-3 rounded-xl mt-4 transition-opacity"
-          style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
         >
-          {loading ? 'Checking…' : 'View My Draw →'}
-        </button>
+          <p
+            className="text-xs font-bold uppercase tracking-widest"
+            style={{ color: 'rgba(255,255,255,0.65)' }}
+          >
+            FIFA World Cup · 2026
+          </p>
+          <h1
+            className="album-title text-5xl font-black tracking-tight mt-1"
+            style={{ color: '#fff', lineHeight: 1 }}
+          >
+            The Draw
+          </h1>
+          <p className="text-sm mt-2 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
+            Office Sweepstake
+          </p>
+        </div>
+
+        {/* Form */}
+        <div className="px-7 py-6" style={{ background: 'var(--card)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
+            Enter your company code to view the draw.
+          </p>
+          <input
+            type="text"
+            placeholder="e.g. ACME26"
+            value={code}
+            onChange={e => { setCode(e.target.value.toUpperCase()); setError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            autoFocus
+            style={{
+              width: '100%',
+              background: 'var(--bg)',
+              border: `1px solid ${error ? '#ef4444' : 'var(--border)'}`,
+              borderRadius: '0.5rem',
+              padding: '0.75rem 1rem',
+              color: 'var(--text-primary)',
+              fontSize: '1.1rem',
+              outline: 'none',
+              textAlign: 'center',
+              letterSpacing: '0.12em',
+              fontWeight: 700,
+            }}
+          />
+          {error && (
+            <p className="text-sm mt-2" style={{ color: '#ef4444' }}>{error}</p>
+          )}
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full font-bold py-3 rounded-xl mt-3 transition-opacity"
+            style={{ background: '#4D10C8', color: '#fff', opacity: loading ? 0.6 : 1, fontSize: '1rem' }}
+          >
+            {loading ? 'Checking…' : 'View the Draw →'}
+          </button>
+        </div>
       </div>
     </main>
   );
