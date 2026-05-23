@@ -331,7 +331,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <button onClick={handleGenerateTokens} disabled={loading}
                 className="font-bold px-5 py-2 rounded-lg transition-opacity"
                 style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
-                {loading ? 'Working…' : 'Generate Tokens'}
+                {loading ? 'Working…' : 'Generate QR Codes'}
               </button>
               <a href={`/print?code=${company.code}`} target="_blank"
                 className="font-bold px-5 py-2 rounded-lg"
