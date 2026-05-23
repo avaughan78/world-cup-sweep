@@ -43,7 +43,7 @@ export default function PrintTickets({ tickets }: { tickets: Ticket[] }) {
               justifyContent: 'center',
             }}
           >
-            <span style={{ fontSize: '2rem', lineHeight: 1 }}>{flag}</span>
+            <span style={{ fontSize: '3rem', lineHeight: 1 }}>{flag}</span>
             <span style={{
               fontWeight: 900,
               fontSize: '0.85rem',
