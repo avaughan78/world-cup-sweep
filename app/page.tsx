@@ -62,7 +62,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             backgroundPosition: 'right center',
           }}
         >
-          <div className="px-6 sm:px-8 pt-8 pb-7">
+          <div className="px-6 sm:px-8 pt-5 pb-5">
             <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
               FIFA World Cup · 2026 · {company.name}
             </p>
