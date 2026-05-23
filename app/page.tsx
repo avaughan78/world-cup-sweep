@@ -44,9 +44,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
       {/* Header with image backdrop */}
       <header
         style={{
+          backgroundColor: '#4D10C8',
           backgroundImage: 'url(/wc2026-header.webp)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundSize: 'auto 100%',
+          backgroundRepeat: 'no-repeat',
+          backgroundPosition: 'right center',
         }}
       >
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-7">
