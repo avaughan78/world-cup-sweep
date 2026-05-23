@@ -57,7 +57,7 @@ export default function HowItWorksModal() {
             <div className="px-6 py-5 space-y-4" style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
               <div className="flex gap-3">
                 <span className="text-xl" style={{ flexShrink: 0 }}>🖨️</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Print the tickets</strong> — the organiser prints one ticket per team. Each ticket has the team name and a unique QR code.</p>
+                <p><strong style={{ color: 'var(--text-primary)' }}>Print the tickets</strong> — the organiser prints the team ticket sheet. Each ticket has a team name and a unique QR code.</p>
               </div>
               <div className="flex gap-3">
                 <span className="text-xl" style={{ flexShrink: 0 }}>🎩</span>
