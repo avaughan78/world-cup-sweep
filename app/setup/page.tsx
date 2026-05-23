@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import PasswordInput from '@/components/PasswordInput';
 
 function suggestCode(name: string): string {
   const upper = name.toUpperCase().replace(/[^A-Z0-9]/g, '');
@@ -14,6 +15,7 @@ export default function SetupPage() {
   const [code, setCode] = useState('');
   const [codeTouched, setCodeTouched] = useState(false);
   const [adminPw, setAdminPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +25,8 @@ export default function SetupPage() {
   }
 
   async function handleCreate() {
+    if (!adminPw.trim()) { setError('Please set an admin password.'); return; }
+    if (adminPw.trim() !== confirmPw.trim()) { setError('Passwords do not match.'); return; }
     setError('');
     setLoading(true);
     try {
@@ -109,13 +113,24 @@ export default function SetupPage() {
             <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
               Admin Password <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— for the organiser only</span>
             </label>
-            <input
-              type="text"
-              placeholder="e.g. football"
+            <PasswordInput
               value={adminPw}
-              onChange={e => setAdminPw(e.target.value)}
+              onChange={v => { setAdminPw(v); setError(''); }}
+              placeholder="e.g. football"
+              inputStyle={inputStyle}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Confirm Password
+            </label>
+            <PasswordInput
+              value={confirmPw}
+              onChange={v => { setConfirmPw(v); setError(''); }}
               onKeyDown={e => e.key === 'Enter' && handleCreate()}
-              style={inputStyle}
+              placeholder="Repeat password"
+              inputStyle={inputStyle}
             />
           </div>
 
