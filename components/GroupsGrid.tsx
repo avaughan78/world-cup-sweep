@@ -7,13 +7,6 @@ import type { GroupStanding } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import TeamModal from './TeamModal';
 
-const BADGE: Record<string, { label: string; style: React.CSSProperties }> = {
-  most_cards:       { label: 'CARD', style: { background: '#f59e0b', color: '#fff' } },
-  first_eliminated: { label: 'OUT',  style: { background: '#ef4444', color: '#fff' } },
-  longest_shot:     { label: 'KM',   style: { background: 'var(--green)', color: '#fff' } },
-  most_own_goals:   { label: 'OG',   style: { background: 'var(--green)', color: '#fff' } },
-  top_scorer_team:  { label: 'BOOT', style: { background: 'var(--green)', color: '#fff' } },
-};
 
 function gdLabel(gd: number): string {
   if (gd > 0) return `+${gd}`;
@@ -150,18 +143,15 @@ export default function GroupsGrid({
                             >
                               {team}
                             </span>
-                            {wonPrizes.map(prize => {
-                              const b = BADGE[prize.slug];
-                              return b ? (
-                                <span
-                                  key={prize.slug}
-                                  className="font-bold rounded-sm uppercase flex-shrink-0"
-                                  style={{ ...b.style, fontSize: '0.55rem', padding: '1px 4px', letterSpacing: '0.05em' }}
-                                >
-                                  {b.label}
-                                </span>
-                              ) : null;
-                            })}
+                            {wonPrizes.map(prize => (
+                              <span
+                                key={prize.slug}
+                                title={prize.name}
+                                style={{ fontSize: '0.85rem', lineHeight: 1, flexShrink: 0 }}
+                              >
+                                {prize.icon}
+                              </span>
+                            ))}
                           </div>
                           {participant && (
                             <div
