@@ -56,20 +56,20 @@ export default function HowItWorksModal() {
 
             <div className="px-6 py-5 space-y-4" style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
               <div className="flex gap-3">
-                <span className="text-xl" style={{ flexShrink: 0 }}>🎟️</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>You've been drawn a team</strong> — one of the 48 competing nations in the 2026 FIFA World Cup. Check below to find your name and team.</p>
+                <span className="text-xl" style={{ flexShrink: 0 }}>🖨️</span>
+                <p><strong style={{ color: 'var(--text-primary)' }}>Print the tickets</strong> — the organiser prints one ticket per team. Each ticket has the team name and a unique QR code.</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="text-xl" style={{ flexShrink: 0 }}>🎩</span>
+                <p><strong style={{ color: 'var(--text-primary)' }}>Draw from a hat</strong> — tickets are folded up and everyone draws one at random. That's your team for the tournament.</p>
+              </div>
+              <div className="flex gap-3">
+                <span className="text-xl" style={{ flexShrink: 0 }}>📱</span>
+                <p><strong style={{ color: 'var(--text-primary)' }}>Claim your team</strong> — scan the QR code on your ticket to register your name, or give your name to the organiser and they'll add it for you.</p>
               </div>
               <div className="flex gap-3">
                 <span className="text-xl" style={{ flexShrink: 0 }}>🏆</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Win the big prizes</strong> — if your team wins the tournament you take 1st place prize money, runner-up takes 2nd.</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="text-xl" style={{ flexShrink: 0 }}>🎲</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Novelty prizes</strong> — there are bonus prizes for things like the most cards, the first team out, and the longest-range goal of the tournament.</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="text-xl" style={{ flexShrink: 0 }}>📊</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Live standings</strong> — the draw updates automatically as the tournament progresses. Eliminated teams are crossed out.</p>
+                <p><strong style={{ color: 'var(--text-primary)' }}>Prizes throughout</strong> — there are prizes for the winner, runner-up, and a set of novelty awards tracked live as the tournament unfolds. Enjoy the World Cup!</p>
               </div>
             </div>
 

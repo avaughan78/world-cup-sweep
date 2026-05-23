@@ -41,40 +41,42 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
 
-      {/* Header with image backdrop */}
-      <header
-        style={{
-          backgroundColor: '#4D10C8',
-          backgroundImage: 'url(/wc2026-header.webp)',
-          backgroundSize: 'auto 100%',
-          backgroundRepeat: 'no-repeat',
-          backgroundPosition: 'right center',
-        }}
-      >
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-7">
-          <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
-            FIFA World Cup · 2026 · {company.name}
-          </p>
-          <div className="flex items-end justify-between mt-1.5">
-            <div className="flex items-end gap-4">
-              <TrophyEasterEgg />
-              <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
-                The Draw
-              </h1>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.5)' }} />
-                {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}
-              </span>
-              <HowItWorksModal />
-              <ThemeToggle />
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6">
+
+        {/* Header with image backdrop — constrained to content width */}
+        <header
+          className="rounded-2xl overflow-hidden"
+          style={{
+            backgroundColor: '#4D10C8',
+            backgroundImage: 'url(/wc2026-header.webp)',
+            backgroundSize: 'auto 100%',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right center',
+          }}
+        >
+          <div className="px-6 sm:px-8 pt-8 pb-7">
+            <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              FIFA World Cup · 2026 · {company.name}
+            </p>
+            <div className="flex items-end justify-between mt-1.5">
+              <div className="flex items-end gap-4">
+                <TrophyEasterEgg />
+                <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
+                  The Draw
+                </h1>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                  <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.5)' }} />
+                  {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}
+                </span>
+                <HowItWorksModal />
+                <ThemeToggle />
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="py-10 space-y-10">
 
           {/* Main prizes */}
@@ -154,5 +156,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         </div>
       </div>
     </main>
+
   );
 }
