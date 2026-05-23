@@ -47,32 +47,41 @@ export default function TrophyEasterEgg() {
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(0,0,0,0.88)' }}
+          style={{ background: 'rgba(8,8,6,0.8)', backdropFilter: 'blur(8px)' }}
           onClick={closeModal}
         >
           <div
-            className="rounded-2xl overflow-hidden shadow-2xl w-full"
-            style={{ maxWidth: '680px' }}
+            className="relative w-full max-w-2xl rounded-2xl overflow-hidden"
+            style={{
+              background: 'var(--bg)',
+              boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07)',
+              maxHeight: '92vh',
+              overflowY: 'auto',
+              scrollbarWidth: 'none',
+            }}
             onClick={e => e.stopPropagation()}
           >
+            {/* Close button */}
+            <button
+              onClick={closeModal}
+              aria-label="Close"
+              className="absolute top-4 right-4 z-20 w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm"
+              style={{ background: 'rgba(0,0,0,0.5)', color: '#fff', border: '1px solid rgba(255,255,255,0.18)' }}
+            >
+              ✕
+            </button>
+
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3" style={{ background: '#111' }}>
-              <div>
-                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: '#f59e0b' }}>
-                  🐐 Easter Egg
-                </p>
-                <p className="text-sm font-bold" style={{ color: '#fff' }}>
-                  Pelé · Wonder Goals
-                </p>
-              </div>
-              <button
-                onClick={closeModal}
-                className="text-xl leading-none"
-                style={{ color: 'rgba(255,255,255,0.5)' }}
-              >
-                ✕
-              </button>
+            <div className="px-6 pt-6 pb-4">
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#f59e0b' }}>
+                🐐 Easter Egg
+              </p>
+              <p className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+                Pelé · Wonder Goals
+              </p>
             </div>
+
+            <hr style={{ borderColor: 'var(--border)' }} />
 
             {/* Video */}
             <video
