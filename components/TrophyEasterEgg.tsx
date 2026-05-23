@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
-const VIDEO_ID = 'TODO'; // replace with YouTube video ID
+const VIDEO_ID = 'bUTRZGCiiFs'; // replace with YouTube video ID
 
 export default function TrophyEasterEgg() {
   const [showModal, setShowModal] = useState(false);
