@@ -32,7 +32,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      <div className="max-w-5xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
         {/* Header */}
         <header className="pt-10 pb-0">
@@ -48,12 +48,12 @@ export default async function Home() {
                 height={72}
                 style={{ objectFit: 'contain' }}
               />
-              <h1 className="album-title text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
                 The Draw
               </h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className="text-base flex items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
+              <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                 <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
                 {syncedAgo ? `Synced ${syncedAgo}` : 'Not yet synced'}
               </span>
@@ -67,7 +67,7 @@ export default async function Home() {
 
           {/* Main prizes */}
           <section>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
                 { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: process.env.PRIZE_1ST ?? null },
                 { ordinal: '2', sup: 'nd', label: 'Runner-up',         amount: process.env.PRIZE_2ND ?? null },
@@ -96,7 +96,7 @@ export default async function Home() {
 
           {/* Novelty prizes */}
           <section>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {prizes.map(prize => {
                 const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
                 const amount = process.env[`PRIZE_${slug.toUpperCase()}`] ?? null;

@@ -216,7 +216,7 @@ export default function AdminPage() {
       {/* Fixed toast notification */}
       {status && (
         <div
-          className="fixed top-4 right-4 z-50 rounded-xl px-4 py-3 text-sm shadow-xl flex items-start gap-3 max-w-sm"
+          className="fixed top-4 left-4 right-4 sm:left-auto sm:max-w-sm z-50 rounded-xl px-4 py-3 text-sm shadow-xl flex items-start gap-3"
           style={{
             background: status.ok ? '#f0fdf4' : '#fef2f2',
             border: `1px solid ${status.ok ? '#bbf7d0' : '#fecaca'}`,
@@ -229,14 +229,14 @@ export default function AdminPage() {
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
         <header className="pt-10 pb-0">
           <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
             Office Sweepstake
           </p>
           <div className="flex items-center justify-between mt-1.5">
-            <h1 className="text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Admin</h1>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Admin</h1>
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
@@ -247,75 +247,71 @@ export default function AdminPage() {
 
         <div className="py-10 space-y-8">
 
-          {/* Sync */}
-          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Sync Live Stats</h2>
-            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-              Pulls from football-data.org — cards, goals, standings, eliminations.
-            </p>
-            <div className="flex gap-3 flex-wrap">
+          {/* Actions */}
+          <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleSync}
                 disabled={loading}
-                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
-                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
-                {loading ? 'Syncing…' : 'Sync Now'}
+                {loading ? 'Working…' : 'Sync Now'}
               </button>
               <button
                 onClick={handleReset}
                 disabled={loading}
-                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
-                style={{ background: '#fee2e2', color: '#991b1b', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                style={{ background: '#fee2e2', color: '#991b1b', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
-                {loading ? 'Resetting…' : 'Reset for 2026'}
+                Reset for 2026
               </button>
-            </div>
-          </div>
-
-          {/* Draw tickets */}
-          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Draw Tickets</h2>
-            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-              Generate a QR code per team, then print tickets for the hat draw.
-            </p>
-            <div className="flex gap-3 flex-wrap">
               <button
                 onClick={handleGenerateTokens}
                 disabled={loading}
-                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
-                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
-                {loading ? 'Generating…' : 'Generate Tokens'}
+                Generate Tokens
               </button>
               <a
                 href="/print"
                 target="_blank"
-                className="font-bold px-6 py-2.5 rounded-lg"
-                style={{ background: 'var(--green)', color: '#fff', fontSize: '1rem' }}
+                className="font-bold px-5 py-2 rounded-lg"
+                style={{ background: 'var(--green)', color: '#fff', fontSize: '0.9rem' }}
               >
                 Print Tickets ↗
               </a>
             </div>
-          </div>
 
-          {/* Longest shot */}
-          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Longest Range Shot</h2>
-            <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-              Manually set the current record holder.
-            </p>
-            <div className="space-y-3">
-              <input placeholder="Team name (e.g. Brazil)" value={shotTeam} onChange={e => setShotTeam(e.target.value)} style={inputStyle} />
-              <input placeholder="Label (e.g. 38.2m — Rüdiger vs USA)" value={shotLabel} onChange={e => setShotLabel(e.target.value)} style={inputStyle} />
-              <input placeholder="Notes (optional)" value={shotNotes} onChange={e => setShotNotes(e.target.value)} style={inputStyle} />
+            {/* Longest shot override */}
+            <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Longest Shot Override</p>
+              <input
+                placeholder="Team"
+                value={shotTeam}
+                onChange={e => setShotTeam(e.target.value)}
+                style={{ flex: '1 1 130px', minWidth: 0, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem', outline: 'none' }}
+              />
+              <input
+                placeholder="Label (e.g. 38.2m — Rüdiger)"
+                value={shotLabel}
+                onChange={e => setShotLabel(e.target.value)}
+                style={{ flex: '2 1 180px', minWidth: 0, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem', outline: 'none' }}
+              />
+              <input
+                placeholder="Notes"
+                value={shotNotes}
+                onChange={e => setShotNotes(e.target.value)}
+                style={{ flex: '1 1 100px', minWidth: 0, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem', outline: 'none' }}
+              />
               <button
                 onClick={handleShotOverride}
                 disabled={loading}
-                className="font-bold px-6 py-2.5 rounded-lg transition-opacity"
-                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '1rem' }}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity flex-shrink-0"
+                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
-                {loading ? 'Saving…' : 'Save Shot Override'}
+                Save
               </button>
             </div>
           </div>
@@ -326,7 +322,7 @@ export default function AdminPage() {
             <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
               Edit names directly — changes save automatically on blur.
             </p>
-            <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))' }}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(GROUPS_2026).map(([letter, teams]) => (
                 <div key={letter} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                   <div
