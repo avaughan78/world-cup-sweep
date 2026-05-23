@@ -1,7 +1,7 @@
 import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
 import SyncTime from '@/components/SyncTime';
-import Image from 'next/image';
+import TrophyEasterEgg from '@/components/TrophyEasterEgg';
 import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
 import GroupsGrid from '@/components/GroupsGrid';
@@ -41,13 +41,7 @@ export default async function Home() {
           </p>
           <div className="flex items-end justify-between mt-1.5">
             <div className="flex items-end gap-4">
-              <Image
-                src="/world-cup-trophy.png"
-                alt="FIFA World Cup Trophy"
-                width={56}
-                height={72}
-                style={{ objectFit: 'contain' }}
-              />
+              <TrophyEasterEgg />
               <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
                 The Draw
               </h1>
