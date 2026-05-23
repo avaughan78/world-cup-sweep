@@ -3,8 +3,6 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
-const VIDEO_ID = 'bUTRZGCiiFs'; // replace with YouTube video ID
-
 export default function TrophyEasterEgg() {
   const [showModal, setShowModal] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -64,7 +62,7 @@ export default function TrophyEasterEgg() {
                   🐐 Easter Egg
                 </p>
                 <p className="text-sm font-bold" style={{ color: '#fff' }}>
-                  Pelé · 1958 World Cup Final
+                  Pelé · Wonder Goals
                 </p>
               </div>
               <button
@@ -77,14 +75,12 @@ export default function TrophyEasterEgg() {
             </div>
 
             {/* Video */}
-            <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#000' }}>
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${VIDEO_ID}?autoplay=1&rel=0`}
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-              />
-            </div>
+            <video
+              src="/pele-wonder-goals.mp4"
+              autoPlay
+              controls
+              style={{ display: 'block', width: '100%', background: '#000' }}
+            />
           </div>
         </div>
       )}
