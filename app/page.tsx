@@ -12,11 +12,11 @@ import HowItWorksModal from '@/components/HowItWorksModal';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+export default async function Home({ searchParams }: { searchParams: Promise<{ code?: string; logout?: string }> }) {
   const params = await searchParams;
   const code = params.code?.trim().toUpperCase();
 
-  if (!code) return <CompanyGate marketing />;
+  if (!code) return <CompanyGate marketing logout={params.logout === '1'} />;
 
   const company = await getCompanyByCode(code);
   if (!company) return <CompanyGate invalidCode marketing />;
