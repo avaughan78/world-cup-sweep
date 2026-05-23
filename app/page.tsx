@@ -15,10 +15,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   const params = await searchParams;
   const code = params.code?.trim().toUpperCase();
 
-  if (!code) return <CompanyGate />;
+  if (!code) return <CompanyGate marketing />;
 
   const company = await getCompanyByCode(code);
-  if (!company) return <CompanyGate invalidCode />;
+  if (!company) return <CompanyGate invalidCode marketing />;
 
   const [participants, lastSync, allTeamStats, groupStandings] = await Promise.all([
     getParticipants(company.id),
