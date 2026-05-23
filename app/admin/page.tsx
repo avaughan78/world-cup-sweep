@@ -117,7 +117,7 @@ export default function AdminPage() {
 
   function handleLogout() {
     document.cookie = 'admin_pw=; max-age=0; path=/; SameSite=Strict; Secure';
-    router.push('/');
+    window.location.replace('/');
   }
 
   async function handleLogin() {
