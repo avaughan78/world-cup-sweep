@@ -101,7 +101,7 @@ export default async function Home() {
 
           {/* Groups */}
           <section>
-            <div className="flex items-baseline justify-between mb-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-y-1 mb-3">
               <p className="default-section-label text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
                 The Groups · {participants.length} Teams
               </p>

@@ -174,7 +174,7 @@ export default function TeamModal({ team, participant, onClose }: {
           }} />
 
           {/* text over hero */}
-          <div className="absolute bottom-0 left-0 right-0 p-7">
+          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-7">
             <div style={{ fontSize: '4rem', lineHeight: 1, marginBottom: '0.5rem' }}>{flag}</div>
             <h2
               className="font-black leading-none tracking-tight"
@@ -194,7 +194,7 @@ export default function TeamModal({ team, participant, onClose }: {
         </div>
 
         {/* ── Body ── */}
-        <div className="p-7">
+        <div className="p-4 sm:p-7">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
               <div className="text-5xl animate-spin" style={{ animationDuration: '1.2s' }}>⚽</div>
@@ -331,7 +331,7 @@ export default function TeamModal({ team, participant, onClose }: {
                     Squad
                   </p>
                   {hasSquad ? (
-                    <div className="grid grid-cols-2 gap-x-8 gap-y-5">
+                    <div className="grid grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-5">
                       {POS_ORDER.filter(pos => byPos[pos]?.length).map(pos => (
                         <div key={pos}>
                           <p

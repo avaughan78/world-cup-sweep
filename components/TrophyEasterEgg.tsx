@@ -29,7 +29,14 @@ export default function TrophyEasterEgg() {
 
   return (
     <>
-      <div onMouseEnter={startTimer} onMouseLeave={cancelTimer} style={{ cursor: 'default', flexShrink: 0 }}>
+      <div
+        onMouseEnter={startTimer}
+        onMouseLeave={cancelTimer}
+        onTouchStart={startTimer}
+        onTouchEnd={cancelTimer}
+        onTouchCancel={cancelTimer}
+        style={{ cursor: 'default', flexShrink: 0, WebkitUserSelect: 'none', userSelect: 'none' }}
+      >
         <Image
           src="/world-cup-trophy.png"
           alt="FIFA World Cup Trophy"
