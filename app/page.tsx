@@ -38,6 +38,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   const prizes = await computePrizes(displayMap, company.id);
 
+  function formatPrize(n: number): string {
+    return `£${n % 1 === 0 ? n : n.toFixed(2)}`;
+  }
+  const prizeAmounts = company.ticket_price
+    ? (() => {
+        const pot = company.ticket_price * participants.length;
+        return {
+          first:   formatPrize(pot * 0.50),
+          second:  formatPrize(pot * 0.25),
+          novelty: formatPrize(pot * 0.05),
+        };
+      })()
+    : null;
+
   const eliminatedTeams = new Set(
     allTeamStats.filter(t => t.is_eliminated).map(t => t.team_name)
   );
@@ -91,8 +105,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           <section>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {[
-                { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: process.env.PRIZE_1ST ?? null },
-                { ordinal: '2', sup: 'nd', label: 'Runner-up',         amount: process.env.PRIZE_2ND ?? null },
+                { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: prizeAmounts?.first   ?? process.env.PRIZE_1ST ?? null },
+                { ordinal: '2', sup: 'nd', label: 'Runner-up',         amount: prizeAmounts?.second  ?? process.env.PRIZE_2ND ?? null },
               ].map(({ ordinal, sup, label, amount }) => (
                 <div
                   key={ordinal}
@@ -121,7 +135,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {prizes.map(prize => {
                 const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
-                const amount = process.env[`PRIZE_${slug.toUpperCase()}`] ?? null;
+                const amount = prizeAmounts?.novelty ?? process.env[`PRIZE_${slug.toUpperCase()}`] ?? null;
                 return <PrizeCard key={prize.slug} prize={prize} prizeAmount={amount} />;
               })}
             </div>

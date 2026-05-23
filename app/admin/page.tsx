@@ -5,7 +5,7 @@ import { GROUPS_2026 } from '@/lib/groups';
 import { getFlag } from '@/lib/flags';
 import ThemeToggle from '@/components/ThemeToggle';
 
-interface Company { id: number; code: string; name: string; }
+interface Company { id: number; code: string; name: string; ticket_price: number | null; }
 
 async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknown; raw: string }> {
   const raw = await res.text();
@@ -36,6 +36,10 @@ export default function AdminPage() {
   const [justSaved, setJustSaved] = useState<Set<string>>(new Set());
 
   const [copied, setCopied] = useState(false);
+
+  // Ticket price
+  const [ticketPrice, setTicketPrice] = useState('');
+  const [priceSaved, setPriceSaved] = useState(false);
 
   // Longest shot
   const [shotTeam, setShotTeam] = useState('');
@@ -72,6 +76,12 @@ export default function AdminPage() {
       })
       .catch(() => {});
   }, [authed, password]);
+
+  // Sync ticket price input when company changes
+  useEffect(() => {
+    const company = companies.find(c => c.id === selectedCompanyId);
+    setTicketPrice(company?.ticket_price != null ? String(company.ticket_price) : '');
+  }, [selectedCompanyId, companies]);
 
   // Load participants when company changes
   useEffect(() => {
@@ -250,6 +260,28 @@ export default function AdminPage() {
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
       setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved!' : raw });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
+  async function handleSaveTicketPrice() {
+    if (!selectedCompany) return;
+    const price = parseFloat(ticketPrice);
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/companies', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, id: selectedCompany.id, ticket_price: isNaN(price) ? null : price }),
+      });
+      const { ok } = await parseResponse(res);
+      if (ok) {
+        setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, ticket_price: isNaN(price) ? null : price } : c));
+        setPriceSaved(true);
+        setTimeout(() => setPriceSaved(false), 2000);
+      }
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -500,6 +532,35 @@ export default function AdminPage() {
                   >
                     Delete Company
                   </button>
+                </div>
+
+                {/* Ticket price */}
+                <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Ticket Price</p>
+                  <div className="flex items-center gap-1 flex-shrink-0" style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
+                    <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={ticketPrice}
+                      onChange={e => setTicketPrice(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
+                      style={{ background: 'transparent', border: 'none', outline: 'none', width: '5rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveTicketPrice}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                    style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                  >
+                    {priceSaved ? 'Saved ✓' : 'Save'}
+                  </button>
+                  <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Sets prize amounts shown on the draw page (48 tickets × price × split).
+                  </p>
                 </div>
 
                 {/* Longest shot override */}

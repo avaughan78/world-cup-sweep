@@ -23,6 +23,11 @@ const STEPS = [
     title: 'Prizes throughout',
     body: 'There are prizes for the winner and runner-up, plus live novelty awards tracked as the tournament unfolds. Enjoy the World Cup!',
   },
+  {
+    icon: '📊',
+    title: 'Live stats',
+    body: 'This page updates automatically as the tournament progresses — standings, cards, scorers, and novelty prize leaders are all tracked in real time.',
+  },
 ];
 
 export default function HowItWorksModal({ claimed = 0, total = 0 }: { claimed?: number; total?: number }) {
@@ -116,16 +121,7 @@ export default function HowItWorksModal({ claimed = 0, total = 0 }: { claimed?: 
               </>
             )}
 
-            {/* CTA */}
-            <div className="px-6 pb-6" style={{ paddingTop: allClaimed || total === 0 ? '0.5rem' : 0 }}>
-              <button
-                onClick={() => setOpen(false)}
-                className="w-full font-bold py-2.5 rounded-xl"
-                style={{ background: 'var(--green)', color: '#fff', fontSize: '0.95rem' }}
-              >
-                Got it
-              </button>
-            </div>
+            <div style={{ paddingBottom: '0.5rem' }} />
           </div>
         </div>
       )}

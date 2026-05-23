@@ -9,6 +9,7 @@ export interface Company {
   id: number;
   code: string;
   name: string;
+  ticket_price: number | null;
 }
 
 export interface Participant {
@@ -57,13 +58,17 @@ export interface GroupStanding {
 // ── Companies ────────────────────────────────────────────────────────────────
 
 export async function listCompanies(): Promise<Company[]> {
-  const rows = await sql`SELECT id, code, name FROM companies ORDER BY name`;
+  const rows = await sql`SELECT id, code, name, ticket_price FROM companies ORDER BY name`;
   return rows as Company[];
 }
 
 export async function getCompanyByCode(code: string): Promise<Company | null> {
-  const rows = await sql`SELECT id, code, name FROM companies WHERE UPPER(code) = UPPER(${code})`;
+  const rows = await sql`SELECT id, code, name, ticket_price FROM companies WHERE UPPER(code) = UPPER(${code})`;
   return (rows[0] as Company) ?? null;
+}
+
+export async function setCompanyTicketPrice(id: number, price: number | null): Promise<void> {
+  await sql`UPDATE companies SET ticket_price = ${price} WHERE id = ${id}`;
 }
 
 export async function createCompany(code: string, name: string): Promise<Company> {

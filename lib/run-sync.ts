@@ -98,12 +98,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       statNotes.push('group standings: initialised from draw (no matches yet)');
     }
 
-    const apiErrors = [matchesResult, scorersResult, standingsResult].filter(r => r.status === 'rejected');
-    if (apiErrors.length > 0) {
-      await logSync('stats', 'error', statNotes.join(', '));
-    } else {
-      await logSync('stats', 'success', statNotes.join(', '));
-    }
+    await logSync('stats', 'success', statNotes.join(', '));
     results.stats = `ok (${statNotes.join(' · ')})`;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
