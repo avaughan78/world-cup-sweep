@@ -35,6 +35,8 @@ export default function AdminPage() {
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [justSaved, setJustSaved] = useState<Set<string>>(new Set());
 
+  const [copied, setCopied] = useState(false);
+
   // Longest shot
   const [shotTeam, setShotTeam] = useState('');
   const [shotLabel, setShotLabel] = useState('');
@@ -254,6 +256,14 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function handleCopyLink() {
+    if (!selectedCompany) return;
+    const url = `${window.location.origin}/?code=${selectedCompany.code}`;
+    await navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   async function handleResetCompany() {
     if (!selectedCompany) return;
     if (!confirm(`Clear all participant names and tokens for "${selectedCompany.name}"? This cannot be undone.`)) return;
@@ -467,6 +477,13 @@ export default function AdminPage() {
                   >
                     View Draw ↗
                   </a>
+                  <button
+                    onClick={handleCopyLink}
+                    className="font-bold px-5 py-2 rounded-lg transition-colors"
+                    style={{ background: copied ? '#f0fdf4' : 'var(--bg)', color: copied ? '#166534' : 'var(--text-muted)', border: `1px solid ${copied ? '#bbf7d0' : 'var(--border)'}`, fontSize: '0.9rem' }}
+                  >
+                    {copied ? 'Copied!' : 'Copy Link'}
+                  </button>
                   <button
                     onClick={handleResetCompany}
                     disabled={loading}
