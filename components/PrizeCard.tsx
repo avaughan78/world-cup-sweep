@@ -1,6 +1,7 @@
 import type { Prize } from '@/lib/prizes';
 import { getFlag } from '@/lib/flags';
 import TicketBadge from './TicketBadge';
+import RocketEasterEgg from './RocketEasterEgg';
 
 export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   const hasLeader = !!prize.current_team;
@@ -12,10 +13,15 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
     >
       <div className="flex-1">
         <div className="flex items-start justify-between">
-          <span
-            className="text-2xl leading-none"
-            style={prize.slug === 'top_scorer_team' ? { filter: 'sepia(1) saturate(5) hue-rotate(5deg) brightness(1.15)' } : undefined}
-          >{prize.icon}</span>
+          {prize.slug === 'longest_shot'
+            ? <RocketEasterEgg size="2xl" />
+            : (
+              <span
+                className="text-2xl leading-none"
+                style={prize.slug === 'top_scorer_team' ? { filter: 'sepia(1) saturate(5) hue-rotate(5deg) brightness(1.15)' } : undefined}
+              >{prize.icon}</span>
+            )
+          }
           {prizeAmount && <TicketBadge amount={prizeAmount} />}
         </div>
         <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>

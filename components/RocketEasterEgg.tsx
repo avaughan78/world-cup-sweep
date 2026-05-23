@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 
 const COUNTDOWN_START = 3;
 
-export default function RocketEasterEgg() {
+export default function RocketEasterEgg({ size = 'sm' }: { size?: 'sm' | '2xl' }) {
   const [showModal, setShowModal] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -54,7 +54,7 @@ export default function RocketEasterEgg() {
         onTouchEnd={cancelTimer}
         onTouchCancel={cancelTimer}
         title="The Thunderbastard"
-        style={{ position: 'relative', display: 'inline-block', fontSize: '0.85rem', lineHeight: 1, flexShrink: 0, cursor: 'default', WebkitUserSelect: 'none', userSelect: 'none' }}
+        style={{ position: 'relative', display: 'inline-block', fontSize: size === '2xl' ? '1.5rem' : '0.85rem', lineHeight: 1, flexShrink: 0, cursor: 'default', WebkitUserSelect: 'none', userSelect: 'none' }}
       >
         <span className={countdown !== null ? 'rocket-shaking' : ''}>🚀</span>
         {countdown !== null && (
