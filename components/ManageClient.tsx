@@ -326,7 +326,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             </div>
             <div className="flex items-center gap-4">
               <a href={`/?code=${company.code}`} className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to draw</a>
-              <button onClick={handleLogout} className="text-sm" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
+              <button type="button" onClick={handleLogout} className="text-sm" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
             </div>
           </div>
           <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />

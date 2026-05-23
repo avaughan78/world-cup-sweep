@@ -459,7 +459,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
-              <button onClick={handleLogout} className="text-sm" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
+              <button type="button" onClick={handleLogout} className="text-sm" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
             </div>
           </div>
           <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
