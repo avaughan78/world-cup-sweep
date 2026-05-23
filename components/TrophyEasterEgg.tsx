@@ -66,8 +66,6 @@ export default function TrophyEasterEgg() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            borderRadius: '6px',
-            background: 'rgba(0,0,0,0.55)',
           }}>
             <span style={{
               color: '#fff',
@@ -75,6 +73,7 @@ export default function TrophyEasterEgg() {
               fontSize: '1.5rem',
               lineHeight: 1,
               fontFamily: 'system-ui, sans-serif',
+              textShadow: '0 1px 4px rgba(0,0,0,0.8)',
             }}>
               {countdown}
             </span>
