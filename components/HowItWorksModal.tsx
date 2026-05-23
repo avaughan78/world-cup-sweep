@@ -19,11 +19,6 @@ const STEPS = [
     body: 'Scan the QR code on your ticket to register your name, or give your name to the organiser and they\'ll add it for you.',
   },
   {
-    icon: '🏆',
-    title: 'Prizes throughout',
-    body: 'There are prizes for the winner and runner-up, plus live novelty awards tracked as the tournament unfolds. Enjoy the World Cup!',
-  },
-  {
     icon: '📊',
     title: 'Live stats',
     body: 'This page updates automatically as the tournament progresses — standings, cards, scorers, and novelty prize leaders are all tracked in real time.',
