@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
-const COUNTDOWN_START = 5;
+const COUNTDOWN_START = 3;
 
 export default function TrophyEasterEgg() {
   const [showModal, setShowModal] = useState(false);
