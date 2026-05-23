@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import type { Company } from '@/lib/db';
+import PasswordInput from './PasswordInput';
 import { GROUPS_2026 } from '@/lib/groups';
 import { getFlag } from '@/lib/flags';
 
@@ -25,6 +26,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [companyName, setCompanyName] = useState(initialCompany.name);
   const [nameSaved, setNameSaved] = useState(false);
   const [newPw, setNewPw] = useState('');
+  const [confirmPw, setConfirmPw] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState('');
   const [shotTeam, setShotTeam] = useState('');
@@ -172,6 +174,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   async function handleSavePassword() {
     const trimmed = newPw.trim();
     if (!trimmed) { setPwError('Password cannot be empty'); return; }
+    if (trimmed !== confirmPw.trim()) { setPwError('Passwords do not match'); return; }
     setLoading(true);
     setPwError('');
     try {
@@ -185,6 +188,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         setSessionPw(data.new_password);
         localStorage.setItem(STORAGE_KEY, data.new_password);
         setNewPw('');
+        setConfirmPw('');
         setPwSaved(true);
         setTimeout(() => setPwSaved(false), 2000);
       } else {
@@ -267,15 +271,13 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
               Enter your admin password to manage this draw.
             </p>
-            <input
-              type="password"
-              placeholder="Admin password"
+            <PasswordInput
               value={inputPw}
-              onChange={e => { setInputPw(e.target.value); setAuthError(''); }}
+              onChange={v => { setInputPw(v); setAuthError(''); }}
               onKeyDown={e => e.key === 'Enter' && handleLogin()}
+              placeholder="Admin password"
               autoFocus
-              style={{
-                width: '100%',
+              inputStyle={{
                 background: 'var(--bg)', border: `1px solid ${authError ? '#ef4444' : 'var(--border)'}`,
                 borderRadius: '0.5rem', padding: '0.75rem 1rem',
                 color: 'var(--text-primary)', fontSize: '1rem', outline: 'none',
@@ -374,13 +376,21 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             {/* Change password */}
             <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
               <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Change Password</p>
-              <input
-                type="password"
-                placeholder="New password"
+              <PasswordInput
                 value={newPw}
-                onChange={e => { setNewPw(e.target.value); setPwError(''); }}
+                onChange={v => { setNewPw(v); setPwError(''); }}
                 onKeyDown={e => e.key === 'Enter' && handleSavePassword()}
-                style={{ flex: '1 1 180px', minWidth: 0, ...smallInputStyle }}
+                placeholder="New password"
+                wrapperStyle={{ flex: '1 1 160px', minWidth: 0 }}
+                inputStyle={smallInputStyle}
+              />
+              <PasswordInput
+                value={confirmPw}
+                onChange={v => { setConfirmPw(v); setPwError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleSavePassword()}
+                placeholder="Confirm password"
+                wrapperStyle={{ flex: '1 1 160px', minWidth: 0 }}
+                inputStyle={smallInputStyle}
               />
               <button onClick={handleSavePassword} disabled={loading}
                 className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"

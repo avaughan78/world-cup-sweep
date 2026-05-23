@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { GROUPS_2026 } from '@/lib/groups';
+import PasswordInput from '@/components/PasswordInput';
 import { getFlag } from '@/lib/flags';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -48,6 +49,8 @@ export default function AdminPage() {
 
   // Admin password
   const [adminPw, setAdminPw] = useState('');
+  const [confirmAdminPw, setConfirmAdminPw] = useState('');
+  const [adminPwError, setAdminPwError] = useState('');
   const [adminPwSaved, setAdminPwSaved] = useState(false);
 
   // Longest shot
@@ -93,6 +96,8 @@ export default function AdminPage() {
     setEditName(company?.name ?? '');
     setEditCode(company?.code ?? '');
     setAdminPw('');
+    setConfirmAdminPw('');
+    setAdminPwError('');
   }, [selectedCompanyId, companies]);
 
   // Load participants when company changes
@@ -303,6 +308,9 @@ export default function AdminPage() {
 
   async function handleSaveAdminPassword() {
     if (!selectedCompany) return;
+    if (!adminPw.trim()) { setAdminPwError('Password cannot be empty'); return; }
+    if (adminPw.trim() !== confirmAdminPw.trim()) { setAdminPwError('Passwords do not match'); return; }
+    setAdminPwError('');
     setLoading(true);
     try {
       const res = await fetch('/api/admin/companies', {
@@ -312,6 +320,8 @@ export default function AdminPage() {
       });
       const { ok } = await parseResponse(res);
       if (ok) {
+        setAdminPw('');
+        setConfirmAdminPw('');
         setAdminPwSaved(true);
         setTimeout(() => setAdminPwSaved(false), 2000);
       }
@@ -402,13 +412,12 @@ export default function AdminPage() {
             Office Sweepstake
           </p>
           <h1 className="text-3xl font-black tracking-tight mb-6" style={{ color: 'var(--text-primary)' }}>Admin</h1>
-          <input
-            type="password"
-            placeholder="Password"
+          <PasswordInput
             value={password}
-            onChange={e => { setPassword(e.target.value); setLoginError(''); }}
+            onChange={v => { setPassword(v); setLoginError(''); }}
             onKeyDown={e => e.key === 'Enter' && handleLogin()}
-            style={inputStyle}
+            placeholder="Password"
+            inputStyle={inputStyle}
           />
           {loginError && <p className="text-sm mt-2" style={{ color: '#ef4444' }}>{loginError}</p>}
           <button
@@ -654,12 +663,19 @@ export default function AdminPage() {
                 {/* Admin password */}
                 <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
                   <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Organiser Admin Password</p>
-                  <input
-                    type="text"
-                    placeholder="e.g. football"
+                  <PasswordInput
                     value={adminPw}
-                    onChange={e => setAdminPw(e.target.value)}
-                    style={{ flex: '1 1 160px', minWidth: 0, ...smallInputStyle }}
+                    onChange={v => { setAdminPw(v); setAdminPwError(''); }}
+                    placeholder="New password"
+                    wrapperStyle={{ flex: '1 1 150px', minWidth: 0 }}
+                    inputStyle={smallInputStyle}
+                  />
+                  <PasswordInput
+                    value={confirmAdminPw}
+                    onChange={v => { setConfirmAdminPw(v); setAdminPwError(''); }}
+                    placeholder="Confirm password"
+                    wrapperStyle={{ flex: '1 1 150px', minWidth: 0 }}
+                    inputStyle={smallInputStyle}
                   />
                   <button
                     onClick={handleSaveAdminPassword}
@@ -669,6 +685,7 @@ export default function AdminPage() {
                   >
                     {adminPwSaved ? 'Saved ✓' : 'Set Password'}
                   </button>
+                  {adminPwError && <p className="w-full text-xs mt-1" style={{ color: '#ef4444' }}>{adminPwError}</p>}
                   <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                     Gives the organiser access to <a href={`/manage?code=${selectedCompany?.code}`} target="_blank" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>/manage?code={selectedCompany?.code}</a>
                   </p>
