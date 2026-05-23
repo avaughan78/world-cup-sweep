@@ -6,6 +6,7 @@ export async function POST(req: NextRequest) {
   if (!token) return NextResponse.json({ error: 'Missing token' }, { status: 400 });
   const trimmed = name?.trim() ?? '';
   if (!trimmed) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+  if (trimmed.length > 100) return NextResponse.json({ error: 'Name too long' }, { status: 400 });
 
   const participant = await getParticipantByToken(token);
   if (!participant) return NextResponse.json({ error: 'Invalid token' }, { status: 404 });

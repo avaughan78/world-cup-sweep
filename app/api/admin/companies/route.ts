@@ -6,8 +6,8 @@ function auth(password?: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const password = req.nextUrl.searchParams.get('password');
-  if (!auth(password ?? '')) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const password = req.headers.get('x-admin-password') ?? '';
+  if (!auth(password)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const companies = await listCompanies();
   return NextResponse.json({ companies });
 }

@@ -67,7 +67,7 @@ export default function AdminPage() {
   // Load companies after auth
   useEffect(() => {
     if (!authed) return;
-    fetch(`/api/admin/companies?password=${encodeURIComponent(password)}`)
+    fetch('/api/admin/companies', { headers: { 'x-admin-password': password } })
       .then(r => r.json())
       .then((d: { companies?: Company[] }) => {
         const list = d.companies ?? [];
@@ -111,7 +111,7 @@ export default function AdminPage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        document.cookie = `admin_pw=${encodeURIComponent(password)}; max-age=${7 * 24 * 3600}; path=/; SameSite=Strict`;
+        document.cookie = `admin_pw=${encodeURIComponent(password)}; max-age=${7 * 24 * 3600}; path=/; SameSite=Strict; Secure`;
         setAuthed(true);
       } else {
         setLoginError('Wrong password');
