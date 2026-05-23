@@ -18,7 +18,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           >{prize.icon}</span>
           {prizeAmount && <TicketBadge amount={prizeAmount} />}
         </div>
-        <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)' }}>
+        <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
           {prize.name}
         </p>
         <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
