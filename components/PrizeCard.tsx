@@ -1,7 +1,7 @@
 import type { Prize } from '@/lib/prizes';
 import { getFlag } from '@/lib/flags';
 import TicketBadge from './TicketBadge';
-import RocketEasterEgg from './RocketEasterEgg';
+import VideoEasterEgg from './VideoEasterEgg';
 
 export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   const hasLeader = !!prize.current_team;
@@ -14,7 +14,9 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
       <div className="flex-1">
         <div className="flex items-start justify-between">
           {prize.slug === 'longest_shot'
-            ? <RocketEasterEgg size="2xl" />
+            ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc="/joecole.mp4" fontSize="1.5rem" />
+            : prize.slug === 'most_cards'
+            ? <VideoEasterEgg icon="🟨" label="The Gareth Barry Award" videoSrc="/zidane.mp4" fontSize="1.5rem" />
             : (
               <span
                 className="text-2xl leading-none"
