@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings, getCompanyByCode } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
 import SyncTime from '@/components/SyncTime';
@@ -39,19 +40,34 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
+
+      {/* Hero banner */}
+      <div className="w-full" style={{ lineHeight: 0 }}>
+        <Image
+          src="/wc2026-header.webp"
+          alt="FIFA World Cup 2026"
+          width={1584}
+          height={396}
+          priority
+          style={{ width: '100%', height: 'auto', display: 'block' }}
+        />
+      </div>
+
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
 
         {/* Header */}
-        <header className="pt-10 pb-0">
-          <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-            FIFA World Cup · 2026 · {company.name}
-          </p>
-          <div className="flex items-end justify-between mt-1.5">
-            <div className="flex items-end gap-4">
+        <header className="pt-6 pb-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
               <TrophyEasterEgg />
-              <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                The Draw
-              </h1>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
+                  {company.name} · Sweepstake
+                </p>
+                <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
+                  The Draw
+                </h1>
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
