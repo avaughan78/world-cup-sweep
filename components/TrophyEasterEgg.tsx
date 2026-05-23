@@ -6,7 +6,6 @@ import Image from 'next/image';
 export default function TrophyEasterEgg() {
   const [showModal, setShowModal] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
 
   function startTimer() {
     timerRef.current = setTimeout(() => setShowModal(true), 5000);
@@ -26,9 +25,6 @@ export default function TrophyEasterEgg() {
 
   useEffect(() => () => cancelTimer(), []);
 
-  useEffect(() => {
-    if (showModal) videoRef.current?.play().catch(() => {});
-  }, [showModal]);
 
   return (
     <>
@@ -90,12 +86,14 @@ export default function TrophyEasterEgg() {
             <hr style={{ borderColor: 'var(--border)' }} />
 
             {/* Video */}
-            <video
-              ref={videoRef}
-              src="/world-cup-goals.mp4"
-              controls
-              style={{ display: 'block', width: '100%', background: '#000' }}
-            />
+            <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#000' }}>
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/CWzGg4OLzGg?autoplay=1&rel=0"
+                allow="autoplay; encrypted-media; fullscreen"
+                allowFullScreen
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
+              />
+            </div>
           </div>
         </div>
       )}
