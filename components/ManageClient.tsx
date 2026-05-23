@@ -24,6 +24,9 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [priceSaved, setPriceSaved] = useState(false);
   const [companyName, setCompanyName] = useState(initialCompany.name);
   const [nameSaved, setNameSaved] = useState(false);
+  const [newPw, setNewPw] = useState('');
+  const [pwSaved, setPwSaved] = useState(false);
+  const [pwError, setPwError] = useState('');
   const [shotTeam, setShotTeam] = useState('');
   const [shotLabel, setShotLabel] = useState('');
   const [shotNotes, setShotNotes] = useState('');
@@ -158,6 +161,31 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         setTimeout(() => setPriceSaved(false), 2000);
       }
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
+    setLoading(false);
+  }
+
+  async function handleSavePassword() {
+    const trimmed = newPw.trim();
+    if (!trimmed) { setPwError('Password cannot be empty'); return; }
+    setLoading(true);
+    setPwError('');
+    try {
+      const res = await fetch('/api/company/manage/details', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, new_password: trimmed }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string; new_password?: string };
+      if (data.ok && data.new_password) {
+        setSessionPw(data.new_password);
+        localStorage.setItem(STORAGE_KEY, data.new_password);
+        setNewPw('');
+        setPwSaved(true);
+        setTimeout(() => setPwSaved(false), 2000);
+      } else {
+        setPwError(data.error ?? 'Failed to save');
+      }
+    } catch { setPwError('Could not connect'); }
     setLoading(false);
   }
 
@@ -333,6 +361,25 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 style={{ background: nameSaved ? '#f0fdf4' : 'var(--green)', color: nameSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
                 {nameSaved ? 'Saved ✓' : 'Save'}
               </button>
+            </div>
+
+            {/* Change password */}
+            <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Change Password</p>
+              <input
+                type="password"
+                placeholder="New password"
+                value={newPw}
+                onChange={e => { setNewPw(e.target.value); setPwError(''); }}
+                onKeyDown={e => e.key === 'Enter' && handleSavePassword()}
+                style={{ flex: '1 1 180px', minWidth: 0, ...smallInputStyle }}
+              />
+              <button onClick={handleSavePassword} disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                style={{ background: pwSaved ? '#f0fdf4' : 'var(--green)', color: pwSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
+                {pwSaved ? 'Saved ✓' : 'Change'}
+              </button>
+              {pwError && <p className="w-full text-xs mt-1" style={{ color: '#ef4444' }}>{pwError}</p>}
             </div>
 
             {/* Ticket price */}
