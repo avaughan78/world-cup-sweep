@@ -2,8 +2,32 @@
 
 import { useState } from 'react';
 
-export default function HowItWorksModal() {
+const STEPS = [
+  {
+    icon: '🖨️',
+    title: 'Print the tickets',
+    body: 'The organiser prints the team ticket sheet. Each ticket has a team name and a unique QR code.',
+  },
+  {
+    icon: '🎩',
+    title: 'Draw from a hat',
+    body: 'Tickets are folded up and everyone draws one at random. That\'s your team for the tournament.',
+  },
+  {
+    icon: '📱',
+    title: 'Claim your team',
+    body: 'Scan the QR code on your ticket to register your name, or give your name to the organiser and they\'ll add it for you.',
+  },
+  {
+    icon: '🏆',
+    title: 'Prizes throughout',
+    body: 'There are prizes for the winner and runner-up, plus live novelty awards tracked as the tournament unfolds. Enjoy the World Cup!',
+  },
+];
+
+export default function HowItWorksModal({ claimed = 0, total = 0 }: { claimed?: number; total?: number }) {
   const [open, setOpen] = useState(false);
+  const allClaimed = total > 0 && claimed === total;
 
   return (
     <>
@@ -30,52 +54,70 @@ export default function HowItWorksModal() {
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative w-full max-w-md rounded-2xl"
+            className="relative w-full max-w-md rounded-2xl overflow-hidden"
             style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}
             onClick={e => e.stopPropagation()}
           >
-            <button
-              onClick={() => setOpen(false)}
-              aria-label="Close"
-              className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full font-bold text-sm"
-              style={{ background: 'rgba(0,0,0,0.08)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+            {/* Branded header */}
+            <div
+              className="px-6 pt-6 pb-5"
+              style={{
+                background: 'linear-gradient(135deg, #4D10C8 0%, #D40100 100%)',
+                backgroundSize: 'auto 100%',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'right center',
+              }}
             >
-              ✕
-            </button>
-
-            <div className="px-6 pt-6 pb-2">
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>
-                Office Sweepstake
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close"
+                className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm"
+                style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}
+              >
+                ✕
+              </button>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
+                FIFA World Cup 2026
               </p>
-              <h2 className="text-2xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              <h2 className="text-2xl font-black tracking-tight" style={{ color: '#fff' }}>
                 How it works
               </h2>
             </div>
 
-            <hr style={{ borderColor: 'var(--border)' }} />
-
-            <div className="px-6 py-5 space-y-4" style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-              <div className="flex gap-3">
-                <span className="text-xl" style={{ flexShrink: 0 }}>🖨️</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Print the tickets</strong> — the organiser prints the team ticket sheet. Each ticket has a team name and a unique QR code.</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="text-xl" style={{ flexShrink: 0 }}>🎩</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Draw from a hat</strong> — tickets are folded up and everyone draws one at random. That's your team for the tournament.</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="text-xl" style={{ flexShrink: 0 }}>📱</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Claim your team</strong> — scan the QR code on your ticket to register your name, or give your name to the organiser and they'll add it for you.</p>
-              </div>
-              <div className="flex gap-3">
-                <span className="text-xl" style={{ flexShrink: 0 }}>🏆</span>
-                <p><strong style={{ color: 'var(--text-primary)' }}>Prizes throughout</strong> — there are prizes for the winner, runner-up, and a set of novelty awards tracked live as the tournament unfolds. Enjoy the World Cup!</p>
-              </div>
+            {/* Steps */}
+            <div className="px-6 py-5 space-y-5">
+              {STEPS.map((step, i) => (
+                <div key={i} className="flex gap-4 items-start">
+                  <div
+                    className="flex items-center justify-center rounded-xl text-lg flex-shrink-0"
+                    style={{ width: '2.5rem', height: '2.5rem', background: 'var(--bg)', border: '1px solid var(--border)' }}
+                  >
+                    {step.icon}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{step.title}</p>
+                    <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>{step.body}</p>
+                  </div>
+                </div>
+              ))}
             </div>
 
-            <hr style={{ borderColor: 'var(--border)' }} />
+            {/* Names hidden notice */}
+            {!allClaimed && total > 0 && (
+              <>
+                <hr style={{ borderColor: 'var(--border)' }} />
+                <div className="px-6 py-4 flex gap-3 items-center">
+                  <span className="text-lg flex-shrink-0">🔒</span>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                    Names are hidden until everyone has claimed their team.{' '}
+                    <strong style={{ color: 'var(--text-primary)' }}>{claimed} of {total}</strong> claimed so far.
+                  </p>
+                </div>
+              </>
+            )}
 
-            <div className="px-6 py-4">
+            {/* CTA */}
+            <div className="px-6 pb-6" style={{ paddingTop: allClaimed || total === 0 ? '0.5rem' : 0 }}>
               <button
                 onClick={() => setOpen(false)}
                 className="w-full font-bold py-2.5 rounded-xl"

@@ -78,7 +78,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                   <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.5)' }} />
                   {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}
                 </span>
-                <HowItWorksModal />
+                <HowItWorksModal claimed={claimed} total={participants.length} />
                 <ThemeToggle />
               </div>
             </div>
@@ -126,20 +126,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               })}
             </div>
           </section>
-
-          {/* Not-yet-revealed banner */}
-          {!revealed && claimed > 0 && (
-            <div
-              className="rounded-xl px-5 py-4 flex items-center gap-3 text-sm font-semibold"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
-            >
-              <span style={{ fontSize: '1.2rem' }}>🔒</span>
-              <span>
-                Names are hidden until all teams are claimed.{' '}
-                <span style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length} claimed so far.</span>
-              </span>
-            </div>
-          )}
 
           {/* Groups */}
           <section>
