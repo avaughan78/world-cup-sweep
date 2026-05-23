@@ -93,6 +93,21 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                   {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}
                 </span>
                 <HowItWorksModal claimed={claimed} total={participants.length} />
+                <a
+                  href={`/manage?code=${company.code}`}
+                  aria-label="Organiser admin"
+                  className="flex items-center justify-center rounded-full font-black text-sm transition-opacity hover:opacity-80"
+                  style={{
+                    width: '1.75rem', height: '1.75rem',
+                    background: 'rgba(255,255,255,0.2)',
+                    color: '#fff',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    flexShrink: 0,
+                    fontSize: '0.9rem',
+                  }}
+                >
+                  ⚙
+                </a>
                 <ThemeToggle />
               </div>
             </div>
