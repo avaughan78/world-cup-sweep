@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { GROUPS_2026 } from '@/lib/groups';
 import { getFlag } from '@/lib/flags';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -114,10 +113,6 @@ export default function AdminPage() {
       })
       .catch(() => {});
   }, [authed, password, selectedCompanyId]);
-
-  function handleLogout() {
-    window.location.href = '/api/admin/logout';
-  }
 
   async function handleLogin() {
     setLoginError('');
@@ -459,7 +454,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
-              <button type="button" onClick={handleLogout} className="text-sm" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
+              <a href="/api/admin/logout" className="text-sm" style={{ color: 'var(--text-muted)' }}>Log out</a>
             </div>
           </div>
           <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
