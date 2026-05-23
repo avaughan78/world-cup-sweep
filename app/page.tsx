@@ -42,7 +42,7 @@ export default async function Home() {
           <div className="flex items-end justify-between mt-1.5">
             <div className="flex items-end gap-4">
               <Image
-                src="/world-cup-trophy.jpg"
+                src="/world-cup-trophy.png"
                 alt="FIFA World Cup Trophy"
                 width={56}
                 height={72}
