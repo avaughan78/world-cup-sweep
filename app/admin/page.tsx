@@ -28,6 +28,15 @@ export default function AdminPage() {
     return () => clearTimeout(t);
   }, [status]);
 
+  // Restore session from cookie on mount
+  useEffect(() => {
+    const match = document.cookie.match(/(?:^|;\s*)admin_pw=([^;]*)/);
+    if (match) {
+      setPassword(decodeURIComponent(match[1]));
+      setAuthed(true);
+    }
+  }, []);
+
   // Participants state
   const [names, setNames] = useState<Record<string, string>>({});
   const [saved, setSaved] = useState<Record<string, string>>({}); // committed values
@@ -49,6 +58,7 @@ export default function AdminPage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
+        document.cookie = `admin_pw=${encodeURIComponent(password)}; max-age=${7 * 24 * 3600}; path=/; SameSite=Strict`;
         setAuthed(true);
       } else {
         setLoginError('Wrong password');
