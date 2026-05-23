@@ -1,17 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { resetStatsForNewSeason, logSync } from '@/lib/db';
+import { resetCompany, resetTournamentStats, logSync } from '@/lib/db';
 
 export async function POST(req: NextRequest) {
-  const { password } = await req.json() as { password?: string };
+  const { password, company_id } = await req.json() as { password?: string; company_id?: number };
 
   if (!password || password !== process.env.ADMIN_PASSWORD) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
   try {
-    await resetStatsForNewSeason();
-    await logSync('reset', 'success', 'all stats cleared for new season');
-    return NextResponse.json({ ok: true, message: 'All stats cleared. Ready for 2026.' });
+    if (company_id) {
+      await resetCompany(company_id);
+      await logSync('reset', 'success', `company ${company_id} draw cleared`);
+      return NextResponse.json({ ok: true, message: 'Company draw cleared. All participant names and tokens removed.' });
+    } else {
+      await resetTournamentStats();
+      await logSync('reset', 'success', 'all tournament stats cleared');
+      return NextResponse.json({ ok: true, message: 'Tournament stats cleared. Ready for the new season.' });
+    }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     return NextResponse.json({ ok: false, message: msg }, { status: 500 });

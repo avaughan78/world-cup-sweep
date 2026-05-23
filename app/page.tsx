@@ -1,4 +1,4 @@
-import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings } from '@/lib/db';
+import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings, getCompanyByCode } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
 import SyncTime from '@/components/SyncTime';
 import TrophyEasterEgg from '@/components/TrophyEasterEgg';
@@ -6,19 +6,28 @@ import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
 import GroupsGrid from '@/components/GroupsGrid';
 import ThemeToggle from '@/components/ThemeToggle';
+import CompanyGate from '@/components/CompanyGate';
 
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const params = await searchParams;
+  const code = params.code?.trim().toUpperCase();
+
+  if (!code) return <CompanyGate />;
+
+  const company = await getCompanyByCode(code);
+  if (!company) return <CompanyGate invalidCode />;
+
   const [participants, lastSync, allTeamStats, groupStandings] = await Promise.all([
-    getParticipants(),
+    getParticipants(company.id),
     getLastSync('stats'),
     getAllTeamStats(),
     getGroupStandings(),
   ]);
 
   const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
-  const prizes = await computePrizes(participantMap);
+  const prizes = await computePrizes(participantMap, company.id);
 
   const eliminatedTeams = new Set(
     allTeamStats.filter(t => t.is_eliminated).map(t => t.team_name)
@@ -28,8 +37,6 @@ export default async function Home() {
     p => p.participant_name && !eliminatedTeams.has(p.team_name)
   ).length;
 
-  const syncedAgo = lastSync;
-
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -37,7 +44,7 @@ export default async function Home() {
         {/* Header */}
         <header className="pt-10 pb-0">
           <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-            FIFA World Cup · 2026 · Sweepstake
+            FIFA World Cup · 2026 · {company.name}
           </p>
           <div className="flex items-end justify-between mt-1.5">
             <div className="flex items-end gap-4">
@@ -49,7 +56,7 @@ export default async function Home() {
             <div className="flex items-center gap-3">
               <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                 <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
-                {syncedAgo ? <>Synced <SyncTime timestamp={syncedAgo} /></> : 'Not yet synced'}
+                {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}
               </span>
               <ThemeToggle />
             </div>
@@ -82,7 +89,7 @@ export default async function Home() {
                       </span>
                     </div>
                   </div>
-                  <p className="text-base" style={{ color: 'var(--text-muted)' }}>Revealed at full time</p>
+                  <p className="text-base" style={{ color: 'var(--text-muted)' }}>Pending the final</p>
                 </div>
               ))}
             </div>
@@ -121,7 +128,7 @@ export default async function Home() {
                 className="rounded-xl p-10 text-center text-sm"
                 style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
               >
-                Sync the Google Sheet to populate team names.
+                No participants assigned yet — visit the admin panel to set names.
               </div>
             ) : (
               <GroupsGrid

@@ -1,4 +1,4 @@
-import { getParticipantsWithTokens } from '@/lib/db';
+import { getParticipantsWithTokens, getCompanyByCode } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import { GROUPS_2026 } from '@/lib/groups';
 import PrintTickets from '@/components/PrintTickets';
@@ -6,8 +6,28 @@ import PrintButton from '@/components/PrintButton';
 
 export const dynamic = 'force-dynamic';
 
-export default async function PrintPage() {
-  const participants = await getParticipantsWithTokens();
+export default async function PrintPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const params = await searchParams;
+  const code = params.code?.trim().toUpperCase();
+
+  if (!code) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <p style={{ color: 'var(--text-muted)' }}>No company code provided. Go to <a href="/admin" style={{ color: 'var(--green)' }}>Admin</a> and use the Print Tickets link.</p>
+      </div>
+    );
+  }
+
+  const company = await getCompanyByCode(code);
+  if (!company) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <p style={{ color: 'var(--text-muted)' }}>Company not found.</p>
+      </div>
+    );
+  }
+
+  const participants = await getParticipantsWithTokens(company.id);
   const tokenMap = new Map(participants.map(p => [p.team_name, p.claim_token]));
 
   const teams = Object.values(GROUPS_2026).flat();
@@ -32,11 +52,11 @@ export default async function PrintPage() {
       >
         <div>
           <h1 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
-            World Cup 2026 · Draw Tickets
+            World Cup 2026 · {company.name} · Draw Tickets
           </h1>
           {!hasTokens && (
             <p className="text-sm mt-0.5" style={{ color: '#ef4444' }}>
-              No tokens generated yet — go to Admin → Generate Tokens first.
+              No tokens generated yet — go to Admin → select this company → Generate Tokens first.
             </p>
           )}
         </div>

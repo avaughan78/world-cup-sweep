@@ -14,12 +14,13 @@ export interface Prize {
 }
 
 export async function computePrizes(
-  participantMap: Map<string, string | null>
+  participantMap: Map<string, string | null>,
+  companyId: number
 ): Promise<Prize[]> {
   const [allStats, topScorer, shotOverride] = await Promise.all([
     getAllTeamStats(),
     getTopScorer(),
-    getPrizeOverride('longest_shot'),
+    getPrizeOverride(companyId, 'longest_shot'),
   ]);
 
   function participant(teamName: string | null): string | null {

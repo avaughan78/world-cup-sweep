@@ -1,5 +1,5 @@
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from './football-api';
-import { upsertTeamStats, setTopScorer, logSync, getParticipants, upsertGroupStanding } from './db';
+import { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding } from './db';
 import { GROUPS_2026 } from './groups';
 import { computeCardTotals, computeOwnGoals, computeEliminations } from './prizes';
 
@@ -33,8 +33,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       matchTeams.add(normaliseTeamName(m.awayTeam.name));
     }
 
-    const participants = await getParticipants();
-    const allTeams = new Set([...matchTeams, ...participants.map(p => p.team_name)]);
+    const allTeams = new Set([...matchTeams, ...Object.values(GROUPS_2026).flat()]);
 
     for (const teamName of allTeams) {
       const c = cards.get(teamName) ?? { yellow: 0, red: 0 };

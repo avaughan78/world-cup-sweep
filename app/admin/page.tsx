@@ -5,6 +5,8 @@ import { GROUPS_2026 } from '@/lib/groups';
 import { getFlag } from '@/lib/flags';
 import ThemeToggle from '@/components/ThemeToggle';
 
+interface Company { id: number; code: string; name: string; }
+
 async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknown; raw: string }> {
   const raw = await res.text();
   try {
@@ -21,14 +23,33 @@ export default function AdminPage() {
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Auto-dismiss status toast after 6 seconds
+  // Companies
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
+  const [newCode, setNewCode] = useState('');
+  const [newName, setNewName] = useState('');
+
+  // Participants
+  const [names, setNames] = useState<Record<string, string>>({});
+  const [saved, setSaved] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState<Set<string>>(new Set());
+  const [justSaved, setJustSaved] = useState<Set<string>>(new Set());
+
+  // Longest shot
+  const [shotTeam, setShotTeam] = useState('');
+  const [shotLabel, setShotLabel] = useState('');
+  const [shotNotes, setShotNotes] = useState('');
+
+  const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
+
+  // Auto-dismiss toast
   useEffect(() => {
     if (!status) return;
     const t = setTimeout(() => setStatus(null), 6000);
     return () => clearTimeout(t);
   }, [status]);
 
-  // Restore session from cookie on mount
+  // Restore session from cookie
   useEffect(() => {
     const match = document.cookie.match(/(?:^|;\s*)admin_pw=([^;]*)/);
     if (match) {
@@ -37,16 +58,36 @@ export default function AdminPage() {
     }
   }, []);
 
-  // Participants state
-  const [names, setNames] = useState<Record<string, string>>({});
-  const [saved, setSaved] = useState<Record<string, string>>({}); // committed values
-  const [saving, setSaving] = useState<Set<string>>(new Set());
-  const [justSaved, setJustSaved] = useState<Set<string>>(new Set());
+  // Load companies after auth
+  useEffect(() => {
+    if (!authed) return;
+    fetch(`/api/admin/companies?password=${encodeURIComponent(password)}`)
+      .then(r => r.json())
+      .then((d: { companies?: Company[] }) => {
+        const list = d.companies ?? [];
+        setCompanies(list);
+        if (list.length === 1) setSelectedCompanyId(list[0].id);
+      })
+      .catch(() => {});
+  }, [authed, password]);
 
-  // Longest shot state
-  const [shotTeam, setShotTeam] = useState('');
-  const [shotLabel, setShotLabel] = useState('');
-  const [shotNotes, setShotNotes] = useState('');
+  // Load participants when company changes
+  useEffect(() => {
+    if (!authed || !selectedCompanyId) { setNames({}); setSaved({}); return; }
+    fetch('/api/admin/participants', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, company_id: selectedCompanyId }),
+    })
+      .then(r => r.json())
+      .then((d: { participants?: Array<{ team_name: string; participant_name: string | null }> }) => {
+        const map: Record<string, string> = {};
+        for (const p of d.participants ?? []) map[p.team_name] = p.participant_name ?? '';
+        setNames(map);
+        setSaved(map);
+      })
+      .catch(() => {});
+  }, [authed, password, selectedCompanyId]);
 
   async function handleLogin() {
     setLoginError('');
@@ -69,35 +110,66 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  // Load participants after auth
-  useEffect(() => {
-    if (!authed) return;
-    fetch('/api/admin/participants', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    })
-      .then(r => r.json())
-      .then((d: { participants?: Array<{ team_name: string; participant_name: string | null }> }) => {
-        const map: Record<string, string> = {};
-        for (const p of d.participants ?? []) {
-          map[p.team_name] = p.participant_name ?? '';
-        }
-        setNames(map);
-        setSaved(map);
-      })
-      .catch(() => {});
-  }, [authed, password]);
+  async function handleCreateCompany() {
+    const code = newCode.trim().toUpperCase();
+    const name = newName.trim();
+    if (!code || !name) { setStatus({ ok: false, message: 'Code and name are required' }); return; }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/companies', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, code, name }),
+      });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as { company?: Company; message?: string } | null;
+      if (ok && d?.company) {
+        setCompanies(prev => [...prev, d.company!].sort((a, b) => a.name.localeCompare(b.name)));
+        setSelectedCompanyId(d.company.id);
+        setNewCode('');
+        setNewName('');
+        setStatus({ ok: true, message: `Company "${name}" created.` });
+      } else {
+        setStatus({ ok: false, message: d?.message ?? raw });
+      }
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
+  async function handleDeleteCompany() {
+    if (!selectedCompany) return;
+    if (!confirm(`Delete "${selectedCompany.name}" and all its participant data? This cannot be undone.`)) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/companies', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, id: selectedCompany.id }),
+      });
+      const { ok } = await parseResponse(res);
+      if (ok) {
+        setCompanies(prev => prev.filter(c => c.id !== selectedCompany.id));
+        setSelectedCompanyId(null);
+        setStatus({ ok: true, message: `"${selectedCompany.name}" deleted.` });
+      }
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
 
   async function saveName(team: string) {
+    if (!selectedCompanyId) return;
     const value = names[team] ?? '';
-    if (value === (saved[team] ?? '')) return; // no change
+    if (value === (saved[team] ?? '')) return;
     setSaving(prev => new Set(prev).add(team));
     try {
       await fetch('/api/admin/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, team_name: team, participant_name: value }),
+        body: JSON.stringify({ password, company_id: selectedCompanyId, team_name: team, participant_name: value }),
       });
       setSaved(prev => ({ ...prev, [team]: value }));
       setJustSaved(prev => { const n = new Set(prev); n.add(team); return n; });
@@ -124,8 +196,8 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleReset() {
-    if (!confirm('Clear all stats, scores, and prize overrides? This cannot be undone.')) return;
+  async function handleResetStats() {
+    if (!confirm('Clear all tournament stats, scores, and standings? This cannot be undone.')) return;
     setLoading(true);
     setStatus(null);
     try {
@@ -144,13 +216,14 @@ export default function AdminPage() {
   }
 
   async function handleGenerateTokens() {
+    if (!selectedCompanyId) return;
     setLoading(true);
     setStatus(null);
     try {
       const res = await fetch('/api/admin/generate-tokens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, company_id: selectedCompanyId }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
@@ -162,6 +235,7 @@ export default function AdminPage() {
   }
 
   async function handleShotOverride() {
+    if (!selectedCompanyId) return;
     if (!shotTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
     setLoading(true);
     setStatus(null);
@@ -169,11 +243,35 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/shot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, team_name: shotTeam, value_label: shotLabel, notes: shotNotes }),
+        body: JSON.stringify({ password, company_id: selectedCompanyId, team_name: shotTeam, value_label: shotLabel, notes: shotNotes }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
       setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved!' : raw });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
+  async function handleResetCompany() {
+    if (!selectedCompany) return;
+    if (!confirm(`Clear all participant names and tokens for "${selectedCompany.name}"? This cannot be undone.`)) return;
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/admin/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, company_id: selectedCompanyId }),
+      });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      if (ok && d?.ok) {
+        setNames({});
+        setSaved({});
+      }
+      setStatus({ ok: ok && !!d?.ok, message: (d?.message as string) ?? raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -188,6 +286,16 @@ export default function AdminPage() {
     padding: '0.625rem 0.875rem',
     color: 'var(--text-primary)',
     fontSize: '1rem',
+    outline: 'none',
+  };
+
+  const smallInputStyle: React.CSSProperties = {
+    background: 'var(--bg)',
+    border: '1px solid var(--border)',
+    borderRadius: '0.5rem',
+    padding: '0.5rem 0.75rem',
+    color: 'var(--text-primary)',
+    fontSize: '0.875rem',
     outline: 'none',
   };
 
@@ -223,10 +331,10 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
-      {/* Fixed toast notification */}
+      {/* Toast */}
       {status && (
         <div
-          className="fixed top-4 left-4 right-4 sm:left-auto sm:max-w-sm z-50 rounded-xl px-4 py-3 text-sm shadow-xl flex items-start gap-3"
+          className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 rounded-xl px-4 py-3 text-sm shadow-xl flex items-start gap-3"
           style={{
             background: status.ok ? '#f0fdf4' : '#fef2f2',
             border: `1px solid ${status.ok ? '#bbf7d0' : '#fecaca'}`,
@@ -257,8 +365,9 @@ export default function AdminPage() {
 
         <div className="py-10 space-y-8">
 
-          {/* Actions */}
+          {/* Global actions */}
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Tournament (Global)</p>
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={handleSync}
@@ -269,120 +378,204 @@ export default function AdminPage() {
                 {loading ? 'Working…' : 'Sync Now'}
               </button>
               <button
-                onClick={handleReset}
+                onClick={handleResetStats}
                 disabled={loading}
                 className="font-bold px-5 py-2 rounded-lg transition-opacity"
                 style={{ background: '#fee2e2', color: '#991b1b', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
-                Reset for 2026
+                Reset Tournament Stats
               </button>
-              <button
-                onClick={handleGenerateTokens}
-                disabled={loading}
-                className="font-bold px-5 py-2 rounded-lg transition-opacity"
-                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
-              >
-                Generate Tokens
-              </button>
-              <a
-                href="/print"
-                target="_blank"
-                className="font-bold px-5 py-2 rounded-lg"
-                style={{ background: 'var(--green)', color: '#fff', fontSize: '0.9rem' }}
-              >
-                Print Tickets ↗
-              </a>
             </div>
+          </div>
 
-            {/* Longest shot override */}
-            <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Longest Shot Override</p>
+          {/* Companies */}
+          <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Companies</p>
+
+            {/* Company selector */}
+            {companies.length > 0 && (
+              <div className="mb-4">
+                <select
+                  value={selectedCompanyId ?? ''}
+                  onChange={e => setSelectedCompanyId(Number(e.target.value) || null)}
+                  style={{ ...smallInputStyle, width: '100%', maxWidth: '24rem' }}
+                >
+                  <option value="">— Select a company —</option>
+                  {companies.map(c => (
+                    <option key={c.id} value={c.id}>{c.code} · {c.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Create company */}
+            <div className="flex flex-wrap gap-2 items-end" style={{ borderTop: companies.length > 0 ? '1px solid var(--border)' : undefined, paddingTop: companies.length > 0 ? '1rem' : undefined }}>
+              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Add Company</p>
               <input
-                placeholder="Team"
-                value={shotTeam}
-                onChange={e => setShotTeam(e.target.value)}
-                style={{ flex: '1 1 130px', minWidth: 0, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem', outline: 'none' }}
+                placeholder="Code (e.g. ACME26)"
+                value={newCode}
+                onChange={e => setNewCode(e.target.value.toUpperCase())}
+                style={{ ...smallInputStyle, flex: '1 1 120px', minWidth: 0 }}
               />
               <input
-                placeholder="Label (e.g. 38.2m — Rüdiger)"
-                value={shotLabel}
-                onChange={e => setShotLabel(e.target.value)}
-                style={{ flex: '2 1 180px', minWidth: 0, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem', outline: 'none' }}
-              />
-              <input
-                placeholder="Notes"
-                value={shotNotes}
-                onChange={e => setShotNotes(e.target.value)}
-                style={{ flex: '1 1 100px', minWidth: 0, background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.5rem 0.75rem', color: 'var(--text-primary)', fontSize: '0.875rem', outline: 'none' }}
+                placeholder="Company name"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                style={{ ...smallInputStyle, flex: '2 1 180px', minWidth: 0 }}
               />
               <button
-                onClick={handleShotOverride}
+                onClick={handleCreateCompany}
                 disabled={loading}
                 className="font-bold px-5 py-2 rounded-lg transition-opacity flex-shrink-0"
                 style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
-                Save
+                Create
               </button>
             </div>
           </div>
 
-          {/* Participants */}
-          <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Participants</h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-              Edit names directly — changes save automatically on blur.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Object.entries(GROUPS_2026).map(([letter, teams]) => (
-                <div key={letter} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                  <div
-                    className="px-3 py-2 font-black uppercase tracking-widest"
-                    style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--text-muted)' }}
+          {/* Company-scoped section */}
+          {selectedCompany && (
+            <>
+              {/* Company actions */}
+              <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>
+                  {selectedCompany.code} · {selectedCompany.name}
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={handleGenerateTokens}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                    style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
                   >
-                    Group {letter}
-                  </div>
-                  {teams.map(team => (
-                    <div
-                      key={team}
-                      className="flex items-center gap-2 px-3 py-2"
-                      style={{ borderBottom: `1px solid var(--border)` }}
-                    >
-                      <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{getFlag(team)}</span>
-                      <span className="font-semibold" style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flexShrink: 0, width: '5.5rem' }}>
-                        {team}
-                      </span>
-                      <div className="flex-1 relative">
-                        <input
-                          type="text"
-                          placeholder="No one yet"
-                          value={names[team] ?? ''}
-                          onChange={e => setNames(prev => ({ ...prev, [team]: e.target.value }))}
-                          onBlur={() => saveName(team)}
-                          onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                          style={{
-                            width: '100%',
-                            background: 'transparent',
-                            border: 'none',
-                            borderBottom: `1px solid ${(names[team] ?? '') !== (saved[team] ?? '') ? 'var(--green)' : 'var(--border)'}`,
-                            padding: '0.2rem 0.1rem',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.85rem',
-                            outline: 'none',
-                          }}
-                        />
-                        {saving.has(team) && (
-                          <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--text-muted)' }}>…</span>
-                        )}
-                        {justSaved.has(team) && !saving.has(team) && (
-                          <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--green)' }}>✓</span>
-                        )}
+                    Generate Tokens
+                  </button>
+                  <a
+                    href={`/print?code=${selectedCompany.code}`}
+                    target="_blank"
+                    className="font-bold px-5 py-2 rounded-lg"
+                    style={{ background: 'var(--green)', color: '#fff', fontSize: '0.9rem' }}
+                  >
+                    Print Tickets ↗
+                  </a>
+                  <a
+                    href={`/?code=${selectedCompany.code}`}
+                    target="_blank"
+                    className="font-bold px-5 py-2 rounded-lg"
+                    style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: '0.9rem' }}
+                  >
+                    View Draw ↗
+                  </a>
+                  <button
+                    onClick={handleResetCompany}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                    style={{ background: '#fee2e2', color: '#991b1b', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                  >
+                    Reset Draw
+                  </button>
+                  <button
+                    onClick={handleDeleteCompany}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                    style={{ background: '#fef2f2', color: '#991b1b', opacity: loading ? 0.5 : 1, fontSize: '0.9rem', border: '1px solid #fecaca' }}
+                  >
+                    Delete Company
+                  </button>
+                </div>
+
+                {/* Longest shot override */}
+                <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Longest Shot Override</p>
+                  <input
+                    placeholder="Team"
+                    value={shotTeam}
+                    onChange={e => setShotTeam(e.target.value)}
+                    style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }}
+                  />
+                  <input
+                    placeholder="Label (e.g. 38.2m — Rüdiger)"
+                    value={shotLabel}
+                    onChange={e => setShotLabel(e.target.value)}
+                    style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }}
+                  />
+                  <input
+                    placeholder="Notes"
+                    value={shotNotes}
+                    onChange={e => setShotNotes(e.target.value)}
+                    style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }}
+                  />
+                  <button
+                    onClick={handleShotOverride}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-opacity flex-shrink-0"
+                    style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+
+              {/* Participants */}
+              <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Participants — {selectedCompany.name}</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+                  Edit names directly — changes save automatically on blur.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(GROUPS_2026).map(([letter, teams]) => (
+                    <div key={letter} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                      <div
+                        className="px-3 py-2 font-black uppercase tracking-widest"
+                        style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--text-muted)' }}
+                      >
+                        Group {letter}
                       </div>
+                      {teams.map(team => (
+                        <div
+                          key={team}
+                          className="flex items-center gap-2 px-3 py-2"
+                          style={{ borderBottom: `1px solid var(--border)` }}
+                        >
+                          <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{getFlag(team)}</span>
+                          <span className="font-semibold" style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flexShrink: 0, width: '5.5rem' }}>
+                            {team}
+                          </span>
+                          <div className="flex-1 relative">
+                            <input
+                              type="text"
+                              placeholder="No one yet"
+                              value={names[team] ?? ''}
+                              onChange={e => setNames(prev => ({ ...prev, [team]: e.target.value }))}
+                              onBlur={() => saveName(team)}
+                              onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                              style={{
+                                width: '100%',
+                                background: 'transparent',
+                                border: 'none',
+                                borderBottom: `1px solid ${(names[team] ?? '') !== (saved[team] ?? '') ? 'var(--green)' : 'var(--border)'}`,
+                                padding: '0.2rem 0.1rem',
+                                color: 'var(--text-primary)',
+                                fontSize: '0.85rem',
+                                outline: 'none',
+                              }}
+                            />
+                            {saving.has(team) && (
+                              <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--text-muted)' }}>…</span>
+                            )}
+                            {justSaved.has(team) && !saving.has(team) && (
+                              <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--green)' }}>✓</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
+            </>
+          )}
 
         </div>
       </div>
