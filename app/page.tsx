@@ -114,7 +114,7 @@ export default async function Home() {
               <div className="album-section-label" style={{ marginBottom: 0 }}>
                 <span className="label-text">The Draw</span>
                 <span className="label-line" />
-                <span className="label-note">forty-eight teams · forty-eight names</span>
+                <span className="label-note">forty-eight teams</span>
               </div>
               {inRunning > 0 && (
                 <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
