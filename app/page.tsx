@@ -156,6 +156,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             </div>
           </section>
 
+          {/* Names hidden notice */}
+          {!revealed && participants.length > 0 && (
+            <div
+              className="rounded-xl px-5 py-4 flex items-center gap-3"
+              style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+            >
+              <span className="text-lg flex-shrink-0">🔒</span>
+              <p className="text-sm" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                Names are hidden until everyone has claimed their team.{' '}
+                <strong style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length}</strong> claimed so far.
+              </p>
+            </div>
+          )}
+
           {/* Groups */}
           <section>
             <div className="flex flex-wrap items-baseline justify-between gap-y-1 mb-3">
