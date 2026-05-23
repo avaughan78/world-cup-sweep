@@ -7,13 +7,21 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
   const results: Record<string, string> = {};
 
   try {
-    const [matches, scorers, standings] = await Promise.all([
+    const statNotes: string[] = [];
+
+    const [matchesResult, scorersResult, standingsResult] = await Promise.allSettled([
       getFinishedMatches(),
       getTopScorers(),
       getStandings(),
     ]);
 
-    const statNotes: string[] = [];
+    const matches = matchesResult.status === 'fulfilled' ? matchesResult.value : [];
+    const scorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
+    const standings = standingsResult.status === 'fulfilled' ? standingsResult.value : [];
+
+    if (matchesResult.status === 'rejected') statNotes.push(`matches error: ${matchesResult.reason}`);
+    if (scorersResult.status === 'rejected') statNotes.push(`scorers error: ${scorersResult.reason}`);
+    if (standingsResult.status === 'rejected') statNotes.push(`standings error: ${standingsResult.reason}`);
 
     const cards = computeCardTotals(matches);
     const ownGoals = computeOwnGoals(matches);

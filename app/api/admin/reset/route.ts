@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await resetStatsForNewSeason();
-    await logSync('stats', 'success', 'reset: all stats cleared for new season');
+    await logSync('reset', 'success', 'all stats cleared for new season');
     return NextResponse.json({ ok: true, message: 'All stats cleared. Ready for 2026.' });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
