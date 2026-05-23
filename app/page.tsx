@@ -28,15 +28,23 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   ]);
 
   const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
-  const prizes = await computePrizes(participantMap, company.id);
+
+  // Only reveal names once every slot is filled
+  const claimed = participants.filter(p => p.participant_name?.trim()).length;
+  const revealed = claimed === participants.length && participants.length > 0;
+  const displayMap = revealed
+    ? participantMap
+    : new Map(participants.map(p => [p.team_name, null]));
+
+  const prizes = await computePrizes(displayMap, company.id);
 
   const eliminatedTeams = new Set(
     allTeamStats.filter(t => t.is_eliminated).map(t => t.team_name)
   );
 
-  const inRunning = participants.filter(
-    p => p.participant_name && !eliminatedTeams.has(p.team_name)
-  ).length;
+  const inRunning = revealed
+    ? participants.filter(p => p.participant_name && !eliminatedTeams.has(p.team_name)).length
+    : 0;
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -119,6 +127,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             </div>
           </section>
 
+          {/* Not-yet-revealed banner */}
+          {!revealed && claimed > 0 && (
+            <div
+              className="rounded-xl px-5 py-4 flex items-center gap-3 text-sm font-semibold"
+              style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+            >
+              <span style={{ fontSize: '1.2rem' }}>🔒</span>
+              <span>
+                Names are hidden until all teams are claimed.{' '}
+                <span style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length} claimed so far.</span>
+              </span>
+            </div>
+          )}
+
           {/* Groups */}
           <section>
             <div className="flex flex-wrap items-baseline justify-between gap-y-1 mb-3">
@@ -145,7 +167,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               </div>
             ) : (
               <GroupsGrid
-                participantMap={Object.fromEntries(participantMap)}
+                participantMap={Object.fromEntries(displayMap)}
                 eliminatedTeams={[...eliminatedTeams]}
                 prizes={prizes}
                 groupStandings={groupStandings}
