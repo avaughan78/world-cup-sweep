@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings, getCompanyByCode } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
 import SyncTime from '@/components/SyncTime';
@@ -8,6 +7,7 @@ import TicketBadge from '@/components/TicketBadge';
 import GroupsGrid from '@/components/GroupsGrid';
 import ThemeToggle from '@/components/ThemeToggle';
 import CompanyGate from '@/components/CompanyGate';
+import HowItWorksModal from '@/components/HowItWorksModal';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,45 +41,38 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
 
-      {/* Hero banner */}
-      <div className="w-full" style={{ lineHeight: 0 }}>
-        <Image
-          src="/wc2026-header.webp"
-          alt="FIFA World Cup 2026"
-          width={1584}
-          height={396}
-          priority
-          style={{ width: '100%', height: 'auto', display: 'block' }}
-        />
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
-
-        {/* Header */}
-        <header className="pt-6 pb-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+      {/* Header with image backdrop */}
+      <header
+        style={{
+          backgroundImage: 'url(/wc2026-header.webp)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-7">
+          <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            FIFA World Cup · 2026 · {company.name}
+          </p>
+          <div className="flex items-end justify-between mt-1.5">
+            <div className="flex items-end gap-4">
               <TrophyEasterEgg />
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                  {company.name} · Sweepstake
-                </p>
-                <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
-                  The Draw
-                </h1>
-              </div>
+              <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
+                The Draw
+              </h1>
             </div>
             <div className="flex items-center gap-3">
-              <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
-                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
+              <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.5)' }} />
                 {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}
               </span>
+              <HowItWorksModal />
               <ThemeToggle />
             </div>
           </div>
-          <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
-        </header>
+        </div>
+      </header>
 
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="py-10 space-y-10">
 
           {/* Main prizes */}
