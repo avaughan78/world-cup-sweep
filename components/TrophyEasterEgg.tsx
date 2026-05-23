@@ -6,6 +6,7 @@ import Image from 'next/image';
 export default function TrophyEasterEgg() {
   const [showModal, setShowModal] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   function startTimer() {
     timerRef.current = setTimeout(() => setShowModal(true), 5000);
@@ -24,6 +25,10 @@ export default function TrophyEasterEgg() {
   }
 
   useEffect(() => () => cancelTimer(), []);
+
+  useEffect(() => {
+    if (showModal) videoRef.current?.play().catch(() => {});
+  }, [showModal]);
 
   return (
     <>
@@ -54,7 +59,8 @@ export default function TrophyEasterEgg() {
             className="relative w-full max-w-2xl rounded-2xl overflow-hidden"
             style={{
               background: 'var(--bg)',
-              boxShadow: '0 40px 100px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.07)',
+              border: '1px solid var(--border)',
+              boxShadow: '0 40px 100px rgba(0,0,0,0.6)',
               maxHeight: '92vh',
               overflowY: 'auto',
               scrollbarWidth: 'none',
@@ -85,8 +91,8 @@ export default function TrophyEasterEgg() {
 
             {/* Video */}
             <video
+              ref={videoRef}
               src="/pele-wonder-goals.mp4"
-              autoPlay
               controls
               style={{ display: 'block', width: '100%', background: '#000' }}
             />
