@@ -83,7 +83,7 @@ export default function TrophyEasterEgg() {
                 🐐 Easter Egg
               </p>
               <p className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                Pelé · Wonder Goals
+                100 World Cup Goals
               </p>
             </div>
 
@@ -92,7 +92,7 @@ export default function TrophyEasterEgg() {
             {/* Video */}
             <video
               ref={videoRef}
-              src="/pele-wonder-goals.mp4"
+              src="/world-cup-goals.mp4"
               controls
               style={{ display: 'block', width: '100%', background: '#000' }}
             />
