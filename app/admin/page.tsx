@@ -115,8 +115,7 @@ export default function AdminPage() {
 
   function handleLogout() {
     document.cookie = 'admin_pw=; max-age=0; path=/; SameSite=Strict; Secure';
-    setAuthed(false);
-    setPassword('');
+    window.location.href = '/';
   }
 
   async function handleLogin() {
