@@ -1,8 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-export async function GET(req: NextRequest) {
-  const home = new URL('/', req.url);
-  const res = NextResponse.redirect(home);
-  res.cookies.set('admin_pw', '', { maxAge: 0, path: '/' });
-  return res;
+export async function GET() {
+  return new Response(null, {
+    status: 302,
+    headers: {
+      'Location': '/',
+      'Set-Cookie': 'admin_pw=; max-age=0; path=/; SameSite=Strict',
+    },
+  });
 }
