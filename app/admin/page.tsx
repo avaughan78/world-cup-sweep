@@ -116,8 +116,7 @@ export default function AdminPage() {
   }, [authed, password, selectedCompanyId]);
 
   function handleLogout() {
-    document.cookie = 'admin_pw=; max-age=0; path=/; SameSite=Strict; Secure';
-    window.location.replace('/');
+    window.location.href = '/api/admin/logout';
   }
 
   async function handleLogin() {
