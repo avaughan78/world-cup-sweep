@@ -1,6 +1,6 @@
 import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
-import { timeAgo } from '@/lib/format';
+import { formatSyncTime } from '@/lib/format';
 import Image from 'next/image';
 import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
@@ -28,7 +28,7 @@ export default async function Home() {
     p => p.participant_name && !eliminatedTeams.has(p.team_name)
   ).length;
 
-  const syncedAgo = lastSync ? timeAgo(lastSync) : null;
+  const syncedAgo = lastSync ? formatSyncTime(lastSync) : null;
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -37,7 +37,7 @@ export default async function Home() {
         {/* Header */}
         <header className="pt-10 pb-0">
           <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-            FIFA World Cup · 2026 · Office Sweepstake
+            FIFA World Cup · 2026 · Sweepstake
           </p>
           <div className="flex items-end justify-between mt-1.5">
             <div className="flex items-end gap-4">

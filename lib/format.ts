@@ -14,3 +14,14 @@ export function timeAgo(dateStr: string): string {
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
 }
+
+export function formatSyncTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const tz = 'Europe/London';
+  const time = date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: tz });
+  const todayStr = new Date().toLocaleDateString('en-GB', { timeZone: tz });
+  const dateStr2 = date.toLocaleDateString('en-GB', { timeZone: tz });
+  if (todayStr === dateStr2) return time;
+  const label = date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: tz });
+  return `${label} ${time}`;
+}
