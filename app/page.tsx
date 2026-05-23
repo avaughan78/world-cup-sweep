@@ -1,6 +1,6 @@
 import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
-import { formatSyncTime } from '@/lib/format';
+import SyncTime from '@/components/SyncTime';
 import Image from 'next/image';
 import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
@@ -28,7 +28,7 @@ export default async function Home() {
     p => p.participant_name && !eliminatedTeams.has(p.team_name)
   ).length;
 
-  const syncedAgo = lastSync ? formatSyncTime(lastSync) : null;
+  const syncedAgo = lastSync;
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
@@ -55,7 +55,7 @@ export default async function Home() {
             <div className="flex items-center gap-3">
               <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'var(--text-muted)' }}>
                 <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'var(--text-muted)' }} />
-                {syncedAgo ? `Synced ${syncedAgo}` : 'Not yet synced'}
+                {syncedAgo ? <>Synced <SyncTime timestamp={syncedAgo} /></> : 'Not yet synced'}
               </span>
               <ThemeToggle />
             </div>
