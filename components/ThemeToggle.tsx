@@ -36,7 +36,7 @@ export default function ThemeToggle() {
       }}
     >
       <span>{album ? '📰' : '🎴'}</span>
-      <span className="hidden sm:inline">{album ? 'Editorial' : 'Sticker Album'}</span>
+      <span className="hidden sm:inline">{album ? 'Editorial' : 'Clean'}</span>
     </button>
   );
 }
