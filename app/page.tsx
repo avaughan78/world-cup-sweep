@@ -6,6 +6,7 @@ import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
 import GroupsGrid from '@/components/GroupsGrid';
 import ThemeToggle from '@/components/ThemeToggle';
+import BugReport from '@/components/BugReport';
 import CompanyGate from '@/components/CompanyGate';
 import HowItWorksModal from '@/components/HowItWorksModal';
 
@@ -206,6 +207,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           </section>
 
         </div>
+
+        <footer className="pb-8 text-center">
+          <BugReport />
+        </footer>
+
       </div>
     </main>
 
