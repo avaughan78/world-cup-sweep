@@ -59,7 +59,7 @@ export default function HowItWorksModal({ claimed = 0, total = 0 }: { claimed?: 
           onClick={() => setOpen(false)}
         >
           <div
-            className="relative w-full max-w-md rounded-2xl overflow-hidden"
+            className="relative w-full max-w-lg rounded-2xl overflow-hidden"
             style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}
             onClick={e => e.stopPropagation()}
           >
