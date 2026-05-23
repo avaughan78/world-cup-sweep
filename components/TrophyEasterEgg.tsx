@@ -3,24 +3,40 @@
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 
+const COUNTDOWN_START = 5;
+
 export default function TrophyEasterEgg() {
   const [showModal, setShowModal] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countRef = useRef(COUNTDOWN_START);
 
   function startTimer() {
-    timerRef.current = setTimeout(() => setShowModal(true), 5000);
+    countRef.current = COUNTDOWN_START;
+    setCountdown(COUNTDOWN_START);
+    intervalRef.current = setInterval(() => {
+      countRef.current -= 1;
+      if (countRef.current <= 0) {
+        clearInterval(intervalRef.current!);
+        intervalRef.current = null;
+        setCountdown(null);
+        setShowModal(true);
+      } else {
+        setCountdown(countRef.current);
+      }
+    }, 1000);
   }
 
   function cancelTimer() {
-    if (timerRef.current) {
-      clearTimeout(timerRef.current);
-      timerRef.current = null;
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
+    setCountdown(null);
   }
 
   function closeModal() {
     setShowModal(false);
-    cancelTimer();
   }
 
   useEffect(() => () => cancelTimer(), []);
@@ -34,7 +50,7 @@ export default function TrophyEasterEgg() {
         onTouchStart={startTimer}
         onTouchEnd={cancelTimer}
         onTouchCancel={cancelTimer}
-        style={{ cursor: 'default', flexShrink: 0, WebkitUserSelect: 'none', userSelect: 'none' }}
+        style={{ cursor: 'default', flexShrink: 0, WebkitUserSelect: 'none', userSelect: 'none', position: 'relative' }}
       >
         <Image
           src="/world-cup-trophy.png"
@@ -43,6 +59,27 @@ export default function TrophyEasterEgg() {
           height={72}
           style={{ objectFit: 'contain' }}
         />
+        {countdown !== null && (
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            borderRadius: '6px',
+            background: 'rgba(0,0,0,0.55)',
+          }}>
+            <span style={{
+              color: '#fff',
+              fontWeight: 900,
+              fontSize: '1.5rem',
+              lineHeight: 1,
+              fontFamily: 'system-ui, sans-serif',
+            }}>
+              {countdown}
+            </span>
+          </div>
+        )}
       </div>
 
       {showModal && (
