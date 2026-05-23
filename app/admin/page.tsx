@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { GROUPS_2026 } from '@/lib/groups';
 import { getFlag } from '@/lib/flags';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -17,6 +18,7 @@ async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknow
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [password, setPassword] = useState('');
   const [authed, setAuthed] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -115,7 +117,7 @@ export default function AdminPage() {
 
   function handleLogout() {
     document.cookie = 'admin_pw=; max-age=0; path=/; SameSite=Strict; Secure';
-    window.location.href = '/';
+    router.push('/');
   }
 
   async function handleLogin() {
