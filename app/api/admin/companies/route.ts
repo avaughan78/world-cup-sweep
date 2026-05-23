@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice } from '@/lib/db';
+import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, setCompanyAdminPassword, updateCompany } from '@/lib/db';
 
 function auth(password?: string) {
   return password === process.env.ADMIN_PASSWORD;
@@ -26,11 +26,22 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { password, id, ticket_price } = await req.json() as { password?: string; id?: number; ticket_price?: number | null };
+  const { password, id, ticket_price, admin_password, name, code } = await req.json() as {
+    password?: string; id?: number; ticket_price?: number | null; admin_password?: string; name?: string; code?: string;
+  };
   if (!auth(password)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
-  const price = ticket_price != null && ticket_price > 0 ? ticket_price : null;
-  await setCompanyTicketPrice(id, price);
+  if (ticket_price !== undefined) {
+    const price = ticket_price != null && ticket_price > 0 ? ticket_price : null;
+    await setCompanyTicketPrice(id, price);
+  }
+  if (admin_password !== undefined) {
+    await setCompanyAdminPassword(id, admin_password.trim() || null);
+  }
+  if (name?.trim() || code?.trim()) {
+    const updated = await updateCompany(id, { name: name?.trim(), code: code?.trim() });
+    return NextResponse.json({ ok: true, company: updated });
+  }
   return NextResponse.json({ ok: true });
 }
 

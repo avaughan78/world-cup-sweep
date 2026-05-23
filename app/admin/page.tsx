@@ -41,6 +41,15 @@ export default function AdminPage() {
   const [ticketPrice, setTicketPrice] = useState('');
   const [priceSaved, setPriceSaved] = useState(false);
 
+  // Company name / code editing
+  const [editName, setEditName] = useState('');
+  const [editCode, setEditCode] = useState('');
+  const [detailsSaved, setDetailsSaved] = useState(false);
+
+  // Admin password
+  const [adminPw, setAdminPw] = useState('');
+  const [adminPwSaved, setAdminPwSaved] = useState(false);
+
   // Longest shot
   const [shotTeam, setShotTeam] = useState('');
   const [shotLabel, setShotLabel] = useState('');
@@ -77,10 +86,13 @@ export default function AdminPage() {
       .catch(() => {});
   }, [authed, password]);
 
-  // Sync ticket price input when company changes
+  // Sync editable fields when company changes
   useEffect(() => {
     const company = companies.find(c => c.id === selectedCompanyId);
     setTicketPrice(company?.ticket_price != null ? String(company.ticket_price) : '');
+    setEditName(company?.name ?? '');
+    setEditCode(company?.code ?? '');
+    setAdminPw('');
   }, [selectedCompanyId, companies]);
 
   // Load participants when company changes
@@ -263,6 +275,47 @@ export default function AdminPage() {
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
+    setLoading(false);
+  }
+
+  async function handleSaveDetails() {
+    if (!selectedCompany) return;
+    const name = editName.trim();
+    const code = editCode.trim().toUpperCase();
+    if (!name || !code) { setStatus({ ok: false, message: 'Name and code are required' }); return; }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/companies', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, id: selectedCompany.id, name, code }),
+      });
+      const { ok, data } = await parseResponse(res);
+      const d = data as { ok?: boolean; company?: Company } | null;
+      if (ok && d?.company) {
+        setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, ...d.company! } : c));
+        setDetailsSaved(true);
+        setTimeout(() => setDetailsSaved(false), 2000);
+      }
+    } catch (e) { setStatus({ ok: false, message: String(e) }); }
+    setLoading(false);
+  }
+
+  async function handleSaveAdminPassword() {
+    if (!selectedCompany) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/companies', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, id: selectedCompany.id, admin_password: adminPw }),
+      });
+      const { ok } = await parseResponse(res);
+      if (ok) {
+        setAdminPwSaved(true);
+        setTimeout(() => setAdminPwSaved(false), 2000);
+      }
+    } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
 
@@ -560,6 +613,54 @@ export default function AdminPage() {
                   </button>
                   <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                     Sets prize amounts shown on the draw page (48 tickets × price × split).
+                  </p>
+                </div>
+
+                {/* Company name / code */}
+                <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Company Details</p>
+                  <input
+                    placeholder="Company name"
+                    value={editName}
+                    onChange={e => setEditName(e.target.value)}
+                    style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }}
+                  />
+                  <input
+                    placeholder="Code"
+                    value={editCode}
+                    onChange={e => setEditCode(e.target.value.toUpperCase())}
+                    style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }}
+                  />
+                  <button
+                    onClick={handleSaveDetails}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                    style={{ background: detailsSaved ? '#f0fdf4' : 'var(--green)', color: detailsSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                  >
+                    {detailsSaved ? 'Saved ✓' : 'Save'}
+                  </button>
+                </div>
+
+                {/* Admin password */}
+                <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Organiser Admin Password</p>
+                  <input
+                    type="text"
+                    placeholder="e.g. football"
+                    value={adminPw}
+                    onChange={e => setAdminPw(e.target.value)}
+                    style={{ flex: '1 1 160px', minWidth: 0, ...smallInputStyle }}
+                  />
+                  <button
+                    onClick={handleSaveAdminPassword}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                    style={{ background: adminPwSaved ? '#f0fdf4' : 'var(--green)', color: adminPwSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                  >
+                    {adminPwSaved ? 'Saved ✓' : 'Set Password'}
+                  </button>
+                  <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    Gives the organiser access to <a href={`/manage?code=${selectedCompany?.code}`} target="_blank" style={{ color: 'var(--text-muted)', textDecoration: 'underline' }}>/manage?code={selectedCompany?.code}</a>
                   </p>
                 </div>
 

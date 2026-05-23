@@ -71,6 +71,22 @@ export async function setCompanyTicketPrice(id: number, price: number | null): P
   await sql`UPDATE companies SET ticket_price = ${price} WHERE id = ${id}`;
 }
 
+export async function setCompanyAdminPassword(id: number, password: string | null): Promise<void> {
+  await sql`UPDATE companies SET admin_password = ${password} WHERE id = ${id}`;
+}
+
+export async function authenticateCompanyAdmin(code: string, password: string): Promise<
+  | { ok: true; company: Company }
+  | { ok: false; reason: 'not_found' | 'not_configured' | 'wrong_password' }
+> {
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_password FROM companies WHERE UPPER(code) = UPPER(${code})`;
+  if (!rows[0]) return { ok: false, reason: 'not_found' };
+  const row = rows[0] as Company & { admin_password: string | null };
+  if (!row.admin_password) return { ok: false, reason: 'not_configured' };
+  if (row.admin_password.trim() !== password.trim()) return { ok: false, reason: 'wrong_password' };
+  return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price } };
+}
+
 export async function createCompany(code: string, name: string): Promise<Company> {
   const rows = await sql`
     INSERT INTO companies (code, name) VALUES (UPPER(${code}), ${name}) RETURNING id, code, name
@@ -87,6 +103,21 @@ export async function createCompany(code: string, name: string): Promise<Company
     }
   }
   return company;
+}
+
+export async function updateCompany(id: number, fields: { name?: string; code?: string }): Promise<Company> {
+  if (fields.name !== undefined && fields.code !== undefined) {
+    const rows = await sql`UPDATE companies SET name = ${fields.name}, code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price`;
+    return rows[0] as Company;
+  } else if (fields.name !== undefined) {
+    const rows = await sql`UPDATE companies SET name = ${fields.name} WHERE id = ${id} RETURNING id, code, name, ticket_price`;
+    return rows[0] as Company;
+  } else if (fields.code !== undefined) {
+    const rows = await sql`UPDATE companies SET code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price`;
+    return rows[0] as Company;
+  }
+  const rows = await sql`SELECT id, code, name, ticket_price FROM companies WHERE id = ${id}`;
+  return rows[0] as Company;
 }
 
 export async function deleteCompany(id: number): Promise<void> {

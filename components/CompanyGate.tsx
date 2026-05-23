@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export default function CompanyGate({ invalidCode = false }: { invalidCode?: boolean }) {
+export default function CompanyGate({ invalidCode = false, redirectPath = '/' }: { invalidCode?: boolean; redirectPath?: string }) {
   const router = useRouter();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
@@ -19,11 +19,11 @@ export default function CompanyGate({ invalidCode = false }: { invalidCode?: boo
     }
     const stored = localStorage.getItem('company_code');
     if (stored) {
-      router.replace(`/?code=${stored}`);
+      router.replace(`${redirectPath}?code=${stored}`);
     } else {
       setChecking(false);
     }
-  }, [router, invalidCode]);
+  }, [router, invalidCode, redirectPath]);
 
   async function handleSubmit() {
     const trimmed = code.trim().toUpperCase();
@@ -39,7 +39,7 @@ export default function CompanyGate({ invalidCode = false }: { invalidCode?: boo
       const data = await res.json() as { ok: boolean; error?: string };
       if (data.ok) {
         localStorage.setItem('company_code', trimmed);
-        router.replace(`/?code=${trimmed}`);
+        router.replace(`${redirectPath}?code=${trimmed}`);
       } else {
         setError('Company code not recognised');
       }
