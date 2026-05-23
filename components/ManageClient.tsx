@@ -166,9 +166,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
 
   function handleLogout() {
     localStorage.removeItem(STORAGE_KEY);
-    setAuthenticated(false);
-    setSessionPw('');
-    setInputPw('');
+    window.location.href = `/?code=${company.code}`;
   }
 
   async function handleSavePassword() {
