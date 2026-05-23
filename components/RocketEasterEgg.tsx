@@ -56,7 +56,7 @@ export default function RocketEasterEgg({ size = 'sm' }: { size?: 'sm' | '2xl' }
         title="The Thunderbastard"
         style={{ position: 'relative', display: 'inline-block', fontSize: size === '2xl' ? '1.5rem' : '0.85rem', lineHeight: 1, flexShrink: 0, cursor: 'default', WebkitUserSelect: 'none', userSelect: 'none' }}
       >
-        <span className={countdown !== null ? 'rocket-shaking' : ''}>🚀</span>
+        <span>🚀</span>
         {countdown !== null && (
           <span style={{
             position: 'absolute',
