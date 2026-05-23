@@ -69,11 +69,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         <header
           className="rounded-2xl overflow-hidden"
           style={{
-            backgroundColor: '#4D10C8',
-            backgroundImage: 'url(/wc2026-header.webp)',
-            backgroundSize: 'auto 100%',
+            backgroundImage: 'url(/wc2026-header-bg.png)',
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right center',
+            backgroundPosition: 'center',
           }}
         >
           <div className="px-6 sm:px-8 pt-5 pb-5">

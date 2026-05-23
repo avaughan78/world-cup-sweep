@@ -64,11 +64,10 @@ export default function CompanyGate({ invalidCode = false, redirectPath = '/' }:
         <div
           className="px-7 pt-7 pb-6"
           style={{
-            backgroundColor: '#4D10C8',
-            backgroundImage: 'url(/wc2026-header.webp)',
-            backgroundSize: 'auto 100%',
+            backgroundImage: 'url(/wc2026-header-bg.png)',
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right center',
+            backgroundPosition: 'center',
           }}
         >
           <p

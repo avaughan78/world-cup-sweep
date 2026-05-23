@@ -215,11 +215,10 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         <div className="w-full max-w-sm rounded-2xl overflow-hidden"
           style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
           <div className="px-7 pt-7 pb-6" style={{
-            backgroundColor: '#4D10C8',
-            backgroundImage: 'url(/wc2026-header.webp)',
-            backgroundSize: 'auto 100%',
+            backgroundImage: 'url(/wc2026-header-bg.png)',
+            backgroundSize: 'cover',
             backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'right center',
+            backgroundPosition: 'center',
           }}>
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
               FIFA World Cup · 2026 · {company.name}
