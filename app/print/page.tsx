@@ -56,7 +56,7 @@ export default async function PrintPage({ searchParams }: { searchParams: Promis
           </h1>
           {!hasTokens && (
             <p className="text-sm mt-0.5" style={{ color: '#ef4444' }}>
-              No tokens generated yet — go to Admin → select this company → Generate Tokens first.
+              No QR codes generated yet — go to Admin → select this company → Generate QR Codes first.
             </p>
           )}
         </div>

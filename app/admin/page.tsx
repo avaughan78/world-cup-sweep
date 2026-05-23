@@ -351,7 +351,7 @@ export default function AdminPage() {
 
   async function handleResetCompany() {
     if (!selectedCompany) return;
-    if (!confirm(`Clear all participant names and tokens for "${selectedCompany.name}"? This cannot be undone.`)) return;
+    if (!confirm(`Clear all participant names and QR codes for "${selectedCompany.name}"? This cannot be undone.`)) return;
     setLoading(true);
     setStatus(null);
     try {
@@ -544,7 +544,7 @@ export default function AdminPage() {
                     className="font-bold px-5 py-2 rounded-lg transition-opacity"
                     style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
                   >
-                    Generate Tokens
+                    Generate QR Codes
                   </button>
                   <a
                     href={`/print?code=${selectedCompany.code}`}

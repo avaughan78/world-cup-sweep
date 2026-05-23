@@ -6,5 +6,5 @@ export async function POST(req: NextRequest) {
   const auth = await authenticateCompanyAdmin(code ?? '', password ?? '');
   if (!auth.ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const count = await generateClaimTokens(auth.company.id);
-  return NextResponse.json({ ok: true, message: `Tokens ready for ${count} teams. You can now print tickets.` });
+  return NextResponse.json({ ok: true, message: `QR codes ready for ${count} teams. You can now print tickets.` });
 }

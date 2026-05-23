@@ -73,7 +73,7 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
             </span>
           </>
         ) : (
-          <span style={{ fontSize: '0.6rem', color: '#ccc', fontFamily: 'system-ui, sans-serif' }}>No token</span>
+          <span style={{ fontSize: '0.6rem', color: '#ccc', fontFamily: 'system-ui, sans-serif' }}>No QR code</span>
         )}
       </div>
     </div>
