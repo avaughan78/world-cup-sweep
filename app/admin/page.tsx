@@ -303,7 +303,6 @@ export default function AdminPage() {
   }
 
   async function handleShotOverride() {
-    if (!shotTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
     setLoading(true);
     setStatus(null);
     try {
@@ -323,7 +322,6 @@ export default function AdminPage() {
   }
 
   async function handleOwnGoalOverride() {
-    if (!ownGoalTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
     setLoading(true);
     setStatus(null);
     try {
@@ -341,7 +339,6 @@ export default function AdminPage() {
   }
 
   async function handleBicycleOverride() {
-    if (!bicycleTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
     setLoading(true);
     setStatus(null);
     try {
