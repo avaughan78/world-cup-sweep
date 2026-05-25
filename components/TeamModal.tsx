@@ -39,7 +39,7 @@ interface Stat { label: string; value: string }
 const BLURB_LIMIT = 400;
 
 const PRONUNCIATION: Record<string, { phonetic: string; word: string; lang: string }> = {
-  'Curaçao': { phonetic: 'kyuor · ruh · sau', word: 'Curaçao', lang: 'nl-NL' },
+  'Curaçao': { phonetic: 'kyuor · ruh · sau', word: 'Curaçao', lang: 'en-GB' },
 };
 
 function AboutBlurb({ title, text }: { title: string; text: string }) {
