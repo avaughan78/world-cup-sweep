@@ -152,7 +152,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
       <hr className="my-3" style={{ borderColor: 'var(--border)' }} />
 
       <div className="min-h-8">
-        <LeaderSection prize={prize} empty="No leader yet" />
+        <LeaderSection prize={prize} empty={prize.slug === 'longest_shot' ? 'Awaiting some magic...' : 'No leader yet'} />
       </div>
       <ParticipantStrip name={prize.current_participant} />
     </div>
