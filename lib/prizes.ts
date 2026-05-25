@@ -138,7 +138,7 @@ export async function computePrizes(
     },
     {
       slug: 'sieve',
-      name: 'The Sieve',
+      name: 'Derby County',
       description: 'Most goals conceded overall',
       icon: '🪣',
       current_team: (topSieve?.goals_conceded ?? 0) > 0 ? topSieve!.team_name : null,
