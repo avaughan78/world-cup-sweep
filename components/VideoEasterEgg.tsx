@@ -23,6 +23,7 @@ export default function VideoEasterEgg({
   const lastClosedRef = useRef(0);
 
   function startTimer() {
+    if (intervalRef.current) return;
     if (Date.now() - lastClosedRef.current < 1000) return;
     countRef.current = COUNTDOWN_START;
     setCountdown(COUNTDOWN_START);
@@ -93,7 +94,7 @@ export default function VideoEasterEgg({
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: 'rgba(8,8,6,0.85)', backdropFilter: 'blur(8px)' }}
+          style={{ background: 'rgba(8,8,6,0.65)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
           onClick={closeModal}
         >
           <div
