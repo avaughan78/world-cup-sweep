@@ -64,7 +64,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6">
+      <div className="max-w-[1080px] mx-auto px-4 sm:px-6 pt-6">
 
         {/* Header with image backdrop — constrained to content width */}
         <header
