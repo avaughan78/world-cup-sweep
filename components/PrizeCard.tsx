@@ -19,16 +19,63 @@ const MYSTERY_QS = [
   { top: '93%', left: '38%', size: '1.0rem', opacity: 0.05, rotate:  '-9deg' },
 ];
 
-export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
-  const hasLeader = !!prize.current_team;
+const videoIcon = (
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <rect x="2" y="2" width="20" height="20" rx="4"/>
+    <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="white"/>
+  </svg>
+);
 
+const participantStyle: React.CSSProperties = {
+  background: 'linear-gradient(90deg, #7c3aed, #2563eb, #db2777, #ea580c)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+};
+
+function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
+  if (!prize.current_team) {
+    return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{empty}</p>;
+  }
+  return (
+    <div>
+      {/* Row 1: team name (left) + participant (right, gradient) */}
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+          <span className="mr-1">{getFlag(prize.current_team)}</span>
+          {prize.current_team}
+        </p>
+        {prize.current_participant && (
+          <span className="text-xs font-bold flex-shrink-0 text-right" style={participantStyle}>
+            {prize.current_participant}
+          </span>
+        )}
+      </div>
+      {/* Row 2: player + video icon right-aligned (manual), or value_label left (auto) */}
+      {prize.video_url ? (
+        <div className="flex items-center justify-end gap-1.5 mt-1">
+          {prize.value_label && (
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
+          )}
+          <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
+            style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
+            {videoIcon}
+          </a>
+        </div>
+      ) : prize.value_label ? (
+        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
+      ) : null}
+    </div>
+  );
+}
+
+export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   if (prize.mystery) {
     return (
       <div
         className="prize-card rounded-xl p-4 flex flex-col h-full relative overflow-hidden"
         style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
       >
-        {/* Scattered ? marks — body area only, below the icon row */}
         <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', userSelect: 'none' }}>
           {MYSTERY_QS.map((q, i) => (
             <span key={i} style={{
@@ -59,32 +106,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         <hr className="my-3 relative" style={{ borderColor: 'var(--border)' }} />
 
         <div className="relative min-h-12">
-          {hasLeader ? (
-            <div>
-              <p className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-                <span className="mr-1">{getFlag(prize.current_team!)}</span>
-                {prize.current_team}
-              </p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                {(prize.value_label || prize.current_participant) && (
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                    {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
-                  </p>
-                )}
-                {prize.video_url && (
-                  <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
-                    style={{ color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <rect x="2" y="2" width="20" height="20" rx="4"/>
-                    <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="white"/>
-                  </svg>
-                  </a>
-                )}
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>TBD</p>
-          )}
+          <LeaderSection prize={prize} empty="TBD" />
         </div>
       </div>
     );
@@ -101,8 +123,6 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
             ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc="/van-bronckhorst.mp4" fontSize="1.5rem" />
             : prize.slug === 'most_cards'
             ? <VideoEasterEgg icon="🟨" label="The Gareth Barry Award" videoSrc="/zidane.mp4" fontSize="1.5rem" />
-            : prize.slug === 'most_own_goals'
-            ? <VideoEasterEgg icon="😬" label="Oooops" videoSrc="/haiti-own-goal.mp4" fontSize="1.5rem" />
             : (
               <span
                 className="text-2xl leading-none"
@@ -123,32 +143,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
       <hr className="my-3" style={{ borderColor: 'var(--border)' }} />
 
       <div className="min-h-12">
-        {hasLeader ? (
-          <div>
-            <p className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-              <span className="mr-1">{getFlag(prize.current_team!)}</span>
-              {prize.current_team}
-            </p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              {(prize.value_label || prize.current_participant) && (
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
-                </p>
-              )}
-              {prize.video_url && (
-                <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
-                  style={{ color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                    <rect x="2" y="2" width="20" height="20" rx="4"/>
-                    <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="white"/>
-                  </svg>
-                </a>
-              )}
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No leader yet</p>
-        )}
+        <LeaderSection prize={prize} empty="No leader yet" />
       </div>
     </div>
   );
