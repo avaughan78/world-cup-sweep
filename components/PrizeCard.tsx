@@ -133,7 +133,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           {prize.slug === 'longest_shot'
             ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc="/van-bronckhorst.mp4" fontSize="1.5rem" />
             : prize.slug === 'most_cards'
-            ? <VideoEasterEgg icon="🟨" label="The Gareth Barry Award" videoSrc="/zidane.mp4" fontSize="1.5rem" />
+            ? <VideoEasterEgg icon="🟨" label="The Zidane Award" videoSrc="/zidane.mp4" fontSize="1.5rem" />
             : (
               <span
                 className="text-2xl leading-none"
