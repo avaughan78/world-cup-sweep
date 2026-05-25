@@ -99,6 +99,8 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           <div className="flex items-start justify-between">
             {prize.slug === 'most_own_goals'
               ? <VideoEasterEgg icon="😬" label="Oooops" videoSrc="/haiti-own-goal.mp4" fontSize="1.5rem" />
+              : prize.slug === 'bicycle'
+              ? <VideoEasterEgg icon="🤸" label="The Bicycle" videoSrc="/richarlison.mp4" fontSize="1.5rem" />
               : <span className="text-2xl leading-none">{prize.icon}</span>
             }
             <TicketBadge amount="?" />
