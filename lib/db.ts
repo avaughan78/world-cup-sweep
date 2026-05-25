@@ -299,6 +299,7 @@ export async function resetTournamentStats() {
   await sql`DELETE FROM team_stats`;
   await sql`DELETE FROM group_standings`;
   await sql`DELETE FROM top_scorer WHERE id = 1`;
+  await sql`DELETE FROM prize_overrides WHERE category IN ('longest_shot', 'most_own_goals', 'bicycle')`;
 }
 
 // ── Sync log (shared) ─────────────────────────────────────────────────────────

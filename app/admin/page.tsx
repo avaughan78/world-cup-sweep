@@ -355,6 +355,22 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function clearPrize(endpoint: string, resetFns: Array<() => void>) {
+    setLoading(true);
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password, team_name: '', value_label: null, notes: '' }),
+      });
+      const { ok, data } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      if (ok && d?.ok) resetFns.forEach(fn => fn());
+      else setStatus({ ok: false, message: 'Clear failed' });
+    } catch (e) { setStatus({ ok: false, message: String(e) }); }
+    setLoading(false);
+  }
+
   async function handleToggleMysteryGlobally(hide: boolean) {
     const action = hide ? 'hide' : 'show';
     if (!confirm(`${hide ? 'Hide' : 'Show'} both mystery prizes for ALL companies?`)) return;
@@ -618,6 +634,19 @@ export default function AdminPage() {
                   {saved ? 'Saved ✓' : 'Save'}
                 </button>
               );
+              const clearBtn = (onClear: () => void) => (
+                <button onClick={onClear} disabled={loading}
+                  className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
+                  style={{
+                    background: 'transparent',
+                    color: 'var(--text-muted)',
+                    border: '1px solid var(--border)',
+                    opacity: loading ? 0.5 : 1,
+                    fontSize: '0.85rem',
+                  }}>
+                  Clear
+                </button>
+              );
               return (
                 <>
                   {/* Thunderbastard */}
@@ -631,6 +660,9 @@ export default function AdminPage() {
                       onChange={e => { setShotUrl(e.target.value); setShotSaved(false); }}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {saveBtn(handleShotOverride, shotSaved)}
+                    {clearBtn(() => clearPrize('/api/admin/shot', [
+                      () => setShotTeam(''), () => setShotPlayer(''), () => setShotUrl(''), () => setShotSaved(false),
+                    ]))}
                   </div>
 
                   {/* Oooops */}
@@ -641,6 +673,9 @@ export default function AdminPage() {
                       onChange={e => { setOwnGoalUrl(e.target.value); setOwnGoalSaved(false); }}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {saveBtn(handleOwnGoalOverride, ownGoalSaved)}
+                    {clearBtn(() => clearPrize('/api/admin/owngoal', [
+                      () => setOwnGoalTeam(''), () => setOwnGoalUrl(''), () => setOwnGoalSaved(false),
+                    ]))}
                   </div>
 
                   {/* Bicycle */}
@@ -654,6 +689,9 @@ export default function AdminPage() {
                       onChange={e => { setBicycleUrl(e.target.value); setBicycleSaved(false); }}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {saveBtn(handleBicycleOverride, bicycleSaved)}
+                    {clearBtn(() => clearPrize('/api/admin/bicycle', [
+                      () => setBicycleTeam(''), () => setBicyclePlayer(''), () => setBicycleUrl(''), () => setBicycleSaved(false),
+                    ]))}
                   </div>
                 </>
               );
