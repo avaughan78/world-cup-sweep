@@ -42,13 +42,15 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
-        <span className="mr-1" style={{ fontSize: '1.3rem' }}>{getFlag(prize.current_team)}</span>
-        {playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team}
-      </p>
+      <div className="flex items-center gap-1.5 min-w-0 flex-1">
+        <span style={{ fontSize: '1.3rem', lineHeight: 1, flexShrink: 0 }}>{getFlag(prize.current_team)}</span>
+        <span className="font-semibold text-base truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+          {playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team}
+        </span>
+      </div>
       <div className="flex items-center gap-1.5 flex-shrink-0">
         {!playerMode && prize.value_label && (
-          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
+          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</span>
         )}
         {prize.video_url && (
           <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
