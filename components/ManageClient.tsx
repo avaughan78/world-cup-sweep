@@ -29,6 +29,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [confirmPw, setConfirmPw] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState('');
+  const [hiddenPrizes, setHiddenPrizes] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,40 @@ export default function ManageClient({ company: initialCompany }: { company: Com
     setSaved(map);
   }
 
+  async function loadPrizeOverrides(pw: string) {
+    const res = await fetch('/api/company/manage/prize-overrides', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: initialCompany.code, password: pw }),
+    });
+    const data = await res.json() as { overrides?: Array<{ category: string; team_name: string | null }> };
+    const hidden = new Set<string>();
+    for (const o of data.overrides ?? []) {
+      if (o.team_name === '__hidden__') hidden.add(o.category);
+    }
+    setHiddenPrizes(hidden);
+  }
+
+  async function handleTogglePrize(slug: string, hide: boolean) {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/company/manage/prize-overrides', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, slug, hidden: hide }),
+      });
+      const data = await res.json() as { ok: boolean };
+      if (data.ok) {
+        setHiddenPrizes(prev => {
+          const next = new Set(prev);
+          hide ? next.add(slug) : next.delete(slug);
+          return next;
+        });
+      }
+    } catch { /* silent */ }
+    setLoading(false);
+  }
+
   async function doAuth(pw: string): Promise<boolean> {
     const res = await fetch('/api/company/manage/auth', {
       method: 'POST',
@@ -60,7 +95,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       setCompany(data.company);
       setTicketPrice(data.company.ticket_price != null ? String(data.company.ticket_price) : '');
       setAuthenticated(true);
-      await loadParticipants(pw);
+      await Promise.all([loadParticipants(pw), loadPrizeOverrides(pw)]);
       return true;
     }
     return false;
@@ -103,7 +138,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         setCompany(data.company);
         setTicketPrice(data.company.ticket_price != null ? String(data.company.ticket_price) : '');
         setAuthenticated(true);
-        await loadParticipants(pw);
+        await Promise.all([loadParticipants(pw), loadPrizeOverrides(pw)]);
       } else {
         setAuthError(data.error ?? 'Incorrect password');
       }
@@ -402,6 +437,33 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                 Sets prize amounts shown on the draw page (48 tickets × price × split).
               </p>
+            </div>
+
+            {/* Mystery prize visibility */}
+            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Mystery Prizes</p>
+              <div className="flex flex-wrap gap-2">
+                {(['most_own_goals', 'bicycle'] as const).map(slug => {
+                  const label = slug === 'most_own_goals' ? '😬 Oooops' : '🤸 The Bicycle';
+                  const isHidden = hiddenPrizes.has(slug);
+                  return (
+                    <button
+                      key={slug}
+                      onClick={() => handleTogglePrize(slug, !isHidden)}
+                      disabled={loading}
+                      className="font-bold px-4 py-2 rounded-lg text-sm transition-colors"
+                      style={{
+                        background: isHidden ? '#fee2e2' : 'var(--bg)',
+                        color: isHidden ? '#991b1b' : 'var(--text-muted)',
+                        border: `1px solid ${isHidden ? '#fecaca' : 'var(--border)'}`,
+                        opacity: loading ? 0.5 : 1,
+                      }}
+                    >
+                      {label} · {isHidden ? 'Hidden — Show' : 'Visible — Hide'}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
           </div>

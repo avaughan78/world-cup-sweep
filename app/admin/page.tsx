@@ -61,7 +61,7 @@ export default function AdminPage() {
   const [ownGoalLabel, setOwnGoalLabel] = useState('');
   const [bicycleTeam, setBicycleTeam] = useState('');
   const [bicycleLabel, setBicycleLabel] = useState('');
-  const [hiddenPrizes, setHiddenPrizes] = useState<Set<string>>(new Set());
+  const [globalRemoved, setGlobalRemoved] = useState<Set<string>>(new Set());
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
 
@@ -110,22 +110,6 @@ export default function AdminPage() {
     setOwnGoalLabel('');
     setBicycleTeam('');
     setBicycleLabel('');
-    if (selectedCompanyId) {
-      fetch(`/api/admin/prize-overrides?company_id=${selectedCompanyId}`, {
-        headers: { 'x-admin-password': password },
-      })
-        .then(r => r.json())
-        .then((d: { overrides?: Array<{ category: string; team_name: string | null }> }) => {
-          const hidden = new Set<string>();
-          for (const o of d.overrides ?? []) {
-            if (o.team_name === '__hidden__') hidden.add(o.category);
-          }
-          setHiddenPrizes(hidden);
-        })
-        .catch(() => {});
-    } else {
-      setHiddenPrizes(new Set());
-    }
   }, [selectedCompanyId, companies]);
 
   // Load participants when company changes
@@ -347,25 +331,21 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleTogglePrizeVisibility(slug: string, hide: boolean) {
-    if (!selectedCompanyId) return;
+  async function handleRemoveGlobally(slug: string) {
+    if (!confirm(`Remove "${slug}" prize from ALL companies? Each company can re-show it from their admin page.`)) return;
     setLoading(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/admin/prize-overrides', {
+      const res = await fetch('/api/admin/remove-prize-global', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, company_id: selectedCompanyId, slug, hidden: hide }),
+        body: JSON.stringify({ password, slug }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
       if (ok && d?.ok) {
-        setHiddenPrizes(prev => {
-          const next = new Set(prev);
-          hide ? next.add(slug) : next.delete(slug);
-          return next;
-        });
-        setStatus({ ok: true, message: hide ? 'Prize hidden.' : 'Prize restored.' });
+        setGlobalRemoved(prev => new Set(prev).add(slug));
+        setStatus({ ok: true, message: `"${slug}" hidden for all ${d.companies} companies.` });
       } else {
         setStatus({ ok: false, message: raw });
       }
@@ -805,10 +785,10 @@ export default function AdminPage() {
                   <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
                     <div className="w-full flex items-center justify-between mb-0.5">
                       <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
-                      <button onClick={() => handleTogglePrizeVisibility('most_own_goals', !hiddenPrizes.has('most_own_goals'))} disabled={loading}
+                      <button onClick={() => handleRemoveGlobally('most_own_goals')} disabled={loading || globalRemoved.has('most_own_goals')}
                         className="text-xs font-bold px-3 py-1 rounded-lg transition-opacity flex-shrink-0"
-                        style={{ background: hiddenPrizes.has('most_own_goals') ? '#fee2e2' : 'var(--bg)', color: hiddenPrizes.has('most_own_goals') ? '#991b1b' : 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
-                        {hiddenPrizes.has('most_own_goals') ? 'Hidden — Show' : 'Hide Prize'}
+                        style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', opacity: loading || globalRemoved.has('most_own_goals') ? 0.5 : 1 }}>
+                        {globalRemoved.has('most_own_goals') ? 'Removed ✓' : 'Remove Globally'}
                       </button>
                     </div>
                     <input placeholder="Team" value={ownGoalTeam} onChange={e => setOwnGoalTeam(e.target.value)}
@@ -826,10 +806,10 @@ export default function AdminPage() {
                   <div className="flex flex-wrap gap-2 items-end pt-3" style={{ borderTop: '1px solid var(--border)' }}>
                     <div className="w-full flex items-center justify-between mb-0.5">
                       <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
-                      <button onClick={() => handleTogglePrizeVisibility('bicycle', !hiddenPrizes.has('bicycle'))} disabled={loading}
+                      <button onClick={() => handleRemoveGlobally('bicycle')} disabled={loading || globalRemoved.has('bicycle')}
                         className="text-xs font-bold px-3 py-1 rounded-lg transition-opacity flex-shrink-0"
-                        style={{ background: hiddenPrizes.has('bicycle') ? '#fee2e2' : 'var(--bg)', color: hiddenPrizes.has('bicycle') ? '#991b1b' : 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
-                        {hiddenPrizes.has('bicycle') ? 'Hidden — Show' : 'Hide Prize'}
+                        style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', opacity: loading || globalRemoved.has('bicycle') ? 0.5 : 1 }}>
+                        {globalRemoved.has('bicycle') ? 'Removed ✓' : 'Remove Globally'}
                       </button>
                     </div>
                     <input placeholder="Team" value={bicycleTeam} onChange={e => setBicycleTeam(e.target.value)}
