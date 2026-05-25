@@ -26,11 +26,10 @@ const videoIcon = (
   </svg>
 );
 
-const participantStyle: React.CSSProperties = {
-  background: 'linear-gradient(90deg, #7c3aed, #2563eb, #db2777, #ea580c)',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  backgroundClip: 'text',
+const headerStrip: React.CSSProperties = {
+  backgroundImage: 'url(/wc2026-header-bg.png)',
+  backgroundSize: 'cover',
+  backgroundPosition: 'center',
 };
 
 function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
@@ -56,8 +55,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
           )}
         </div>
         {prize.current_participant && (
-          <div className="mt-2 rounded-md px-3 py-1 text-center overflow-hidden"
-            style={{ backgroundImage: 'url(/wc2026-header-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+          <div className="mt-2 rounded-md px-3 py-1 text-center overflow-hidden" style={headerStrip}>
             <span className="text-xs font-bold" style={{ color: '#fff' }}>
               {prize.current_participant}
             </span>
@@ -69,30 +67,28 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
 
   return (
     <div>
-      <div className="flex items-baseline justify-between gap-2">
+      <div className="flex items-center justify-between gap-2">
         <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
           <span className="mr-1">{getFlag(prize.current_team)}</span>
           {prize.current_team}
         </p>
-        {prize.current_participant && (
-          <span className="text-xs font-bold flex-shrink-0 text-right" style={participantStyle}>
-            {prize.current_participant}
-          </span>
-        )}
-      </div>
-      {prize.video_url ? (
-        <div className="flex items-center justify-end gap-1.5 mt-1">
-          {prize.value_label && (
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
-          )}
+        {prize.video_url && (
           <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
             style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
             {videoIcon}
           </a>
-        </div>
-      ) : prize.value_label ? (
+        )}
+      </div>
+      {prize.value_label && (
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
-      ) : null}
+      )}
+      {prize.current_participant && (
+        <div className="mt-2 rounded-md px-3 py-1 text-center overflow-hidden" style={headerStrip}>
+          <span className="text-xs font-bold" style={{ color: '#fff' }}>
+            {prize.current_participant}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
