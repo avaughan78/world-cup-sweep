@@ -10,8 +10,10 @@ export default function TrophyEasterEgg() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countRef = useRef(COUNTDOWN_START);
+  const lastClosedRef = useRef(0);
 
   function startTimer() {
+    if (Date.now() - lastClosedRef.current < 1000) return;
     countRef.current = COUNTDOWN_START;
     setCountdown(COUNTDOWN_START);
     intervalRef.current = setInterval(() => {
@@ -36,6 +38,7 @@ export default function TrophyEasterEgg() {
   }
 
   function closeModal() {
+    lastClosedRef.current = Date.now();
     setShowModal(false);
   }
 

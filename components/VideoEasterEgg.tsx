@@ -20,8 +20,10 @@ export default function VideoEasterEgg({
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const countRef = useRef(COUNTDOWN_START);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const lastClosedRef = useRef(0);
 
   function startTimer() {
+    if (Date.now() - lastClosedRef.current < 1000) return;
     countRef.current = COUNTDOWN_START;
     setCountdown(COUNTDOWN_START);
     intervalRef.current = setInterval(() => {
@@ -46,6 +48,7 @@ export default function VideoEasterEgg({
   }
 
   function closeModal() {
+    lastClosedRef.current = Date.now();
     setShowModal(false);
     if (videoRef.current) {
       videoRef.current.pause();
