@@ -4,13 +4,19 @@ import TicketBadge from './TicketBadge';
 import VideoEasterEgg from './VideoEasterEgg';
 
 const MYSTERY_QS = [
-  { top: '52%', left: '8%',  size: '1.6rem', opacity: 0.06, rotate: '-14deg' },
-  { top: '68%', left: '55%', size: '2.1rem', opacity: 0.05, rotate:  '11deg' },
-  { top: '78%', left: '28%', size: '1.2rem', opacity: 0.07, rotate:  '25deg' },
-  { top: '60%', left: '80%', size: '1.8rem', opacity: 0.04, rotate:  '-6deg' },
-  { top: '85%', left: '68%', size: '1.0rem', opacity: 0.06, rotate:  '18deg' },
-  { top: '90%', left: '14%', size: '1.4rem', opacity: 0.05, rotate: '-22deg' },
-  { top: '43%', left: '70%', size: '1.1rem', opacity: 0.04, rotate:   '8deg' },
+  { top:  '4%', left: '38%', size: '1.3rem', opacity: 0.05, rotate:  '10deg' },
+  { top:  '8%', left: '72%', size: '1.0rem', opacity: 0.04, rotate: '-18deg' },
+  { top: '18%', left: '12%', size: '1.8rem', opacity: 0.06, rotate:  '-8deg' },
+  { top: '22%', left: '55%', size: '1.2rem', opacity: 0.05, rotate:  '22deg' },
+  { top: '32%', left: '82%', size: '1.5rem', opacity: 0.04, rotate:  '-4deg' },
+  { top: '38%', left: '30%', size: '1.0rem', opacity: 0.06, rotate:  '15deg' },
+  { top: '48%', left: '65%', size: '2.0rem', opacity: 0.05, rotate: '-12deg' },
+  { top: '55%', left:  '8%', size: '1.6rem', opacity: 0.06, rotate:  '-6deg' },
+  { top: '64%', left: '48%', size: '1.1rem', opacity: 0.04, rotate:  '20deg' },
+  { top: '72%', left: '78%', size: '1.4rem', opacity: 0.05, rotate:   '8deg' },
+  { top: '80%', left: '22%', size: '1.2rem', opacity: 0.07, rotate: '-20deg' },
+  { top: '88%', left: '60%', size: '1.7rem', opacity: 0.04, rotate:  '14deg' },
+  { top: '93%', left: '38%', size: '1.0rem', opacity: 0.05, rotate:  '-9deg' },
 ];
 
 export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
