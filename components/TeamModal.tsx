@@ -38,8 +38,8 @@ interface Stat { label: string; value: string }
 
 const BLURB_LIMIT = 400;
 
-const PRONUNCIATION: Record<string, string> = {
-  'Curaçao': 'kyoo · ruh · SOW (rhymes with "cow")',
+const PRONUNCIATION: Record<string, { phonetic: string; word: string; lang: string }> = {
+  'Curaçao': { phonetic: 'kyuor · ruh · sau', word: 'Curaçao', lang: 'nl-NL' },
 };
 
 function AboutBlurb({ title, text }: { title: string; text: string }) {
@@ -187,9 +187,37 @@ export default function TeamModal({ team, participant, onClose }: {
               {team}
             </h2>
             {PRONUNCIATION[team] && (
-              <p className="mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', letterSpacing: '0.03em' }}>
-                🔊 {PRONUNCIATION[team]}
-              </p>
+              <div className="flex items-center gap-2 mt-1.5">
+                <button
+                  type="button"
+                  aria-label="Hear pronunciation"
+                  onClick={e => {
+                    e.stopPropagation();
+                    const u = new SpeechSynthesisUtterance(PRONUNCIATION[team].word);
+                    u.lang = PRONUNCIATION[team].lang;
+                    window.speechSynthesis.cancel();
+                    window.speechSynthesis.speak(u);
+                  }}
+                  style={{
+                    background: 'rgba(255,255,255,0.12)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    borderRadius: '50%',
+                    width: '1.6rem',
+                    height: '1.6rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    flexShrink: 0,
+                    fontSize: '0.8rem',
+                  }}
+                >
+                  🔊
+                </button>
+                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', letterSpacing: '0.03em', fontWeight: 500 }}>
+                  {PRONUNCIATION[team].phonetic}
+                </span>
+              </div>
             )}
             {participant && (
               <p
