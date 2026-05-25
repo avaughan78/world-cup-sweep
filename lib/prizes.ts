@@ -1,4 +1,4 @@
-import { getAllTeamStats, getTopScorer, getPrizeOverride, getGroupStandings, TeamStats } from './db';
+import { getAllTeamStats, getTopScorer, getPrizeOverride, TeamStats } from './db';
 import type { ApiMatch, ApiStanding } from './football-api';
 import { normaliseTeamName } from './football-api';
 
@@ -19,13 +19,12 @@ export async function computePrizes(
   participantMap: Map<string, string | null>,
   companyId: number
 ): Promise<Prize[]> {
-  const [allStats, topScorer, shotOverride, bicycleOverride, ownGoalOverride, groupStandings] = await Promise.all([
+  const [allStats, topScorer, shotOverride, bicycleOverride, ownGoalOverride] = await Promise.all([
     getAllTeamStats(),
     getTopScorer(),
     getPrizeOverride(companyId, 'longest_shot'),
     getPrizeOverride(companyId, 'bicycle'),
     getPrizeOverride(companyId, 'most_own_goals'),
-    getGroupStandings(),
   ]);
 
   function participant(teamName: string | null): string | null {
@@ -56,14 +55,10 @@ export async function computePrizes(
   // 5. Top scorer's team
   const topScorerTeam = topScorer?.team_name ?? null;
 
-  // 6. Most goals conceded (The Sieve) — aggregate from group standings
-  const concededMap = new Map<string, number>();
-  for (const s of groupStandings) {
-    concededMap.set(s.team_name, (concededMap.get(s.team_name) ?? 0) + s.goals_against);
-  }
-  let topSieve: { team_name: string; goals: number } | null = null;
-  for (const [team_name, goals] of concededMap) {
-    if (!topSieve || goals > topSieve.goals) topSieve = { team_name, goals };
+  // 6. Most goals conceded (The Sieve) — all matches via team_stats.goals_conceded
+  let topSieve: TeamStats | null = null;
+  for (const t of allStats) {
+    if (!topSieve || t.goals_conceded > topSieve.goals_conceded) topSieve = t;
   }
 
   return [
@@ -142,10 +137,10 @@ export async function computePrizes(
       name: 'The Sieve',
       description: 'Most goals conceded in the tournament',
       icon: '🪣',
-      current_team: (topSieve?.goals ?? 0) > 0 ? topSieve!.team_name : null,
-      current_participant: (topSieve?.goals ?? 0) > 0 ? participant(topSieve!.team_name) : null,
-      value_label: (topSieve?.goals ?? 0) > 0
-        ? `${topSieve!.goals} conceded`
+      current_team: (topSieve?.goals_conceded ?? 0) > 0 ? topSieve!.team_name : null,
+      current_participant: (topSieve?.goals_conceded ?? 0) > 0 ? participant(topSieve!.team_name) : null,
+      value_label: (topSieve?.goals_conceded ?? 0) > 0
+        ? `${topSieve!.goals_conceded} conceded`
         : null,
       is_manual: false,
     },
@@ -218,4 +213,18 @@ export function computeEliminations(standings: ApiStanding[]): Set<string> {
   }
 
   return eliminated;
+}
+
+export function computeGoalsConceded(matches: ApiMatch[]): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const match of matches) {
+    if (match.status !== 'FINISHED') continue;
+    const home = normaliseTeamName(match.homeTeam.name);
+    const away = normaliseTeamName(match.awayTeam.name);
+    const homeScore = match.score.fullTime.home ?? 0;
+    const awayScore = match.score.fullTime.away ?? 0;
+    map.set(home, (map.get(home) ?? 0) + awayScore);
+    map.set(away, (map.get(away) ?? 0) + homeScore);
+  }
+  return map;
 }

@@ -1,10 +1,13 @@
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from './football-api';
-import { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding } from './db';
+import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding } from './db';
 import { GROUPS_2026 } from './groups';
-import { computeCardTotals, computeOwnGoals, computeEliminations } from './prizes';
+import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeEliminations } from './prizes';
 
 export async function runSync(): Promise<{ ok: boolean; results: Record<string, string> }> {
   const results: Record<string, string> = {};
+
+  // One-time migration — safe to run repeatedly (no-op if column exists)
+  await sql`ALTER TABLE team_stats ADD COLUMN IF NOT EXISTS goals_conceded INTEGER NOT NULL DEFAULT 0`;
 
   try {
     const statNotes: string[] = [];
@@ -25,6 +28,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
     const cards = computeCardTotals(matches);
     const ownGoals = computeOwnGoals(matches);
+    const goalsConceded = computeGoalsConceded(matches);
     const eliminated = computeEliminations(standings);
 
     const matchTeams = new Set<string>();
@@ -42,6 +46,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         yellow_cards: c.yellow,
         red_cards: c.red,
         own_goals_against: ownGoals.get(teamName) ?? 0,
+        goals_conceded: goalsConceded.get(teamName) ?? 0,
         is_eliminated: eliminated.has(teamName),
       });
     }

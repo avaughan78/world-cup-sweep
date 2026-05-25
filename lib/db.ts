@@ -23,6 +23,7 @@ export interface TeamStats {
   yellow_cards: number;
   red_cards: number;
   own_goals_against: number;
+  goals_conceded: number;
   is_eliminated: boolean;
   eliminated_at: string | null;
 }
@@ -196,20 +197,22 @@ export async function upsertTeamStats(stats: {
   yellow_cards: number;
   red_cards: number;
   own_goals_against: number;
+  goals_conceded: number;
   is_eliminated: boolean;
   eliminated_at?: string;
 }) {
   const eliminatedAt = stats.eliminated_at ?? null;
   await sql`
-    INSERT INTO team_stats (team_name, yellow_cards, red_cards, own_goals_against, is_eliminated, eliminated_at, updated_at)
+    INSERT INTO team_stats (team_name, yellow_cards, red_cards, own_goals_against, goals_conceded, is_eliminated, eliminated_at, updated_at)
     VALUES (
       ${stats.team_name}, ${stats.yellow_cards}, ${stats.red_cards}, ${stats.own_goals_against},
-      ${stats.is_eliminated}, ${eliminatedAt}, NOW()
+      ${stats.goals_conceded}, ${stats.is_eliminated}, ${eliminatedAt}, NOW()
     )
     ON CONFLICT (team_name) DO UPDATE SET
       yellow_cards        = ${stats.yellow_cards},
       red_cards           = ${stats.red_cards},
       own_goals_against   = ${stats.own_goals_against},
+      goals_conceded      = ${stats.goals_conceded},
       is_eliminated       = ${stats.is_eliminated},
       eliminated_at = CASE
         WHEN ${eliminatedAt}::timestamptz IS NOT NULL THEN ${eliminatedAt}::timestamptz

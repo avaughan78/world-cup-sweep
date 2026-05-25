@@ -110,6 +110,23 @@ export default function AdminPage() {
     setOwnGoalLabel('');
     setBicycleTeam('');
     setBicycleLabel('');
+    // Load current global hidden state
+    if (selectedCompanyId) {
+      fetch(`/api/admin/prize-overrides?company_id=${selectedCompanyId}`, {
+        headers: { 'x-admin-password': password },
+      })
+        .then(r => r.json())
+        .then((d: { overrides?: Array<{ category: string; team_name: string | null }> }) => {
+          const hidden = new Set<string>();
+          for (const o of d.overrides ?? []) {
+            if (o.team_name === '__hidden__') hidden.add(o.category);
+          }
+          setGlobalRemoved(hidden);
+        })
+        .catch(() => {});
+    } else {
+      setGlobalRemoved(new Set());
+    }
   }, [selectedCompanyId, companies]);
 
   // Load participants when company changes
@@ -331,8 +348,9 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleRemoveMysteryGlobally() {
-    if (!confirm('Remove both mystery prizes (Oooops + Bicycle) from ALL companies? Each company can re-show them from their admin page.')) return;
+  async function handleToggleMysteryGlobally(hide: boolean) {
+    const action = hide ? 'hide' : 'show';
+    if (!confirm(`${hide ? 'Hide' : 'Show'} both mystery prizes for ALL companies?`)) return;
     setLoading(true);
     setStatus(null);
     try {
@@ -340,11 +358,11 @@ export default function AdminPage() {
         fetch('/api/admin/remove-prize-global', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, slug }),
+          body: JSON.stringify({ password, slug, hidden: hide }),
         })
       ));
-      setGlobalRemoved(new Set(['most_own_goals', 'bicycle']));
-      setStatus({ ok: true, message: 'Mystery prizes removed from all companies.' });
+      setGlobalRemoved(hide ? new Set(['most_own_goals', 'bicycle']) : new Set());
+      setStatus({ ok: true, message: `Mystery prizes ${action}n globally.` });
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
@@ -805,15 +823,26 @@ export default function AdminPage() {
                     </button>
                   </div>
 
-                  {/* Remove both mystery prizes globally */}
-                  <div className="mt-3 pt-3 flex justify-end" style={{ borderTop: '1px solid var(--border)' }}>
-                    <button onClick={handleRemoveMysteryGlobally}
-                      disabled={loading || (globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle'))}
-                      className="font-bold px-4 py-2 rounded-lg transition-opacity text-sm"
-                      style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', opacity: loading || (globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle')) ? 0.5 : 1 }}>
-                      {globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle') ? 'Mystery Prizes Removed ✓' : 'Remove Both Mystery Prizes Globally'}
-                    </button>
-                  </div>
+                  {/* Global mystery prize toggle */}
+                  {(() => {
+                    const bothHidden = globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle');
+                    return (
+                      <div className="mt-3 pt-3 flex justify-end" style={{ borderTop: '1px solid var(--border)' }}>
+                        <button
+                          onClick={() => handleToggleMysteryGlobally(!bothHidden)}
+                          disabled={loading}
+                          className="font-bold px-4 py-2 rounded-lg transition-opacity text-sm"
+                          style={{
+                            background: bothHidden ? '#f0fdf4' : '#fee2e2',
+                            color: bothHidden ? '#166534' : '#991b1b',
+                            border: `1px solid ${bothHidden ? '#bbf7d0' : '#fecaca'}`,
+                            opacity: loading ? 0.5 : 1,
+                          }}>
+                          {bothHidden ? 'Mystery Prizes Hidden Globally — Show All' : 'Hide Both Mystery Prizes Globally'}
+                        </button>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
 
