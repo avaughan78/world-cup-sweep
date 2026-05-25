@@ -25,7 +25,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
   if (prize.mystery) {
     return (
       <div
-        className="prize-card rounded-xl p-4 flex flex-col relative overflow-hidden"
+        className="prize-card rounded-xl p-4 flex flex-col h-full relative overflow-hidden"
         style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
       >
         {/* Scattered ? marks — body area only, below the icon row */}
@@ -58,7 +58,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
         <hr className="my-3 relative" style={{ borderColor: 'var(--border)' }} />
 
-        <div className="relative">
+        <div className="relative min-h-12">
           {hasLeader ? (
             <div>
               <p className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
@@ -79,7 +79,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
   return (
     <div
-      className="prize-card rounded-xl p-4 flex flex-col"
+      className="prize-card rounded-xl p-4 flex flex-col h-full"
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
       <div className="flex-1">
@@ -109,19 +109,21 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
       <hr className="my-3" style={{ borderColor: 'var(--border)' }} />
 
-      {hasLeader ? (
-        <div>
-          <p className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-            <span className="mr-1">{getFlag(prize.current_team!)}</span>
-            {prize.current_team}
-          </p>
-          <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-            {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
-          </p>
-        </div>
-      ) : (
-        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No leader yet</p>
-      )}
+      <div className="min-h-12">
+        {hasLeader ? (
+          <div>
+            <p className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+              <span className="mr-1">{getFlag(prize.current_team!)}</span>
+              {prize.current_team}
+            </p>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
+            </p>
+          </div>
+        ) : (
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No leader yet</p>
+        )}
+      </div>
     </div>
   );
 }

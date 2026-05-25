@@ -160,7 +160,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             {/* Mystery prizes — centred below */}
             <div className="flex flex-col sm:flex-row justify-center gap-3">
               {prizes.filter(p => p.mystery && !p.hidden).map(prize => (
-                <div key={prize.slug} className="sm:w-72">
+                <div key={prize.slug} className="sm:w-72 flex flex-col">
                   <PrizeCard prize={prize} prizeAmount={null} />
                 </div>
               ))}

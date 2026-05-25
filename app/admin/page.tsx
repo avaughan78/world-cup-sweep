@@ -94,6 +94,35 @@ export default function AdminPage() {
       .catch(() => {});
   }, [authed, password]);
 
+  // Load global prize overrides after auth
+  useEffect(() => {
+    if (!authed) return;
+    fetch('/api/admin/global-overrides', { headers: { 'x-admin-password': password } })
+      .then(r => r.json())
+      .then((d: { overrides?: Array<{ category: string; team_name: string | null; value_label: string | null; notes: string | null }> }) => {
+        const hidden = new Set<string>();
+        for (const o of d.overrides ?? []) {
+          if (o.team_name === '__hidden__') {
+            hidden.add(o.category);
+          } else {
+            if (o.category === 'longest_shot') {
+              setShotTeam(o.team_name ?? '');
+              setShotLabel(o.value_label ?? '');
+              setShotNotes(o.notes ?? '');
+            } else if (o.category === 'most_own_goals') {
+              setOwnGoalTeam(o.team_name ?? '');
+              setOwnGoalLabel(o.value_label ?? '');
+            } else if (o.category === 'bicycle') {
+              setBicycleTeam(o.team_name ?? '');
+              setBicycleLabel(o.value_label ?? '');
+            }
+          }
+        }
+        setGlobalRemoved(hidden);
+      })
+      .catch(() => {});
+  }, [authed, password]);
+
   // Sync editable fields when company changes
   useEffect(() => {
     const company = companies.find(c => c.id === selectedCompanyId);
@@ -103,30 +132,6 @@ export default function AdminPage() {
     setAdminPw('');
     setConfirmAdminPw('');
     setAdminPwError('');
-    setShotTeam('');
-    setShotLabel('');
-    setShotNotes('');
-    setOwnGoalTeam('');
-    setOwnGoalLabel('');
-    setBicycleTeam('');
-    setBicycleLabel('');
-    // Load current global hidden state
-    if (selectedCompanyId) {
-      fetch(`/api/admin/prize-overrides?company_id=${selectedCompanyId}`, {
-        headers: { 'x-admin-password': password },
-      })
-        .then(r => r.json())
-        .then((d: { overrides?: Array<{ category: string; team_name: string | null }> }) => {
-          const hidden = new Set<string>();
-          for (const o of d.overrides ?? []) {
-            if (o.team_name === '__hidden__') hidden.add(o.category);
-          }
-          setGlobalRemoved(hidden);
-        })
-        .catch(() => {});
-    } else {
-      setGlobalRemoved(new Set());
-    }
   }, [selectedCompanyId, companies]);
 
   // Load participants when company changes
@@ -293,7 +298,6 @@ export default function AdminPage() {
   }
 
   async function handleShotOverride() {
-    if (!selectedCompanyId) return;
     if (!shotTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
     setLoading(true);
     setStatus(null);
@@ -301,11 +305,11 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/shot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, company_id: selectedCompanyId, team_name: shotTeam, value_label: shotLabel, notes: shotNotes }),
+        body: JSON.stringify({ password, team_name: shotTeam, value_label: shotLabel, notes: shotNotes }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
-      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved!' : raw });
+      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved for all companies!' : raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -313,7 +317,6 @@ export default function AdminPage() {
   }
 
   async function handleOwnGoalOverride() {
-    if (!selectedCompanyId) return;
     if (!ownGoalTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
     setLoading(true);
     setStatus(null);
@@ -321,17 +324,16 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/owngoal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, company_id: selectedCompanyId, team_name: ownGoalTeam, value_label: ownGoalLabel }),
+        body: JSON.stringify({ password, team_name: ownGoalTeam, value_label: ownGoalLabel }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
-      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved!' : raw });
+      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved for all companies!' : raw });
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
 
   async function handleBicycleOverride() {
-    if (!selectedCompanyId) return;
     if (!bicycleTeam.trim()) { setStatus({ ok: false, message: 'Team name is required' }); return; }
     setLoading(true);
     setStatus(null);
@@ -339,11 +341,11 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/bicycle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, company_id: selectedCompanyId, team_name: bicycleTeam, value_label: bicycleLabel }),
+        body: JSON.stringify({ password, team_name: bicycleTeam, value_label: bicycleLabel }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
-      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved!' : raw });
+      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved for all companies!' : raw });
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
@@ -586,6 +588,79 @@ export default function AdminPage() {
             </div>
           </div>
 
+          {/* Global manual prizes */}
+          <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Manual Prizes (Global — all companies)</p>
+
+            {/* Thunderbastard */}
+            <div className="flex flex-wrap gap-2 items-end mb-3">
+              <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🚀 Thunderbastard — Longest Shot</p>
+              <input placeholder="Team" value={shotTeam} onChange={e => setShotTeam(e.target.value)}
+                style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
+              <input placeholder="Label (e.g. 38.2m — Rüdiger)" value={shotLabel} onChange={e => setShotLabel(e.target.value)}
+                style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
+              <input placeholder="Notes" value={shotNotes} onChange={e => setShotNotes(e.target.value)}
+                style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }} />
+              <button onClick={handleShotOverride} disabled={loading}
+                className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
+                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
+                Save
+              </button>
+            </div>
+
+            {/* Oooops */}
+            <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
+              <input placeholder="Team" value={ownGoalTeam} onChange={e => setOwnGoalTeam(e.target.value)}
+                style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
+              <input placeholder="Label (e.g. Deflection off Müller)" value={ownGoalLabel} onChange={e => setOwnGoalLabel(e.target.value)}
+                style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
+              <button onClick={handleOwnGoalOverride} disabled={loading}
+                className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
+                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
+                Save
+              </button>
+            </div>
+
+            {/* Bicycle */}
+            <div className="flex flex-wrap gap-2 items-end pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
+              <input placeholder="Team" value={bicycleTeam} onChange={e => setBicycleTeam(e.target.value)}
+                style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
+              <input placeholder="Label (e.g. Rashford vs Morocco)" value={bicycleLabel} onChange={e => setBicycleLabel(e.target.value)}
+                style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
+              <button onClick={handleBicycleOverride} disabled={loading}
+                className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
+                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
+                Save
+              </button>
+            </div>
+
+            {/* Global mystery prize toggle */}
+            {(() => {
+              const bothHidden = globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle');
+              return (
+                <div className="mt-3 pt-3 flex items-center justify-between gap-3" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                    Oooops and Bicycle are mystery prizes — hide them globally if unused.
+                  </p>
+                  <button
+                    onClick={() => handleToggleMysteryGlobally(!bothHidden)}
+                    disabled={loading}
+                    className="font-bold px-4 py-2 rounded-lg transition-opacity text-sm flex-shrink-0"
+                    style={{
+                      background: bothHidden ? '#f0fdf4' : '#fee2e2',
+                      color: bothHidden ? '#166534' : '#991b1b',
+                      border: `1px solid ${bothHidden ? '#bbf7d0' : '#fecaca'}`,
+                      opacity: loading ? 0.5 : 1,
+                    }}>
+                    {bothHidden ? 'Mystery Prizes Hidden — Show All' : 'Hide Both Mystery Prizes'}
+                  </button>
+                </div>
+              );
+            })()}
+          </div>
+
           {/* Companies */}
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Companies</p>
@@ -775,75 +850,6 @@ export default function AdminPage() {
                   </p>
                 </div>
 
-                {/* Manual prize overrides */}
-                <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                  <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Mystery / Manual Prizes</p>
-
-                  {/* Thunderbastard */}
-                  <div className="flex flex-wrap gap-2 items-end mb-3">
-                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🚀 Thunderbastard — Longest Shot</p>
-                    <input placeholder="Team" value={shotTeam} onChange={e => setShotTeam(e.target.value)}
-                      style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
-                    <input placeholder="Label (e.g. 38.2m — Rüdiger)" value={shotLabel} onChange={e => setShotLabel(e.target.value)}
-                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-                    <input placeholder="Notes" value={shotNotes} onChange={e => setShotNotes(e.target.value)}
-                      style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }} />
-                    <button onClick={handleShotOverride} disabled={loading}
-                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                      Save
-                    </button>
-                  </div>
-
-                  {/* Oooops */}
-                  <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
-                    <input placeholder="Team" value={ownGoalTeam} onChange={e => setOwnGoalTeam(e.target.value)}
-                      style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
-                    <input placeholder="Label (e.g. Deflection off Müller)" value={ownGoalLabel} onChange={e => setOwnGoalLabel(e.target.value)}
-                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-                    <button onClick={handleOwnGoalOverride} disabled={loading}
-                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                      Save
-                    </button>
-                  </div>
-
-                  {/* Bicycle */}
-                  <div className="flex flex-wrap gap-2 items-end pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
-                    <input placeholder="Team" value={bicycleTeam} onChange={e => setBicycleTeam(e.target.value)}
-                      style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
-                    <input placeholder="Label (e.g. Rashford vs Morocco)" value={bicycleLabel} onChange={e => setBicycleLabel(e.target.value)}
-                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-                    <button onClick={handleBicycleOverride} disabled={loading}
-                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                      Save
-                    </button>
-                  </div>
-
-                  {/* Global mystery prize toggle */}
-                  {(() => {
-                    const bothHidden = globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle');
-                    return (
-                      <div className="mt-3 pt-3 flex justify-end" style={{ borderTop: '1px solid var(--border)' }}>
-                        <button
-                          onClick={() => handleToggleMysteryGlobally(!bothHidden)}
-                          disabled={loading}
-                          className="font-bold px-4 py-2 rounded-lg transition-opacity text-sm"
-                          style={{
-                            background: bothHidden ? '#f0fdf4' : '#fee2e2',
-                            color: bothHidden ? '#166534' : '#991b1b',
-                            border: `1px solid ${bothHidden ? '#bbf7d0' : '#fecaca'}`,
-                            opacity: loading ? 0.5 : 1,
-                          }}>
-                          {bothHidden ? 'Mystery Prizes Hidden Globally — Show All' : 'Hide Both Mystery Prizes Globally'}
-                        </button>
-                      </div>
-                    );
-                  })()}
-                </div>
               </div>
 
               {/* Participants */}
