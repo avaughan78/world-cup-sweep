@@ -1,6 +1,6 @@
 export default function TicketBadge({ amount }: { amount: string }) {
   return (
-    <svg width="52" height="26" viewBox="0 0 52 26" style={{ flexShrink: 0 }}>
+    <svg width="68" height="34" viewBox="0 0 52 26" style={{ flexShrink: 0 }}>
       {amount === '?' && <title>Mystery prize...</title>}
       <path
         d="M 5,0 L 47,0 Q 52,0 52,5 L 52,10 Q 48,13 52,16 L 52,21 Q 52,26 47,26 L 5,26 Q 0,26 0,21 L 0,16 Q 4,13 0,10 L 0,5 Q 0,0 5,0 Z"
