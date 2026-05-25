@@ -148,13 +148,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           </section>
 
           {/* Novelty prizes */}
-          <section>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {prizes.map(prize => {
+          <section className="space-y-4">
+            {/* Cash prizes — row of 5 */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              {prizes.filter(p => !p.mystery).map(prize => {
                 const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
                 const amount = prizeAmounts?.novelty ?? process.env[`PRIZE_${slug.toUpperCase()}`] ?? null;
                 return <PrizeCard key={prize.slug} prize={prize} prizeAmount={amount} />;
               })}
+            </div>
+            {/* Mystery prizes — centred below */}
+            <div className="flex flex-col sm:flex-row justify-center gap-3">
+              {prizes.filter(p => p.mystery).map(prize => (
+                <div key={prize.slug} className="sm:w-72">
+                  <PrizeCard prize={prize} prizeAmount={null} />
+                </div>
+              ))}
             </div>
           </section>
 

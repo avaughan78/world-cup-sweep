@@ -113,8 +113,8 @@ export async function computePrizes(
     },
     {
       slug: 'top_scorer_team',
-      name: 'The Chosen One',
-      description: "Team of the tournament's leading goal scorer",
+      name: 'The Golden Boot',
+      description: "The team whose player wins the tournament's top scorer award",
       icon: '👟',
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
