@@ -331,24 +331,20 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handleRemoveGlobally(slug: string) {
-    if (!confirm(`Remove "${slug}" prize from ALL companies? Each company can re-show it from their admin page.`)) return;
+  async function handleRemoveMysteryGlobally() {
+    if (!confirm('Remove both mystery prizes (Oooops + Bicycle) from ALL companies? Each company can re-show them from their admin page.')) return;
     setLoading(true);
     setStatus(null);
     try {
-      const res = await fetch('/api/admin/remove-prize-global', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, slug }),
-      });
-      const { ok, data, raw } = await parseResponse(res);
-      const d = data as Record<string, unknown> | null;
-      if (ok && d?.ok) {
-        setGlobalRemoved(prev => new Set(prev).add(slug));
-        setStatus({ ok: true, message: `"${slug}" hidden for all ${d.companies} companies.` });
-      } else {
-        setStatus({ ok: false, message: raw });
-      }
+      await Promise.all(['most_own_goals', 'bicycle'].map(slug =>
+        fetch('/api/admin/remove-prize-global', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password, slug }),
+        })
+      ));
+      setGlobalRemoved(new Set(['most_own_goals', 'bicycle']));
+      setStatus({ ok: true, message: 'Mystery prizes removed from all companies.' });
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
@@ -783,14 +779,7 @@ export default function AdminPage() {
 
                   {/* Oooops */}
                   <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <div className="w-full flex items-center justify-between mb-0.5">
-                      <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
-                      <button onClick={() => handleRemoveGlobally('most_own_goals')} disabled={loading || globalRemoved.has('most_own_goals')}
-                        className="text-xs font-bold px-3 py-1 rounded-lg transition-opacity flex-shrink-0"
-                        style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', opacity: loading || globalRemoved.has('most_own_goals') ? 0.5 : 1 }}>
-                        {globalRemoved.has('most_own_goals') ? 'Removed ✓' : 'Remove Globally'}
-                      </button>
-                    </div>
+                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
                     <input placeholder="Team" value={ownGoalTeam} onChange={e => setOwnGoalTeam(e.target.value)}
                       style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
                     <input placeholder="Label (e.g. Deflection off Müller)" value={ownGoalLabel} onChange={e => setOwnGoalLabel(e.target.value)}
@@ -804,14 +793,7 @@ export default function AdminPage() {
 
                   {/* Bicycle */}
                   <div className="flex flex-wrap gap-2 items-end pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <div className="w-full flex items-center justify-between mb-0.5">
-                      <p className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
-                      <button onClick={() => handleRemoveGlobally('bicycle')} disabled={loading || globalRemoved.has('bicycle')}
-                        className="text-xs font-bold px-3 py-1 rounded-lg transition-opacity flex-shrink-0"
-                        style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', opacity: loading || globalRemoved.has('bicycle') ? 0.5 : 1 }}>
-                        {globalRemoved.has('bicycle') ? 'Removed ✓' : 'Remove Globally'}
-                      </button>
-                    </div>
+                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
                     <input placeholder="Team" value={bicycleTeam} onChange={e => setBicycleTeam(e.target.value)}
                       style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
                     <input placeholder="Label (e.g. Rashford vs Morocco)" value={bicycleLabel} onChange={e => setBicycleLabel(e.target.value)}
@@ -820,6 +802,16 @@ export default function AdminPage() {
                       className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
                       style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
                       Save
+                    </button>
+                  </div>
+
+                  {/* Remove both mystery prizes globally */}
+                  <div className="mt-3 pt-3 flex justify-end" style={{ borderTop: '1px solid var(--border)' }}>
+                    <button onClick={handleRemoveMysteryGlobally}
+                      disabled={loading || (globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle'))}
+                      className="font-bold px-4 py-2 rounded-lg transition-opacity text-sm"
+                      style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca', opacity: loading || (globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle')) ? 0.5 : 1 }}>
+                      {globalRemoved.has('most_own_goals') && globalRemoved.has('bicycle') ? 'Mystery Prizes Removed ✓' : 'Remove Both Mystery Prizes Globally'}
                     </button>
                   </div>
                 </div>
