@@ -110,6 +110,7 @@ export async function computePrizes(
         ? `${topOGs!.own_goals_against} OG${topOGs!.own_goals_against !== 1 ? 's' : ''}`
         : null,
       is_manual: false,
+      mystery: true,
     },
     {
       slug: 'top_scorer_team',
@@ -145,7 +146,6 @@ export async function computePrizes(
         ? `${topSieve!.goals} conceded`
         : null,
       is_manual: false,
-      mystery: true,
     },
   ];
 }
