@@ -13,6 +13,7 @@ export interface Prize {
   is_manual: boolean;
   mystery?: boolean;
   hidden?: boolean;
+  video_url?: string | null;
 }
 
 export async function computePrizes(
@@ -95,6 +96,7 @@ export async function computePrizes(
       current_participant: participant(shotOverride?.team_name ?? null),
       value_label: shotOverride?.value_label ?? null,
       is_manual: true,
+      video_url: shotOverride?.notes ?? null,
     },
     {
       slug: 'most_own_goals',
@@ -107,6 +109,7 @@ export async function computePrizes(
       is_manual: true,
       mystery: true,
       hidden: ownGoalOverride?.team_name === '__hidden__',
+      video_url: ownGoalOverride?.team_name !== '__hidden__' ? (ownGoalOverride?.notes ?? null) : null,
     },
     {
       slug: 'top_scorer_team',
@@ -131,6 +134,7 @@ export async function computePrizes(
       is_manual: true,
       mystery: true,
       hidden: bicycleOverride?.team_name === '__hidden__',
+      video_url: bicycleOverride?.team_name !== '__hidden__' ? (bicycleOverride?.notes ?? null) : null,
     },
     {
       slug: 'sieve',

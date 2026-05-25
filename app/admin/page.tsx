@@ -55,12 +55,16 @@ export default function AdminPage() {
 
   // Manual prize overrides
   const [shotTeam, setShotTeam] = useState('');
-  const [shotLabel, setShotLabel] = useState('');
-  const [shotNotes, setShotNotes] = useState('');
+  const [shotPlayer, setShotPlayer] = useState('');
+  const [shotUrl, setShotUrl] = useState('');
+  const [shotSaved, setShotSaved] = useState(false);
   const [ownGoalTeam, setOwnGoalTeam] = useState('');
-  const [ownGoalLabel, setOwnGoalLabel] = useState('');
+  const [ownGoalUrl, setOwnGoalUrl] = useState('');
+  const [ownGoalSaved, setOwnGoalSaved] = useState(false);
   const [bicycleTeam, setBicycleTeam] = useState('');
-  const [bicycleLabel, setBicycleLabel] = useState('');
+  const [bicyclePlayer, setBicyclePlayer] = useState('');
+  const [bicycleUrl, setBicycleUrl] = useState('');
+  const [bicycleSaved, setBicycleSaved] = useState(false);
   const [globalRemoved, setGlobalRemoved] = useState<Set<string>>(new Set());
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
@@ -107,14 +111,15 @@ export default function AdminPage() {
           } else {
             if (o.category === 'longest_shot') {
               setShotTeam(o.team_name ?? '');
-              setShotLabel(o.value_label ?? '');
-              setShotNotes(o.notes ?? '');
+              setShotPlayer(o.value_label ?? '');
+              setShotUrl(o.notes ?? '');
             } else if (o.category === 'most_own_goals') {
               setOwnGoalTeam(o.team_name ?? '');
-              setOwnGoalLabel(o.value_label ?? '');
+              setOwnGoalUrl(o.notes ?? '');
             } else if (o.category === 'bicycle') {
               setBicycleTeam(o.team_name ?? '');
-              setBicycleLabel(o.value_label ?? '');
+              setBicyclePlayer(o.value_label ?? '');
+              setBicycleUrl(o.notes ?? '');
             }
           }
         }
@@ -305,11 +310,12 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/shot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, team_name: shotTeam, value_label: shotLabel, notes: shotNotes }),
+        body: JSON.stringify({ password, team_name: shotTeam, value_label: shotPlayer, notes: shotUrl }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
-      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved for all companies!' : raw });
+      if (ok && d?.ok) setShotSaved(true);
+      else setStatus({ ok: false, message: raw });
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -324,11 +330,12 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/owngoal', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, team_name: ownGoalTeam, value_label: ownGoalLabel }),
+        body: JSON.stringify({ password, team_name: ownGoalTeam, value_label: null, notes: ownGoalUrl }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
-      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved for all companies!' : raw });
+      if (ok && d?.ok) setOwnGoalSaved(true);
+      else setStatus({ ok: false, message: raw });
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
@@ -341,11 +348,12 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/bicycle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, team_name: bicycleTeam, value_label: bicycleLabel }),
+        body: JSON.stringify({ password, team_name: bicycleTeam, value_label: bicyclePlayer, notes: bicycleUrl }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
-      setStatus({ ok: ok && !!d?.ok, message: d?.ok ? 'Saved for all companies!' : raw });
+      if (ok && d?.ok) setBicycleSaved(true);
+      else setStatus({ ok: false, message: raw });
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
@@ -601,47 +609,54 @@ export default function AdminPage() {
                   {allTeams.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               );
+              const saveBtn = (onClick: () => void, saved: boolean) => (
+                <button onClick={onClick} disabled={loading || saved}
+                  className="font-bold px-4 py-2 rounded-lg transition-all flex-shrink-0"
+                  style={{
+                    background: saved ? 'var(--border)' : 'var(--green)',
+                    color: saved ? 'var(--text-muted)' : '#fff',
+                    opacity: loading ? 0.5 : 1,
+                    fontSize: '0.85rem',
+                  }}>
+                  {saved ? 'Saved ✓' : 'Save'}
+                </button>
+              );
               return (
                 <>
                   {/* Thunderbastard */}
                   <div className="flex flex-wrap gap-2 items-end mb-3">
                     <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🚀 Thunderbastard — Longest Shot</p>
-                    {teamSelect(shotTeam, setShotTeam)}
-                    <input placeholder="Label (e.g. 38.2m — Rüdiger)" value={shotLabel} onChange={e => setShotLabel(e.target.value)}
-                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-                    <input placeholder="Notes" value={shotNotes} onChange={e => setShotNotes(e.target.value)}
-                      style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }} />
-                    <button onClick={handleShotOverride} disabled={loading}
-                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                      Save
-                    </button>
+                    {teamSelect(shotTeam, v => { setShotTeam(v); setShotSaved(false); })}
+                    <input placeholder="Player name" value={shotPlayer}
+                      onChange={e => { setShotPlayer(e.target.value); setShotSaved(false); }}
+                      style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
+                    <input placeholder="Video URL" value={shotUrl}
+                      onChange={e => { setShotUrl(e.target.value); setShotSaved(false); }}
+                      style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
+                    {saveBtn(handleShotOverride, shotSaved)}
                   </div>
 
                   {/* Oooops */}
                   <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
                     <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
-                    {teamSelect(ownGoalTeam, setOwnGoalTeam)}
-                    <input placeholder="Label (e.g. Deflection off Müller)" value={ownGoalLabel} onChange={e => setOwnGoalLabel(e.target.value)}
-                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-                    <button onClick={handleOwnGoalOverride} disabled={loading}
-                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                      Save
-                    </button>
+                    {teamSelect(ownGoalTeam, v => { setOwnGoalTeam(v); setOwnGoalSaved(false); })}
+                    <input placeholder="Video URL" value={ownGoalUrl}
+                      onChange={e => { setOwnGoalUrl(e.target.value); setOwnGoalSaved(false); }}
+                      style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
+                    {saveBtn(handleOwnGoalOverride, ownGoalSaved)}
                   </div>
 
                   {/* Bicycle */}
                   <div className="flex flex-wrap gap-2 items-end pt-3" style={{ borderTop: '1px solid var(--border)' }}>
                     <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
-                    {teamSelect(bicycleTeam, setBicycleTeam)}
-                    <input placeholder="Label (e.g. Rashford vs Morocco)" value={bicycleLabel} onChange={e => setBicycleLabel(e.target.value)}
-                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-                    <button onClick={handleBicycleOverride} disabled={loading}
-                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                      Save
-                    </button>
+                    {teamSelect(bicycleTeam, v => { setBicycleTeam(v); setBicycleSaved(false); })}
+                    <input placeholder="Player name" value={bicyclePlayer}
+                      onChange={e => { setBicyclePlayer(e.target.value); setBicycleSaved(false); }}
+                      style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
+                    <input placeholder="Video URL" value={bicycleUrl}
+                      onChange={e => { setBicycleUrl(e.target.value); setBicycleSaved(false); }}
+                      style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
+                    {saveBtn(handleBicycleOverride, bicycleSaved)}
                   </div>
                 </>
               );

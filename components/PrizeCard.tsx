@@ -65,9 +65,19 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
                 <span className="mr-1">{getFlag(prize.current_team!)}</span>
                 {prize.current_team}
               </p>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
-              </p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                {(prize.value_label || prize.current_participant) && (
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
+                  </p>
+                )}
+                {prize.video_url && (
+                  <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
+                    style={{ color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                  </a>
+                )}
+              </div>
             </div>
           ) : (
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>TBD</p>
@@ -116,9 +126,19 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
               <span className="mr-1">{getFlag(prize.current_team!)}</span>
               {prize.current_team}
             </p>
-            <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
-            </p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {(prize.value_label || prize.current_participant) && (
+                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                  {[prize.value_label, prize.current_participant].filter(Boolean).join(' · ')}
+                </p>
+              )}
+              {prize.video_url && (
+                <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
+                  style={{ color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                </a>
+              )}
+            </div>
           </div>
         ) : (
           <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No leader yet</p>
