@@ -20,7 +20,7 @@ const MYSTERY_QS = [
 ];
 
 const videoIcon = (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
     <rect x="2" y="2" width="20" height="20" rx="4"/>
     <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="white"/>
   </svg>
@@ -44,7 +44,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
       <div>
         <div className="flex items-center justify-between gap-2">
           <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
-            <span className="mr-1">{getFlag(prize.current_team)}</span>
+            <span className="mr-1" style={{ fontSize: '1.3rem' }}>{getFlag(prize.current_team)}</span>
             {prize.value_label ?? prize.current_team}
           </p>
           {prize.video_url && (
@@ -69,7 +69,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
     <div>
       <div className="flex items-center justify-between gap-2">
         <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
-          <span className="mr-1">{getFlag(prize.current_team)}</span>
+          <span className="mr-1" style={{ fontSize: '1.3rem' }}>{getFlag(prize.current_team)}</span>
           {prize.current_team}
         </p>
         {prize.video_url && (
