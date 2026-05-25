@@ -114,7 +114,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         <hr className="my-3 relative" style={{ borderColor: 'var(--border)' }} />
 
         <div className="relative min-h-8">
-          <LeaderSection prize={prize} empty="TBD" />
+          <LeaderSection prize={prize} empty="Awaiting some magic..." />
         </div>
         <ParticipantStrip name={prize.current_participant} />
       </div>
