@@ -32,6 +32,7 @@ const headerStrip: React.CSSProperties = {
   backgroundPosition: 'center',
 };
 
+// Renders team/player info only — strip is rendered separately at card level
 function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   if (!prize.current_team) {
     return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{empty}</p>;
@@ -39,54 +40,35 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
 
   const playerMode = prize.slug === 'longest_shot' || prize.slug === 'bicycle';
 
-  if (playerMode) {
-    return (
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
-            <span className="mr-1" style={{ fontSize: '1.3rem' }}>{getFlag(prize.current_team)}</span>
-            {prize.value_label ?? prize.current_team}
-          </p>
-          {prize.video_url && (
-            <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
-              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
-              {videoIcon}
-            </a>
-          )}
-        </div>
-        {prize.current_participant && (
-          <div className="mt-2 rounded-md px-3 py-1 text-center overflow-hidden" style={headerStrip}>
-            <span className="text-xs font-bold" style={{ color: '#fff' }}>
-              {prize.current_participant}
-            </span>
-          </div>
-        )}
-      </div>
-    );
-  }
-
   return (
-    <div>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
-          <span className="mr-1" style={{ fontSize: '1.3rem' }}>{getFlag(prize.current_team)}</span>
-          {prize.current_team}
-        </p>
+    <div className="flex items-center justify-between gap-2">
+      <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+        <span className="mr-1" style={{ fontSize: '1.3rem' }}>{getFlag(prize.current_team)}</span>
+        {playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team}
+      </p>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        {!playerMode && prize.value_label && (
+          <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
+        )}
         {prize.video_url && (
           <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
-            style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
+            style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
             {videoIcon}
           </a>
         )}
       </div>
-      {prize.value_label && (
-        <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
-      )}
-      {prize.current_participant && (
-        <div className="mt-2 rounded-md px-3 py-1 text-center overflow-hidden" style={headerStrip}>
-          <span className="text-xs font-bold" style={{ color: '#fff' }}>
-            {prize.current_participant}
-          </span>
+    </div>
+  );
+}
+
+// Fixed-height strip — always rendered so card bottom sections stay the same height
+function ParticipantStrip({ name }: { name: string | null }) {
+  return (
+    <div style={{ height: '2rem', marginTop: '0.5rem' }}>
+      {name && (
+        <div className="rounded-md px-3 text-center overflow-hidden flex items-center justify-center"
+          style={{ ...headerStrip, height: '100%' }}>
+          <span className="text-xs font-bold" style={{ color: '#fff' }}>{name}</span>
         </div>
       )}
     </div>
@@ -129,9 +111,10 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
         <hr className="my-3 relative" style={{ borderColor: 'var(--border)' }} />
 
-        <div className="relative min-h-12">
+        <div className="relative min-h-8">
           <LeaderSection prize={prize} empty="TBD" />
         </div>
+        <ParticipantStrip name={prize.current_participant} />
       </div>
     );
   }
@@ -166,9 +149,10 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
       <hr className="my-3" style={{ borderColor: 'var(--border)' }} />
 
-      <div className="min-h-12">
+      <div className="min-h-8">
         <LeaderSection prize={prize} empty="No leader yet" />
       </div>
+      <ParticipantStrip name={prize.current_participant} />
     </div>
   );
 }
