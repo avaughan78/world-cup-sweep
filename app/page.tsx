@@ -151,7 +151,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           <section className="space-y-4">
             {/* Cash prizes — row of 5 */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-              {prizes.filter(p => !p.mystery).map(prize => {
+              {prizes.filter(p => !p.mystery && !p.hidden).map(prize => {
                 const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
                 const amount = prizeAmounts?.novelty ?? process.env[`PRIZE_${slug.toUpperCase()}`] ?? null;
                 return <PrizeCard key={prize.slug} prize={prize} prizeAmount={amount} />;
@@ -159,7 +159,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             </div>
             {/* Mystery prizes — centred below */}
             <div className="flex flex-col sm:flex-row justify-center gap-3">
-              {prizes.filter(p => p.mystery).map(prize => (
+              {prizes.filter(p => p.mystery && !p.hidden).map(prize => (
                 <div key={prize.slug} className="sm:w-72">
                   <PrizeCard prize={prize} prizeAmount={null} />
                 </div>

@@ -12,17 +12,19 @@ export interface Prize {
   value_label: string | null;
   is_manual: boolean;
   mystery?: boolean;
+  hidden?: boolean;
 }
 
 export async function computePrizes(
   participantMap: Map<string, string | null>,
   companyId: number
 ): Promise<Prize[]> {
-  const [allStats, topScorer, shotOverride, bicycleOverride, groupStandings] = await Promise.all([
+  const [allStats, topScorer, shotOverride, bicycleOverride, ownGoalOverride, groupStandings] = await Promise.all([
     getAllTeamStats(),
     getTopScorer(),
     getPrizeOverride(companyId, 'longest_shot'),
     getPrizeOverride(companyId, 'bicycle'),
+    getPrizeOverride(companyId, 'most_own_goals'),
     getGroupStandings(),
   ]);
 
@@ -102,15 +104,14 @@ export async function computePrizes(
     {
       slug: 'most_own_goals',
       name: 'Oooops',
-      description: 'The team who conceded the most own goals',
+      description: 'The team conceding the most spectacular own goal',
       icon: '😬',
-      current_team: (topOGs?.own_goals_against ?? 0) > 0 ? topOGs!.team_name : null,
-      current_participant: (topOGs?.own_goals_against ?? 0) > 0 ? participant(topOGs!.team_name) : null,
-      value_label: (topOGs?.own_goals_against ?? 0) > 0
-        ? `${topOGs!.own_goals_against} OG${topOGs!.own_goals_against !== 1 ? 's' : ''}`
-        : null,
-      is_manual: false,
+      current_team: ownGoalOverride?.team_name && ownGoalOverride.team_name !== '__hidden__' ? ownGoalOverride.team_name : null,
+      current_participant: ownGoalOverride?.team_name && ownGoalOverride.team_name !== '__hidden__' ? participant(ownGoalOverride.team_name) : null,
+      value_label: ownGoalOverride?.team_name !== '__hidden__' ? (ownGoalOverride?.value_label ?? null) : null,
+      is_manual: true,
       mystery: true,
+      hidden: ownGoalOverride?.team_name === '__hidden__',
     },
     {
       slug: 'top_scorer_team',
@@ -129,11 +130,12 @@ export async function computePrizes(
       name: 'The Bicycle',
       description: 'Best overhead kick of the tournament',
       icon: '🤸',
-      current_team: bicycleOverride?.team_name ?? null,
-      current_participant: participant(bicycleOverride?.team_name ?? null),
-      value_label: bicycleOverride?.value_label ?? null,
+      current_team: bicycleOverride?.team_name && bicycleOverride.team_name !== '__hidden__' ? bicycleOverride.team_name : null,
+      current_participant: bicycleOverride?.team_name && bicycleOverride.team_name !== '__hidden__' ? participant(bicycleOverride.team_name) : null,
+      value_label: bicycleOverride?.team_name !== '__hidden__' ? (bicycleOverride?.value_label ?? null) : null,
       is_manual: true,
       mystery: true,
+      hidden: bicycleOverride?.team_name === '__hidden__',
     },
     {
       slug: 'sieve',

@@ -29,9 +29,6 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [confirmPw, setConfirmPw] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState('');
-  const [shotTeam, setShotTeam] = useState('');
-  const [shotLabel, setShotLabel] = useState('');
-  const [shotNotes, setShotNotes] = useState('');
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -218,20 +215,6 @@ export default function ManageClient({ company: initialCompany }: { company: Com
     setLoading(false);
   }
 
-  async function handleShotOverride() {
-    if (!shotTeam.trim()) { setStatus({ ok: false, message: 'Team name required' }); return; }
-    setLoading(true);
-    try {
-      const res = await fetch('/api/company/manage/shot', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, team_name: shotTeam, value_label: shotLabel, notes: shotNotes }),
-      });
-      const data = await res.json() as { ok: boolean };
-      setStatus({ ok: !!data.ok, message: data.ok ? 'Saved!' : 'Failed' });
-    } catch (e) { setStatus({ ok: false, message: String(e) }); }
-    setLoading(false);
-  }
 
   async function handleCopyLink() {
     await navigator.clipboard.writeText(`${window.location.origin}/?code=${company.code}`);
@@ -421,21 +404,6 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               </p>
             </div>
 
-            {/* Longest shot */}
-            <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Longest Shot Override</p>
-              <input placeholder="Team" value={shotTeam} onChange={e => setShotTeam(e.target.value)}
-                style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
-              <input placeholder="Label (e.g. 38.2m — Rüdiger)" value={shotLabel} onChange={e => setShotLabel(e.target.value)}
-                style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-              <input placeholder="Notes" value={shotNotes} onChange={e => setShotNotes(e.target.value)}
-                style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }} />
-              <button onClick={handleShotOverride} disabled={loading}
-                className="font-bold px-5 py-2 rounded-lg transition-opacity flex-shrink-0"
-                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
-                Save
-              </button>
-            </div>
           </div>
 
           {/* Participants */}

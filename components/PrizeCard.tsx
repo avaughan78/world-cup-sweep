@@ -3,6 +3,16 @@ import { getFlag } from '@/lib/flags';
 import TicketBadge from './TicketBadge';
 import VideoEasterEgg from './VideoEasterEgg';
 
+const MYSTERY_QS = [
+  { top: '52%', left: '8%',  size: '1.6rem', opacity: 0.06, rotate: '-14deg' },
+  { top: '68%', left: '55%', size: '2.1rem', opacity: 0.05, rotate:  '11deg' },
+  { top: '78%', left: '28%', size: '1.2rem', opacity: 0.07, rotate:  '25deg' },
+  { top: '60%', left: '80%', size: '1.8rem', opacity: 0.04, rotate:  '-6deg' },
+  { top: '85%', left: '68%', size: '1.0rem', opacity: 0.06, rotate:  '18deg' },
+  { top: '90%', left: '14%', size: '1.4rem', opacity: 0.05, rotate: '-22deg' },
+  { top: '43%', left: '70%', size: '1.1rem', opacity: 0.04, rotate:   '8deg' },
+];
+
 export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   const hasLeader = !!prize.current_team;
 
@@ -12,30 +22,24 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         className="prize-card rounded-xl p-4 flex flex-col relative overflow-hidden"
         style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
       >
-        {/* ? watermark background */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute', inset: 0,
-            overflow: 'hidden',
-            pointerEvents: 'none',
-            userSelect: 'none',
-            fontSize: '2.2rem',
-            fontWeight: 900,
-            color: 'var(--text-primary)',
-            opacity: 0.045,
-            lineHeight: 1.3,
-            letterSpacing: '0.4em',
-            padding: '0.4rem 0.6rem',
-            wordBreak: 'break-all',
-          }}
-        >
-          {'?????????????????????????????????????????????????????????????'}
+        {/* Scattered ? marks — body area only, below the icon row */}
+        <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', userSelect: 'none' }}>
+          {MYSTERY_QS.map((q, i) => (
+            <span key={i} style={{
+              position: 'absolute', top: q.top, left: q.left,
+              fontSize: q.size, opacity: q.opacity, fontWeight: 900,
+              color: 'var(--text-primary)', lineHeight: 1,
+              transform: `rotate(${q.rotate})`,
+            }}>?</span>
+          ))}
         </div>
 
         <div className="flex-1 relative">
           <div className="flex items-start justify-between">
-            <span className="text-2xl leading-none">{prize.icon}</span>
+            {prize.slug === 'most_own_goals'
+              ? <VideoEasterEgg icon="😬" label="Oooops" videoSrc="/haiti-own-goal.mp4" fontSize="1.5rem" />
+              : <span className="text-2xl leading-none">{prize.icon}</span>
+            }
             <TicketBadge amount="?" />
           </div>
           <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
