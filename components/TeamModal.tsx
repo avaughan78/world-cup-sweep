@@ -38,6 +38,10 @@ interface Stat { label: string; value: string }
 
 const BLURB_LIMIT = 400;
 
+const PRONUNCIATION: Record<string, string> = {
+  'Curaçao': 'kyoo · ruh · SOW (rhymes with "cow")',
+};
+
 function AboutBlurb({ title, text }: { title: string; text: string }) {
   const [expanded, setExpanded] = useState(false);
   const needsTrunc = text.length > BLURB_LIMIT;
@@ -182,6 +186,11 @@ export default function TeamModal({ team, participant, onClose }: {
             >
               {team}
             </h2>
+            {PRONUNCIATION[team] && (
+              <p className="mt-1.5 font-medium" style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem', letterSpacing: '0.03em' }}>
+                🔊 {PRONUNCIATION[team]}
+              </p>
+            )}
             {participant && (
               <p
                 className="mt-2 font-semibold"
