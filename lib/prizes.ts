@@ -78,7 +78,7 @@ export async function computePrizes(
     {
       slug: 'first_eliminated',
       name: 'Early Bath',
-      description: 'The first team eliminated from the tournament',
+      description: 'The first team eliminated',
       icon: '✈️',
       current_team: firstOut?.team_name ?? null,
       current_participant: participant(firstOut?.team_name ?? null),
@@ -90,7 +90,7 @@ export async function computePrizes(
     {
       slug: 'longest_shot',
       name: 'The Thunderbastard',
-      description: "The longest range goal scored in the tournament",
+      description: "The longest range goal",
       icon: '🚀',
       current_team: shotOverride?.team_name ?? null,
       current_participant: participant(shotOverride?.team_name ?? null),
@@ -114,7 +114,7 @@ export async function computePrizes(
     {
       slug: 'top_scorer_team',
       name: 'The Golden Boot',
-      description: "The team whose player wins the tournament's top scorer award",
+      description: "The tournament's top scorer",
       icon: '👟',
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
@@ -139,7 +139,7 @@ export async function computePrizes(
     {
       slug: 'sieve',
       name: 'The Sieve',
-      description: 'Most goals conceded in the tournament',
+      description: 'Most goals conceded overall',
       icon: '🪣',
       current_team: (topSieve?.goals_conceded ?? 0) > 0 ? topSieve!.team_name : null,
       current_participant: (topSieve?.goals_conceded ?? 0) > 0 ? participant(topSieve!.team_name) : null,
