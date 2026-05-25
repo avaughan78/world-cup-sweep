@@ -5,6 +5,7 @@ import VideoEasterEgg from './VideoEasterEgg';
 
 export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   const hasLeader = !!prize.current_team;
+  const displayAmount = prize.mystery ? '???' : prizeAmount;
 
   return (
     <div
@@ -14,7 +15,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
       <div className="flex-1">
         <div className="flex items-start justify-between">
           {prize.slug === 'longest_shot'
-            ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc="/joecole.mp4" fontSize="1.5rem" />
+            ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc="/van-bronckhorst.mp4" fontSize="1.5rem" />
             : prize.slug === 'most_cards'
             ? <VideoEasterEgg icon="🟨" label="The Gareth Barry Award" videoSrc="/zidane.mp4" fontSize="1.5rem" />
             : prize.slug === 'most_own_goals'
@@ -26,7 +27,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
               >{prize.icon}</span>
             )
           }
-          {prizeAmount && <TicketBadge amount={prizeAmount} />}
+          {displayAmount && <TicketBadge amount={displayAmount} />}
         </div>
         <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
           {prize.name}

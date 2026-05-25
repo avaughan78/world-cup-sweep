@@ -149,7 +149,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
           {/* Novelty prizes */}
           <section>
-            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {prizes.map(prize => {
                 const slug = prize.slug === 'top_scorer_team' ? 'top_scorer' : prize.slug;
                 const amount = prizeAmounts?.novelty ?? process.env[`PRIZE_${slug.toUpperCase()}`] ?? null;

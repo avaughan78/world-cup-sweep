@@ -1,4 +1,4 @@
-import { getAllTeamStats, getTopScorer, getPrizeOverride, TeamStats } from './db';
+import { getAllTeamStats, getTopScorer, getPrizeOverride, getGroupStandings, TeamStats } from './db';
 import type { ApiMatch, ApiStanding } from './football-api';
 import { normaliseTeamName } from './football-api';
 
@@ -11,16 +11,19 @@ export interface Prize {
   current_participant: string | null;
   value_label: string | null;
   is_manual: boolean;
+  mystery?: boolean;
 }
 
 export async function computePrizes(
   participantMap: Map<string, string | null>,
   companyId: number
 ): Promise<Prize[]> {
-  const [allStats, topScorer, shotOverride] = await Promise.all([
+  const [allStats, topScorer, shotOverride, bicycleOverride, groupStandings] = await Promise.all([
     getAllTeamStats(),
     getTopScorer(),
     getPrizeOverride(companyId, 'longest_shot'),
+    getPrizeOverride(companyId, 'bicycle'),
+    getGroupStandings(),
   ]);
 
   function participant(teamName: string | null): string | null {
@@ -50,6 +53,16 @@ export async function computePrizes(
 
   // 5. Top scorer's team
   const topScorerTeam = topScorer?.team_name ?? null;
+
+  // 6. Most goals conceded (The Sieve) — aggregate from group standings
+  const concededMap = new Map<string, number>();
+  for (const s of groupStandings) {
+    concededMap.set(s.team_name, (concededMap.get(s.team_name) ?? 0) + s.goals_against);
+  }
+  let topSieve: { team_name: string; goals: number } | null = null;
+  for (const [team_name, goals] of concededMap) {
+    if (!topSieve || goals > topSieve.goals) topSieve = { team_name, goals };
+  }
 
   return [
     {
@@ -109,6 +122,30 @@ export async function computePrizes(
         ? `${topScorer.player_name} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
         : null,
       is_manual: false,
+    },
+    {
+      slug: 'bicycle',
+      name: 'The Bicycle',
+      description: 'Best overhead kick of the tournament',
+      icon: '🤸',
+      current_team: bicycleOverride?.team_name ?? null,
+      current_participant: participant(bicycleOverride?.team_name ?? null),
+      value_label: bicycleOverride?.value_label ?? null,
+      is_manual: true,
+      mystery: true,
+    },
+    {
+      slug: 'sieve',
+      name: 'The Sieve',
+      description: 'Most goals conceded in the tournament',
+      icon: '🪣',
+      current_team: (topSieve?.goals ?? 0) > 0 ? topSieve!.team_name : null,
+      current_participant: (topSieve?.goals ?? 0) > 0 ? participant(topSieve!.team_name) : null,
+      value_label: (topSieve?.goals ?? 0) > 0
+        ? `${topSieve!.goals} conceded`
+        : null,
+      is_manual: false,
+      mystery: true,
     },
   ];
 }
