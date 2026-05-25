@@ -74,7 +74,23 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
                 {prize.video_url && (
                   <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
                     style={{ color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="1.5" y="2" width="21" height="20" rx="2.5"/>
+                    <line x1="1.5" y1="7" x2="22.5" y2="7"/>
+                    <line x1="1.5" y1="17" x2="22.5" y2="17"/>
+                    <rect x="3" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="7" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="11" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="15" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="19" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="3" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="7" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="11" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="15" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="19" y="18.25" width="2" height="2" rx="0.3"/>
+                    <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"/>
+                    <path d="M11 10.5l3.5 1.5-3.5 1.5z" fill="white" stroke="none"/>
+                  </svg>
                   </a>
                 )}
               </div>
@@ -135,7 +151,23 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
               {prize.video_url && (
                 <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
                   style={{ color: 'var(--text-muted)', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <rect x="1.5" y="2" width="21" height="20" rx="2.5"/>
+                    <line x1="1.5" y1="7" x2="22.5" y2="7"/>
+                    <line x1="1.5" y1="17" x2="22.5" y2="17"/>
+                    <rect x="3" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="7" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="11" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="15" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="19" y="3.75" width="2" height="2" rx="0.3"/>
+                    <rect x="3" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="7" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="11" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="15" y="18.25" width="2" height="2" rx="0.3"/>
+                    <rect x="19" y="18.25" width="2" height="2" rx="0.3"/>
+                    <circle cx="12" cy="12" r="3.5" fill="currentColor" stroke="none"/>
+                    <path d="M11 10.5l3.5 1.5-3.5 1.5z" fill="white" stroke="none"/>
+                  </svg>
                 </a>
               )}
             </div>
