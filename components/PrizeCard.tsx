@@ -40,28 +40,47 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
 
   const playerMode = prize.slug === 'longest_shot' || prize.slug === 'bicycle';
 
+  if (playerMode) {
+    return (
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
+            <span className="mr-1">{getFlag(prize.current_team)}</span>
+            {prize.value_label ?? prize.current_team}
+          </p>
+          {prize.video_url && (
+            <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
+              style={{ flexShrink: 0, display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
+              {videoIcon}
+            </a>
+          )}
+        </div>
+        {prize.current_participant && (
+          <div className="mt-2 rounded-md px-3 py-1 text-center overflow-hidden"
+            style={{ backgroundImage: 'url(/wc2026-header-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+            <span className="text-xs font-bold" style={{ color: '#fff' }}>
+              {prize.current_participant}
+            </span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2">
         <p className="text-base font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>
           <span className="mr-1">{getFlag(prize.current_team)}</span>
-          {playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team}
+          {prize.current_team}
         </p>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {prize.current_participant && (
-            <span className="text-xs font-bold text-right" style={participantStyle}>
-              {prize.current_participant}
-            </span>
-          )}
-          {playerMode && prize.video_url && (
-            <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
-              style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
-              {videoIcon}
-            </a>
-          )}
-        </div>
+        {prize.current_participant && (
+          <span className="text-xs font-bold flex-shrink-0 text-right" style={participantStyle}>
+            {prize.current_participant}
+          </span>
+        )}
       </div>
-      {!playerMode && (prize.video_url ? (
+      {prize.video_url ? (
         <div className="flex items-center justify-end gap-1.5 mt-1">
           {prize.value_label && (
             <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
@@ -73,7 +92,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
         </div>
       ) : prize.value_label ? (
         <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>
-      ) : null)}
+      ) : null}
     </div>
   );
 }
