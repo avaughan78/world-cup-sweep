@@ -592,49 +592,60 @@ export default function AdminPage() {
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Manual Prizes (Global — all companies)</p>
 
-            {/* Thunderbastard */}
-            <div className="flex flex-wrap gap-2 items-end mb-3">
-              <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🚀 Thunderbastard — Longest Shot</p>
-              <input placeholder="Team" value={shotTeam} onChange={e => setShotTeam(e.target.value)}
-                style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
-              <input placeholder="Label (e.g. 38.2m — Rüdiger)" value={shotLabel} onChange={e => setShotLabel(e.target.value)}
-                style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-              <input placeholder="Notes" value={shotNotes} onChange={e => setShotNotes(e.target.value)}
-                style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }} />
-              <button onClick={handleShotOverride} disabled={loading}
-                className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                Save
-              </button>
-            </div>
+            {(() => {
+              const allTeams = Object.values(GROUPS_2026).flat().sort();
+              const teamSelect = (value: string, onChange: (v: string) => void) => (
+                <select value={value} onChange={e => onChange(e.target.value)}
+                  style={{ flex: '1 1 160px', minWidth: 0, ...smallInputStyle }}>
+                  <option value="">— Select team —</option>
+                  {allTeams.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              );
+              return (
+                <>
+                  {/* Thunderbastard */}
+                  <div className="flex flex-wrap gap-2 items-end mb-3">
+                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🚀 Thunderbastard — Longest Shot</p>
+                    {teamSelect(shotTeam, setShotTeam)}
+                    <input placeholder="Label (e.g. 38.2m — Rüdiger)" value={shotLabel} onChange={e => setShotLabel(e.target.value)}
+                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
+                    <input placeholder="Notes" value={shotNotes} onChange={e => setShotNotes(e.target.value)}
+                      style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }} />
+                    <button onClick={handleShotOverride} disabled={loading}
+                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
+                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
+                      Save
+                    </button>
+                  </div>
 
-            {/* Oooops */}
-            <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
-              <input placeholder="Team" value={ownGoalTeam} onChange={e => setOwnGoalTeam(e.target.value)}
-                style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
-              <input placeholder="Label (e.g. Deflection off Müller)" value={ownGoalLabel} onChange={e => setOwnGoalLabel(e.target.value)}
-                style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-              <button onClick={handleOwnGoalOverride} disabled={loading}
-                className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                Save
-              </button>
-            </div>
+                  {/* Oooops */}
+                  <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
+                    {teamSelect(ownGoalTeam, setOwnGoalTeam)}
+                    <input placeholder="Label (e.g. Deflection off Müller)" value={ownGoalLabel} onChange={e => setOwnGoalLabel(e.target.value)}
+                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
+                    <button onClick={handleOwnGoalOverride} disabled={loading}
+                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
+                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
+                      Save
+                    </button>
+                  </div>
 
-            {/* Bicycle */}
-            <div className="flex flex-wrap gap-2 items-end pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
-              <input placeholder="Team" value={bicycleTeam} onChange={e => setBicycleTeam(e.target.value)}
-                style={{ flex: '1 1 130px', minWidth: 0, ...smallInputStyle }} />
-              <input placeholder="Label (e.g. Rashford vs Morocco)" value={bicycleLabel} onChange={e => setBicycleLabel(e.target.value)}
-                style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
-              <button onClick={handleBicycleOverride} disabled={loading}
-                className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
-                Save
-              </button>
-            </div>
+                  {/* Bicycle */}
+                  <div className="flex flex-wrap gap-2 items-end pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
+                    {teamSelect(bicycleTeam, setBicycleTeam)}
+                    <input placeholder="Label (e.g. Rashford vs Morocco)" value={bicycleLabel} onChange={e => setBicycleLabel(e.target.value)}
+                      style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }} />
+                    <button onClick={handleBicycleOverride} disabled={loading}
+                      className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
+                      style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.85rem' }}>
+                      Save
+                    </button>
+                  </div>
+                </>
+              );
+            })()}
 
             {/* Global mystery prize toggle */}
             {(() => {
