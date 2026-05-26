@@ -132,7 +132,7 @@ export default function GroupsGrid({
 
                       {/* Flag + name + participant + badges */}
                       <div className="flex-1 min-w-0 flex items-center gap-1.5 mr-1">
-                        <Flag team={team} height="0.95rem" />
+                        <Flag team={team} height="0.95rem" width="1.4rem" />
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1 min-w-0">
                             <span
