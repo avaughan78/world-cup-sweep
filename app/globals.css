@@ -150,3 +150,22 @@ body {
 
 /* Trophy icon golden in album mode */
 [data-theme="album"] .trophy-icon { color: #c9a600 !important; }
+
+/* ── Dark theme ───────────────────────────────────────────── */
+
+[data-theme="dark"] {
+  --bg: #0f0f0d;
+  --card: #1a1a17;
+  --border: #2e2e28;
+  --separator: #3a3a33;
+  --text-primary: #f0ede0;
+  --text-secondary: #b0ad9e;
+  --text-muted: #6b6760;
+  --green: #4ade80;
+}
+
+[data-theme="dark"] body {
+  background: var(--bg);
+}
+
+[data-theme="dark"] .team-row:hover { background: var(--border) !important; }

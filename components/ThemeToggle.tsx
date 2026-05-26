@@ -2,24 +2,41 @@
 
 import { useEffect, useState } from 'react';
 
+type Theme = 'default' | 'dark' | 'album';
+
+const THEMES: Theme[] = ['default', 'dark', 'album'];
+
+const LABELS: Record<Theme, { icon: string; label: string; title: string }> = {
+  default: { icon: '☀️', label: 'Light',    title: 'Switch to dark mode' },
+  dark:    { icon: '🌙', label: 'Dark',     title: 'Switch to sticker album view' },
+  album:   { icon: '🎴', label: 'Album',    title: 'Switch to light mode' },
+};
+
 export default function ThemeToggle() {
-  const [album, setAlbum] = useState(false);
+  const [theme, setTheme] = useState<Theme>('default');
 
   useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    if (saved === 'album') apply(true);
+    const saved = localStorage.getItem('theme') as Theme | null;
+    if (saved && THEMES.includes(saved)) apply(saved);
   }, []);
 
-  function apply(on: boolean) {
-    setAlbum(on);
-    document.documentElement.setAttribute('data-theme', on ? 'album' : 'default');
-    localStorage.setItem('theme', on ? 'album' : 'default');
+  function apply(t: Theme) {
+    setTheme(t);
+    document.documentElement.setAttribute('data-theme', t === 'default' ? 'default' : t);
+    localStorage.setItem('theme', t);
   }
+
+  function cycle() {
+    const next = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+    apply(next);
+  }
+
+  const { icon, label, title } = LABELS[theme];
 
   return (
     <button
-      onClick={() => apply(!album)}
-      title={album ? 'Switch to editorial view' : 'Switch to sticker album view'}
+      onClick={cycle}
+      title={title}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -35,8 +52,8 @@ export default function ThemeToggle() {
         transition: 'opacity 0.15s',
       }}
     >
-      <span>{album ? '📰' : '🎴'}</span>
-      <span className="hidden sm:inline">{album ? 'Editorial' : 'Clean'}</span>
+      <span>{icon}</span>
+      <span className="hidden sm:inline">{label}</span>
     </button>
   );
 }
