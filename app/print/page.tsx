@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { getParticipantsWithTokens, getCompanyByCode } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import { GROUPS_2026 } from '@/lib/groups';
@@ -10,22 +11,10 @@ export default async function PrintPage({ searchParams }: { searchParams: Promis
   const params = await searchParams;
   const code = params.code?.trim().toUpperCase();
 
-  if (!code) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <p style={{ color: 'var(--text-muted)' }}>No company code provided. Go to <a href="/admin" style={{ color: 'var(--green)' }}>Admin</a> and use the Print Tickets link.</p>
-      </div>
-    );
-  }
+  if (!code) redirect('/admin');
 
   const company = await getCompanyByCode(code);
-  if (!company) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <p style={{ color: 'var(--text-muted)' }}>Company not found.</p>
-      </div>
-    );
-  }
+  if (!company) redirect('/admin');
 
   const participants = await getParticipantsWithTokens(company.id);
   const tokenMap = new Map(participants.map(p => [p.team_name, p.claim_token]));
