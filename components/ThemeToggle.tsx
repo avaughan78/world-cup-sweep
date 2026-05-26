@@ -6,10 +6,10 @@ type Theme = 'default' | 'dark' | 'album';
 
 const THEMES: Theme[] = ['default', 'dark', 'album'];
 
-const LABELS: Record<Theme, { icon: string; label: string; title: string }> = {
-  default: { icon: '☀️', label: 'Light',    title: 'Switch to dark mode' },
-  dark:    { icon: '🌙', label: 'Dark',     title: 'Switch to sticker album view' },
-  album:   { icon: '🎴', label: 'Album',    title: 'Switch to light mode' },
+const ICONS: Record<Theme, string> = {
+  default: '☀️',
+  dark:    '🌙',
+  album:   '🎴',
 };
 
 export default function ThemeToggle() {
@@ -31,12 +31,9 @@ export default function ThemeToggle() {
     apply(next);
   }
 
-  const { icon, label, title } = LABELS[theme];
-
   return (
     <button
       onClick={cycle}
-      title={title}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -52,8 +49,7 @@ export default function ThemeToggle() {
         transition: 'opacity 0.15s',
       }}
     >
-      <span>{icon}</span>
-      <span className="hidden sm:inline">{label}</span>
+      <span>{ICONS[theme]}</span>
     </button>
   );
 }
