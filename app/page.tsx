@@ -12,6 +12,12 @@ import HowItWorksModal from '@/components/HowItWorksModal';
 
 export const dynamic = 'force-dynamic';
 
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
+  const params = await searchParams;
+  if (params.code) return { robots: { index: false, follow: false } };
+  return {};
+}
+
 export default async function Home({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
   const params = await searchParams;
   const code = params.code?.trim().toUpperCase();
