@@ -368,6 +368,11 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 style={{ background: 'var(--green)', color: '#fff', fontSize: '0.9rem' }}>
                 Print Tickets ↗
               </a>
+              <a href={`/advert?code=${company.code}`} target="_blank"
+                className="font-bold px-5 py-2 rounded-lg"
+                style={{ background: 'var(--border)', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                Print Advert ↗
+              </a>
               <a href={`/?code=${company.code}`} target="_blank"
                 className="font-bold px-5 py-2 rounded-lg"
                 style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: '0.9rem' }}>
