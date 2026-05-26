@@ -111,7 +111,7 @@ export default function CompanyGate({
           The Draw
         </h2>
         <p className="text-sm mt-1 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
-          Office Sweepstake
+          Office Tracker
         </p>
       </div>
 
@@ -206,13 +206,13 @@ export default function CompanyGate({
                   The Draw
                 </h1>
                 <p className="text-lg sm:text-xl font-bold mt-5 mb-2" style={{ color: 'rgba(255,255,255,0.92)' }}>
-                  The office sweepstake, done right.
+                  The office tracker, done right.
                 </p>
                 <p
                   className="text-sm leading-relaxed mb-7 max-w-sm"
                   style={{ color: 'rgba(255,255,255,0.58)' }}
                 >
-                  48 teams. QR codes, live stats, and automatic prize tracking — from the group stage to the final on 19 July 2026.
+                  48 teams. QR codes, live stats, and automatic tracking — from the group stage to the final on 19 July 2026.
                 </p>
                 <button
                   onClick={() => setShowModal(true)}
@@ -251,7 +251,7 @@ export default function CompanyGate({
                   style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <p className="font-black text-base mb-1" style={{ color: '#fff' }}>
-                    Running your own sweepstake?
+                    Running your own tracker?
                   </p>
                   <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
                     Set up The Draw for your office or group in under two minutes. Free, no account needed.

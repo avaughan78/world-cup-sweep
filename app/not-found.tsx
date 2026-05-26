@@ -25,7 +25,7 @@ export default function NotFound() {
         </div>
         <div className="px-7 py-6" style={{ background: 'var(--card)' }}>
           <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-            That page doesn&apos;t exist. Head back to the draw or set up your own sweepstake.
+            That page doesn&apos;t exist. Head back to the draw or set up your own tracker.
           </p>
           <a
             href="/"

@@ -25,8 +25,8 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "World Cup 2026 Sweepstake",
-  description: "Office sweepstake prize tracker for the 2026 FIFA World Cup",
+  title: "World Cup 2026",
+  description: "Tracker for the 2026 FIFA World Cup",
 };
 
 export default function RootLayout({

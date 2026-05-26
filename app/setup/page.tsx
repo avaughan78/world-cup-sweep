@@ -78,7 +78,7 @@ export default function SetupPage() {
             The Draw
           </h1>
           <p className="text-sm mt-2 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Set up your sweepstake
+            Set up your tracker
           </p>
         </div>
 
