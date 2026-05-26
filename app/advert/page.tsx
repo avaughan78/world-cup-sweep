@@ -107,7 +107,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           }}>
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(110deg, rgba(8,0,45,0.97) 0%, rgba(8,0,45,0.88) 50%, rgba(140,0,0,0.7) 100%)',
+              background: 'linear-gradient(110deg, rgba(77,16,200,0.97) 0%, rgba(77,16,200,0.88) 50%, rgba(212,1,0,0.75) 100%)',
             }} />
 
             {/* Faded trophy */}
@@ -120,7 +120,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '8mm 12mm', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
 
               {/* Tournament label */}
-              <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>
+              <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
                 FIFA World Cup · USA · Canada · Mexico
               </p>
 
@@ -154,7 +154,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           {/* ── HOOK BAR ─────────────────────────────────────────── */}
           <div style={{ background: '#D40100', padding: '5mm 12mm' }}>
             <p className="bungee" style={{ margin: '0 0 1mm', fontSize: '19pt', color: '#fff', lineHeight: 1, letterSpacing: '0.01em' }}>
-              48 nations. One winner.
+              48 nations. Nine chances to win.
             </p>
             <p className="oswald" style={{ margin: 0, fontSize: '11pt', fontWeight: 400, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.03em' }}>
               Which team will <em>you</em> draw?
@@ -162,23 +162,23 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── ALL 48 TEAMS ─────────────────────────────────────── */}
-          <div style={{ background: '#08002d', padding: '5mm 12mm' }}>
-            <p className="oswald" style={{ margin: '0 0 3.5mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+          <div style={{ background: '#f5f4ee', padding: '5mm 12mm' }}>
+            <p className="oswald" style={{ margin: '0 0 3.5mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8a8678' }}>
               The 48 nations
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '2.5mm 1mm' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '3mm 1mm' }}>
               {ALL_TEAMS.map(team => (
-                <div key={team} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8mm' }}>
-                  <span style={{ fontSize: '13pt', lineHeight: 1 }}>{getFlag(team)}</span>
+                <div key={team} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1mm' }}>
+                  <span style={{ fontSize: '16pt', lineHeight: 1 }}>{getFlag(team)}</span>
                   <span style={{
                     fontFamily: 'system-ui, sans-serif',
-                    fontSize: '4pt',
-                    color: 'rgba(255,255,255,0.45)',
+                    fontSize: '4.5pt',
+                    color: '#6b6760',
                     textAlign: 'center',
                     lineHeight: 1.2,
                     wordBreak: 'break-word',
                     hyphens: 'auto',
-                    maxWidth: '13mm',
+                    maxWidth: '14mm',
                   }}>
                     {team}
                   </span>
@@ -226,20 +226,20 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                 <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a8678' }}>
                   Sweepstake organised by
                 </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '18pt', color: '#08002d', lineHeight: 1, letterSpacing: '0.01em' }}>
+                <p className="bungee" style={{ margin: 0, fontSize: '18pt', color: '#4D10C8', lineHeight: 1, letterSpacing: '0.01em' }}>
                   {company.name}
                 </p>
               </div>
               {fee && (
                 <div style={{
-                  background: '#fff8e6',
-                  border: '1.5px solid #f0c060',
+                  background: '#edf7f0',
+                  border: '1.5px solid #3b7a52',
                   borderRadius: '3mm',
                   padding: '3mm 5mm',
                   textAlign: 'center',
                   flexShrink: 0,
                 }}>
-                  <p className="oswald" style={{ margin: '0 0 0.5mm', fontSize: '6pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#8a6a00' }}>
+                  <p className="oswald" style={{ margin: '0 0 0.5mm', fontSize: '6pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3b7a52' }}>
                     Entry
                   </p>
                   <p className="bungee" style={{ margin: 0, fontSize: '14pt', color: '#1a1a17', lineHeight: 1 }}>
@@ -250,7 +250,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             </div>
 
             {/* Code + QR side by side */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#08002d', borderRadius: '4mm', padding: '5mm 6mm' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#4D10C8', borderRadius: '4mm', padding: '5mm 6mm' }}>
               <div style={{ flex: 1 }}>
                 <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
                   Visit {displayUrl} and enter
@@ -271,7 +271,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
 
           {/* ── FOOTER ───────────────────────────────────────────── */}
           <div style={{
-            background: '#08002d',
+            background: '#4D10C8',
             padding: '4mm 12mm',
             display: 'flex',
             justifyContent: 'space-between',
