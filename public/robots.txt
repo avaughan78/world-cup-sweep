@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /$
+Allow: /setup$
+Disallow: /admin
+Disallow: /manage
+Disallow: /print
+Disallow: /claim/
+Disallow: /api/

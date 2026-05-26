@@ -484,7 +484,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                   {teams.map(team => (
                     <div key={team} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderBottom: '1px solid var(--border)' }}>
-                      <Flag team={team} height="1.1rem" />
+                      <Flag team={team} height="1.1rem" width="1.6rem" />
                       <span className="font-semibold"
                         style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flexShrink: 0, width: '5.5rem' }}>
                         {team}
