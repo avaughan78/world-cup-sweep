@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import type { Company } from '@/lib/db';
 import PasswordInput from './PasswordInput';
 import { GROUPS_2026 } from '@/lib/groups';
-import { getFlag } from '@/lib/flags';
+import Flag from '@/components/Flag';
 
 export default function ManageClient({ company: initialCompany }: { company: Company }) {
   const [authenticated, setAuthenticated] = useState(false);
@@ -484,7 +484,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                   {teams.map(team => (
                     <div key={team} className="flex items-center gap-2 px-3 py-2"
                       style={{ borderBottom: '1px solid var(--border)' }}>
-                      <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{getFlag(team)}</span>
+                      <Flag team={team} height="1.1rem" />
                       <span className="font-semibold"
                         style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flexShrink: 0, width: '5.5rem' }}>
                         {team}

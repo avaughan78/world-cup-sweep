@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { GROUPS_2026 } from '@/lib/groups';
 import PasswordInput from '@/components/PasswordInput';
-import { getFlag } from '@/lib/flags';
+import Flag from '@/components/Flag';
 import ThemeToggle from '@/components/ThemeToggle';
 
 interface Company { id: number; code: string; name: string; ticket_price: number | null; }
@@ -628,7 +628,7 @@ export default function AdminPage() {
 
                   {/* Oooops */}
                   <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 Oooops — Most Spectacular Own Goal</p>
+                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 OG — Most Spectacular Own Goal</p>
                     {teamSelect(ownGoalTeam, v => { setOwnGoalTeam(v); setManualPrizesSaved(false); })}
                     <input placeholder="Video URL" value={ownGoalUrl}
                       onChange={e => { setOwnGoalUrl(e.target.value); setManualPrizesSaved(false); }}
@@ -908,7 +908,7 @@ export default function AdminPage() {
                           className="flex items-center gap-2 px-3 py-2"
                           style={{ borderBottom: `1px solid var(--border)` }}
                         >
-                          <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{getFlag(team)}</span>
+                          <Flag team={team} height="1.1rem" />
                           <span className="font-semibold" style={{ fontSize: '0.8rem', color: 'var(--text-primary)', flexShrink: 0, width: '5.5rem' }}>
                             {team}
                           </span>

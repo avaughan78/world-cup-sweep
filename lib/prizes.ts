@@ -100,7 +100,7 @@ export async function computePrizes(
     },
     {
       slug: 'most_own_goals',
-      name: 'Oooops',
+      name: 'OG',
       description: 'The team conceding the most spectacular own goal',
       icon: '😬',
       current_team: ownGoalOverride?.team_name && ownGoalOverride.team_name !== '__hidden__' ? ownGoalOverride.team_name : null,

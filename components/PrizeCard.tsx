@@ -1,5 +1,5 @@
 import type { Prize } from '@/lib/prizes';
-import { getFlag } from '@/lib/flags';
+import Flag from './Flag';
 import TicketBadge from './TicketBadge';
 import VideoEasterEgg from './VideoEasterEgg';
 
@@ -43,7 +43,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-        <span style={{ fontSize: '1.3rem', lineHeight: 1, flexShrink: 0 }}>{getFlag(prize.current_team)}</span>
+        <Flag team={prize.current_team} height="1.3rem" />
         <span className="font-semibold text-base truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
           {playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team}
         </span>
@@ -98,7 +98,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         <div className="flex-1 relative">
           <div className="flex items-start justify-between">
             {prize.slug === 'most_own_goals'
-              ? <VideoEasterEgg icon="😬" label="Oooops" videoSrc="/haiti-own-goal.mp4" fontSize="1.5rem" />
+              ? <VideoEasterEgg icon="😬" label="OG" videoSrc="/haiti-own-goal.mp4" fontSize="1.5rem" />
               : prize.slug === 'bicycle'
               ? <VideoEasterEgg icon="🤸" label="The Bicycle" videoSrc="/richarlison.mp4" fontSize="1.5rem" />
               : <span className="text-2xl leading-none">{prize.icon}</span>
