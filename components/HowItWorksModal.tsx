@@ -11,7 +11,7 @@ const STEPS = [
   {
     icon: '🎩',
     title: 'Draw from a hat',
-    body: 'Tickets are folded up and everyone draws one at random. That\'s your team for the tournament.',
+    body: 'Tickets are folded and then drawn from the hat. The organiser collects the entry fee.',
   },
   {
     icon: '📱',
