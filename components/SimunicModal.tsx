@@ -2,17 +2,21 @@
 
 import { useState } from 'react';
 
-export default function SimunicModal({ name }: { name: string }) {
+export default function SimunicModal() {
   const [open, setOpen] = useState(false);
 
   return (
     <>
-      <span
-        onClick={() => setOpen(true)}
-        style={{ cursor: 'pointer', borderBottom: '1px dotted currentColor' }}
-        title="Read the story"
-      >
-        {name}
+      <span>
+        The{' '}
+        <span
+          onClick={() => setOpen(true)}
+          style={{ cursor: 'pointer', borderBottom: '1px dotted currentColor' }}
+          title="Read the story"
+        >
+          Josip Simunic
+        </span>
+        {' '}Award
       </span>
 
       {open && (

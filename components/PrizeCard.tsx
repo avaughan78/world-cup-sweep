@@ -145,7 +145,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           {prizeAmount && <TicketBadge amount={prizeAmount} />}
         </div>
         <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
-          {prize.slug === 'most_cards' ? <SimunicModal name={prize.name} /> : prize.name}
+          {prize.slug === 'most_cards' ? <SimunicModal /> : prize.name}
         </p>
         <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
           {prize.description}
