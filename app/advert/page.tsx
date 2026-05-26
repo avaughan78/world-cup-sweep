@@ -195,7 +195,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                     )}
                     <span style={{
                       fontFamily: 'system-ui, sans-serif',
-                      fontSize: '4.5pt',
+                      fontSize: '6.5pt',
                       color: '#6b6760',
                       textAlign: 'center',
                       lineHeight: 1.2,
