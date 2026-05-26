@@ -1,13 +1,19 @@
 import { redirect } from 'next/navigation';
 import { getCompanyByCode } from '@/lib/db';
 import { GROUPS_2026 } from '@/lib/groups';
-import { getFlag } from '@/lib/flags';
+import { getFlagUrl } from '@/lib/flags';
 import QRCode from 'react-qr-code';
 import PrintButton from '@/components/PrintButton';
 
 export const dynamic = 'force-dynamic';
 
 const ALL_TEAMS = Object.values(GROUPS_2026).flat();
+
+const HOST_FLAGS = [
+  { code: 'us', label: 'USA' },
+  { code: 'ca', label: 'Canada' },
+  { code: 'mx', label: 'Mexico' },
+];
 
 const STEPS = [
   {
@@ -95,56 +101,63 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           }}
         >
 
-          {/* ── HERO ─────────────────────────────────────────────── */}
+          {/* ── HERO — same background image as the main site header ── */}
           <div style={{
             position: 'relative',
             height: '82mm',
             flexShrink: 0,
             backgroundImage: 'url(/wc2026-header-bg.png)',
             backgroundSize: 'cover',
-            backgroundPosition: 'center 35%',
+            backgroundPosition: 'center',
             overflow: 'hidden',
           }}>
+            {/* Subtle gradient only at the bottom to lift text — matches main site style */}
             <div style={{
               position: 'absolute', inset: 0,
-              background: 'linear-gradient(110deg, rgba(77,16,200,0.97) 0%, rgba(77,16,200,0.88) 50%, rgba(212,1,0,0.75) 100%)',
+              background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)',
             }} />
 
             {/* Faded trophy */}
             <img src="/world-cup-trophy.png" alt="" style={{
-              position: 'absolute', right: '-8mm', bottom: '-10mm',
-              height: '105mm', width: 'auto', opacity: 0.18,
-              filter: 'brightness(2)',
+              position: 'absolute', right: '-5mm', bottom: '-8mm',
+              height: '95mm', width: 'auto', opacity: 0.22,
+              filter: 'brightness(1.8)',
             }} />
 
             <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '8mm 12mm', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
 
-              {/* Tournament label */}
-              <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.55)' }}>
+              <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
                 FIFA World Cup · USA · Canada · Mexico
               </p>
 
-              {/* Big date centrepiece */}
               <div>
-                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '11pt', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ff4040' }}>
+                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '11pt', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffcc00' }}>
                   Kicks off
                 </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '36pt', lineHeight: 0.95, color: '#fff', letterSpacing: '0.01em' }}>
+                <p className="bungee" style={{ margin: 0, fontSize: '38pt', lineHeight: 0.95, color: '#fff', letterSpacing: '0.01em', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
                   11 June
                 </p>
-                <p className="bungee" style={{ margin: '1mm 0 0', fontSize: '20pt', lineHeight: 1, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.01em' }}>
+                <p className="bungee" style={{ margin: '1.5mm 0 0', fontSize: '22pt', lineHeight: 1, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.01em' }}>
                   2026
                 </p>
               </div>
 
-              {/* Host flags + final date */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', gap: '2.5mm', alignItems: 'center' }}>
-                  {['🇺🇸', '🇨🇦', '🇲🇽'].map(f => (
-                    <span key={f} style={{ fontSize: '16pt', lineHeight: 1 }}>{f}</span>
+                <div style={{ display: 'flex', gap: '3mm', alignItems: 'center' }}>
+                  {HOST_FLAGS.map(({ code, label }) => (
+                    <div key={code} style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                      <img
+                        src={`https://flagcdn.com/w40/${code}.png`}
+                        alt={label}
+                        style={{ height: '14px', width: 'auto', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
+                      />
+                      <span className="oswald" style={{ fontSize: '7.5pt', fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                        {label}
+                      </span>
+                    </div>
                   ))}
                 </div>
-                <p className="oswald" style={{ margin: 0, fontSize: '8pt', fontWeight: 600, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                <p className="oswald" style={{ margin: 0, fontSize: '8pt', fontWeight: 600, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                   Final · 19 July 2026
                 </p>
               </div>
@@ -156,7 +169,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             <p className="bungee" style={{ margin: '0 0 1mm', fontSize: '19pt', color: '#fff', lineHeight: 1, letterSpacing: '0.01em' }}>
               48 nations. Nine chances to win.
             </p>
-            <p className="oswald" style={{ margin: 0, fontSize: '11pt', fontWeight: 400, color: 'rgba(255,255,255,0.8)', letterSpacing: '0.03em' }}>
+            <p className="oswald" style={{ margin: 0, fontSize: '11pt', fontWeight: 400, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.03em' }}>
               Which team will <em>you</em> draw?
             </p>
           </div>
@@ -167,35 +180,46 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
               The 48 nations
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '3mm 1mm' }}>
-              {ALL_TEAMS.map(team => (
-                <div key={team} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1mm' }}>
-                  <span style={{ fontSize: '16pt', lineHeight: 1 }}>{getFlag(team)}</span>
-                  <span style={{
-                    fontFamily: 'system-ui, sans-serif',
-                    fontSize: '4.5pt',
-                    color: '#6b6760',
-                    textAlign: 'center',
-                    lineHeight: 1.2,
-                    wordBreak: 'break-word',
-                    hyphens: 'auto',
-                    maxWidth: '14mm',
-                  }}>
-                    {team}
-                  </span>
-                </div>
-              ))}
+              {ALL_TEAMS.map(team => {
+                const url = getFlagUrl(team);
+                return (
+                  <div key={team} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5mm' }}>
+                    {url ? (
+                      <img
+                        src={url}
+                        alt={team}
+                        style={{ width: '18px', height: 'auto', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.15)', display: 'block' }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '14pt', lineHeight: 1 }}>🏳️</span>
+                    )}
+                    <span style={{
+                      fontFamily: 'system-ui, sans-serif',
+                      fontSize: '4.5pt',
+                      color: '#6b6760',
+                      textAlign: 'center',
+                      lineHeight: 1.2,
+                      wordBreak: 'break-word',
+                      hyphens: 'auto',
+                      maxWidth: '14mm',
+                    }}>
+                      {team}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
           {/* ── HOW IT WORKS ─────────────────────────────────────── */}
-          <div style={{ background: '#f5f4ee', padding: '6mm 12mm' }}>
-            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8a8678' }}>
+          <div style={{ background: '#fff', padding: '6mm 12mm' }}>
+            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#4D10C8' }}>
               How it works
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3mm' }}>
               {STEPS.map(step => (
                 <div key={step.title} style={{
-                  background: '#fff',
+                  background: '#f5f4ee',
                   borderRadius: '3mm',
                   padding: '4mm',
                   border: '1px solid #e5e2d8',
@@ -218,15 +242,14 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── JOIN ─────────────────────────────────────────────── */}
-          <div style={{ flex: 1, background: '#fff', padding: '6mm 12mm', display: 'flex', flexDirection: 'column', gap: '4mm' }}>
+          <div style={{ flex: 1, background: '#fff', padding: '5mm 12mm 6mm', display: 'flex', flexDirection: 'column', gap: '4mm' }}>
 
-            {/* Company + entry fee */}
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4mm' }}>
               <div>
                 <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a8678' }}>
                   Sweepstake organised by
                 </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '18pt', color: '#4D10C8', lineHeight: 1, letterSpacing: '0.01em' }}>
+                <p className="bungee" style={{ margin: 0, fontSize: '18pt', color: '#4D10C8', lineHeight: 1 }}>
                   {company.name}
                 </p>
               </div>
@@ -249,13 +272,13 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
               )}
             </div>
 
-            {/* Code + QR side by side */}
+            {/* Code + QR */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#4D10C8', borderRadius: '4mm', padding: '5mm 6mm' }}>
               <div style={{ flex: 1 }}>
-                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-                  Visit {displayUrl} and enter
+                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
+                  Visit {displayUrl} and enter code
                 </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '24pt', color: '#fff', letterSpacing: '0.15em', lineHeight: 1 }}>
+                <p className="bungee" style={{ margin: 0, fontSize: '26pt', color: '#fff', letterSpacing: '0.15em', lineHeight: 1 }}>
                   {company.code}
                 </p>
                 <p className="oswald" style={{ margin: '2mm 0 0', fontSize: '7pt', color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>
@@ -278,10 +301,10 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             alignItems: 'center',
             flexShrink: 0,
           }}>
-            <p className="oswald" style={{ margin: 0, fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)' }}>
+            <p className="oswald" style={{ margin: 0, fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
               48 teams · 104 matches · 3 host nations
             </p>
-            <p className="bungee" style={{ margin: 0, fontSize: '8pt', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.06em' }}>
+            <p className="bungee" style={{ margin: 0, fontSize: '8pt', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.06em' }}>
               11 Jun – 19 Jul 2026
             </p>
           </div>
