@@ -281,8 +281,8 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                 <p className="bungee" style={{ margin: 0, fontSize: '26pt', color: '#fff', letterSpacing: '0.15em', lineHeight: 1 }}>
                   {company.code}
                 </p>
-                <p className="oswald" style={{ margin: '2mm 0 0', fontSize: '7pt', color: 'rgba(255,255,255,0.35)', fontWeight: 400 }}>
-                  Or scan the QR code once the draw has started
+                <p className="oswald" style={{ margin: '2mm 0 0', fontSize: '8pt', color: 'rgba(255,255,255,0.7)', fontWeight: 400, lineHeight: 1.4 }}>
+                  When all names are drawn and entered onto the site you can follow the competition prize stats on this page:
                 </p>
               </div>
               <div style={{ flexShrink: 0, background: '#fff', borderRadius: '2.5mm', padding: '3mm' }}>
