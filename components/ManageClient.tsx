@@ -5,6 +5,7 @@ import type { Company } from '@/lib/db';
 import PasswordInput from './PasswordInput';
 import { GROUPS_2026 } from '@/lib/groups';
 import Flag from '@/components/Flag';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function ManageClient({ company: initialCompany }: { company: Company }) {
   const [authenticated, setAuthenticated] = useState(false);
@@ -343,6 +344,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>Organiser Admin</p>
             </div>
             <div className="flex items-center gap-4">
+              <ThemeToggle />
               <a href={`/?code=${company.code}`} className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to draw</a>
               <button type="button" onClick={handleLogout} className="text-sm" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
             </div>

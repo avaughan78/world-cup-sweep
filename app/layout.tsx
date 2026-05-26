@@ -39,6 +39,10 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${bungee.variable} ${oswald.variable} h-full antialiased`}
     >
+      <head>
+        {/* Apply saved theme before first paint to avoid flash */}
+        <script dangerouslySetInnerHTML={{ __html: `try{var t=localStorage.getItem('theme');if(t&&['default','dark','album'].includes(t))document.documentElement.setAttribute('data-theme',t);}catch(e){}` }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
