@@ -92,7 +92,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                   <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.5)' }} />
                   {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}
                 </span>
-                <HowItWorksModal claimed={claimed} total={participants.length} />
+                <HowItWorksModal claimed={claimed} total={participants.length} ticketPrice={company.ticket_price} />
                 <a
                   href={`/manage?code=${company.code}`}
                   aria-label="Organiser admin"

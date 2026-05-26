@@ -25,7 +25,7 @@ const STEPS = [
   },
 ];
 
-export default function HowItWorksModal({ claimed = 0, total = 0 }: { claimed?: number; total?: number }) {
+export default function HowItWorksModal({ claimed = 0, total = 0, ticketPrice }: { claimed?: number; total?: number; ticketPrice?: number | null }) {
   const [open, setOpen] = useState(false);
   const allClaimed = total > 0 && claimed === total;
 
@@ -107,7 +107,10 @@ export default function HowItWorksModal({ claimed = 0, total = 0 }: { claimed?: 
             <div className="px-6 py-4 flex gap-3 items-center">
               <span className="text-lg flex-shrink-0">💰</span>
               <p className="text-sm" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                Collecting money isn&apos;t handled by this site — that&apos;s between you and your organiser.
+                {ticketPrice != null
+                  ? <>Entry fee is <strong style={{ color: 'var(--text-primary)' }}>£{ticketPrice % 1 === 0 ? ticketPrice : ticketPrice.toFixed(2)}</strong> per ticket — collecting money isn&apos;t handled by this site, that&apos;s between you and your organiser.</>
+                  : <>Collecting money isn&apos;t handled by this site — that&apos;s between you and your organiser.</>
+                }
               </p>
             </div>
 
