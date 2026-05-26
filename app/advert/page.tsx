@@ -184,18 +184,20 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                 const url = getFlagUrl(team);
                 return (
                   <div key={team} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5mm' }}>
-                    {url ? (
-                      <img
-                        src={url}
-                        alt={team}
-                        style={{ width: '18px', height: 'auto', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.15)', display: 'block' }}
-                      />
-                    ) : (
-                      <span style={{ fontSize: '14pt', lineHeight: 1 }}>🏳️</span>
-                    )}
+                    <div style={{ width: '20px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {url ? (
+                        <img
+                          src={url}
+                          alt={team}
+                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '10pt', lineHeight: 1 }}>🏳️</span>
+                      )}
+                    </div>
                     <span style={{
                       fontFamily: 'system-ui, sans-serif',
-                      fontSize: '6.5pt',
+                      fontSize: '7pt',
                       color: '#6b6760',
                       textAlign: 'center',
                       lineHeight: 1.2,
