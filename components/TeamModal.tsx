@@ -34,6 +34,23 @@ const POS_LABEL: Record<string, string> = {
   Offence: 'FWD',
 };
 
+function ClubBadge({ url, club }: { url: string; club: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className="rounded-sm shrink-0 flex items-center justify-center font-black"
+        style={{ width: 16, height: 16, background: 'var(--border)', fontSize: '0.55rem', color: 'var(--text-muted)' }}>
+        {club[0]}
+      </span>
+    );
+  }
+  return (
+    <img src={url} alt={club} className="shrink-0"
+      style={{ width: 16, height: 16, objectFit: 'contain' }}
+      onError={() => setFailed(true)} />
+  );
+}
+
 interface Stat { label: string; value: string }
 
 const BLURB_LIMIT = 400;
@@ -425,14 +442,13 @@ export default function TeamModal({ team, participant, onClose }: {
                                   </p>
                                   {p.club && (
                                     <div className="flex items-center justify-center gap-1 mt-0.5 w-full">
-                                      {p.clubBadge && (
-                                        <img
-                                          src={p.clubBadge}
-                                          alt={p.club}
-                                          className="shrink-0"
-                                          style={{ width: 16, height: 16, objectFit: 'contain' }}
-                                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
-                                        />
+                                      {p.clubBadge ? (
+                                        <ClubBadge url={p.clubBadge} club={p.club} />
+                                      ) : (
+                                        <span className="rounded-sm shrink-0 flex items-center justify-center font-black"
+                                          style={{ width: 16, height: 16, background: 'var(--border)', fontSize: '0.55rem', color: 'var(--text-muted)' }}>
+                                          {p.club[0]}
+                                        </span>
                                       )}
                                       <p
                                         className="truncate"
