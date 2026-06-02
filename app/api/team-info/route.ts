@@ -111,23 +111,29 @@ export async function GET(req: NextRequest) {
     return null;
   }
 
-  async function fetchPlayerPhoto(name: string): Promise<string | null> {
+  type PlayerInfo = { photo: string | null; club: string | null; clubBadge: string | null };
+
+  async function fetchPlayerInfo(name: string): Promise<PlayerInfo> {
     try {
       const res = await fetchWithTimeout(
         `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`,
         {},
         3000
       );
-      if (!res.ok) return null;
-      const data = await res.json() as { player?: Array<{ strThumb?: string; strCutout?: string }> };
+      if (!res.ok) return { photo: null, club: null, clubBadge: null };
+      const data = await res.json() as { player?: Array<{ strThumb?: string; strCutout?: string; strTeam?: string; strTeamBadge?: string }> };
       const p = data?.player?.[0];
-      return p?.strThumb || p?.strCutout || null;
+      return {
+        photo: p?.strThumb || p?.strCutout || null,
+        club: p?.strTeam || null,
+        clubBadge: p?.strTeamBadge || null,
+      };
     } catch {
-      return null;
+      return { photo: null, club: null, clubBadge: null };
     }
   }
 
-  async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null }>> {
+  async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null }>> {
     const apiKey = process.env.FOOTBALL_DATA_API_KEY;
     if (!apiKey) { console.warn('[team-info] No FOOTBALL_DATA_API_KEY'); return []; }
     try {
@@ -180,8 +186,8 @@ export async function GET(req: NextRequest) {
         }));
         console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
         if (sq.length) {
-          const photos = await Promise.all(sq.map(p => fetchPlayerPhoto(p.name)));
-          return sq.map((p, i) => ({ ...p, photo: photos[i] }));
+          const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
+          return sq.map((p, i) => ({ ...p, ...infos[i] }));
         }
       } else {
         console.error(`[team-info] /teams/${matched.id} failed: ${teamRes.status}`);
@@ -191,8 +197,8 @@ export async function GET(req: NextRequest) {
         const sq = matched.squad.map(p => ({
           name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
         }));
-        const photos = await Promise.all(sq.map(p => fetchPlayerPhoto(p.name)));
-        return sq.map((p, i) => ({ ...p, photo: photos[i] }));
+        const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
+        return sq.map((p, i) => ({ ...p, ...infos[i] }));
       }
       console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
     } catch (err) {

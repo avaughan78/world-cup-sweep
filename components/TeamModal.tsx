@@ -13,7 +13,7 @@ interface TeamInfo {
   languages: string[];
   wikiImage: string | null;
   wikiExtract: string | null;
-  squad: Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null }>;
+  squad: Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null }>;
 }
 
 function fmtPop(n: number): string {
@@ -109,10 +109,10 @@ export default function TeamModal({ team, participant, onClose }: {
     info?.currencies[0] ? { label: 'Currency', value: info.currencies[0] } : null,
   ].filter((s): s is Stat => s !== null);
 
-  const byPos: Record<string, Array<{ name: string; shirtNumber: number | null; photo: string | null }>> = {};
+  const byPos: Record<string, Array<{ name: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null }>> = {};
   for (const p of info?.squad ?? []) {
     if (!byPos[p.position]) byPos[p.position] = [];
-    byPos[p.position].push({ name: p.name, shirtNumber: p.shirtNumber, photo: p.photo });
+    byPos[p.position].push({ name: p.name, shirtNumber: p.shirtNumber, photo: p.photo, club: p.club, clubBadge: p.clubBadge });
   }
   const hasSquad = Object.keys(byPos).length > 0;
 
@@ -408,13 +408,42 @@ export default function TeamModal({ team, participant, onClose }: {
                                     </span>
                                   )}
                                 </div>
-                                <p
-                                  className="text-center font-medium leading-tight w-full truncate px-0.5"
-                                  style={{ color: 'var(--text-primary)', fontSize: '0.7rem' }}
-                                  title={p.name}
-                                >
-                                  {p.name.split(' ').slice(-1)[0]}
-                                </p>
+                                <div className="flex flex-col items-center gap-0.5 w-full px-0.5">
+                                  <p
+                                    className="text-center leading-tight w-full truncate"
+                                    style={{ color: 'var(--text-muted)', fontSize: '0.6rem' }}
+                                    title={p.name}
+                                  >
+                                    {p.name.split(' ').slice(0, -1).join(' ') || p.name}
+                                  </p>
+                                  <p
+                                    className="text-center font-bold leading-tight w-full truncate"
+                                    style={{ color: 'var(--text-primary)', fontSize: '0.72rem' }}
+                                    title={p.name}
+                                  >
+                                    {p.name.split(' ').slice(-1)[0]}
+                                  </p>
+                                  {p.club && (
+                                    <div className="flex items-center justify-center gap-1 mt-0.5 w-full">
+                                      {p.clubBadge && (
+                                        <img
+                                          src={p.clubBadge}
+                                          alt={p.club}
+                                          className="shrink-0"
+                                          style={{ width: 12, height: 12, objectFit: 'contain' }}
+                                          onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                        />
+                                      )}
+                                      <p
+                                        className="truncate"
+                                        style={{ color: 'var(--text-muted)', fontSize: '0.58rem' }}
+                                        title={p.club}
+                                      >
+                                        {p.club}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
                               </div>
                             ))}
                           </div>
