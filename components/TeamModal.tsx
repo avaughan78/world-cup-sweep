@@ -430,13 +430,13 @@ export default function TeamModal({ team, participant, onClose }: {
                                           src={p.clubBadge}
                                           alt={p.club}
                                           className="shrink-0"
-                                          style={{ width: 12, height: 12, objectFit: 'contain' }}
+                                          style={{ width: 16, height: 16, objectFit: 'contain' }}
                                           onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
                                         />
                                       )}
                                       <p
                                         className="truncate"
-                                        style={{ color: 'var(--text-muted)', fontSize: '0.58rem' }}
+                                        style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}
                                         title={p.club}
                                       >
                                         {p.club}

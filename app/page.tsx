@@ -4,7 +4,7 @@ import SyncTime from '@/components/SyncTime';
 import TrophyEasterEgg from '@/components/TrophyEasterEgg';
 import PrizeCard from '@/components/PrizeCard';
 import TicketBadge from '@/components/TicketBadge';
-import GroupsGrid from '@/components/GroupsGrid';
+import GroupsSection from '@/components/GroupsSection';
 import ThemeToggle from '@/components/ThemeToggle';
 import BugReport from '@/components/BugReport';
 import CompanyGate from '@/components/CompanyGate';
@@ -187,39 +187,26 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             </div>
           )}
 
-          {/* Groups */}
-          <section>
-            <div className="flex flex-wrap items-baseline justify-between gap-y-1 mb-3">
-              <p className="default-section-label text-sm font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                The Groups · {participants.length} Teams
-              </p>
-              <div className="album-section-label" style={{ marginBottom: 0 }}>
-                <span className="label-text">The Draw</span>
-                <span className="label-line" />
-                <span className="label-note">forty-eight teams</span>
-              </div>
-              {inRunning > 0 && (
-                <span className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {inRunning} still in the running
-                </span>
-              )}
-            </div>
-            {participants.length === 0 ? (
+          {/* Groups / Fixtures */}
+          {participants.length === 0 ? (
+            <section>
               <div
                 className="rounded-xl p-10 text-center text-sm"
                 style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
               >
                 No participants assigned yet — visit the admin panel to set names.
               </div>
-            ) : (
-              <GroupsGrid
-                participantMap={Object.fromEntries(displayMap)}
-                eliminatedTeams={[...eliminatedTeams]}
-                prizes={prizes}
-                groupStandings={groupStandings}
-              />
-            )}
-          </section>
+            </section>
+          ) : (
+            <GroupsSection
+              participantMap={Object.fromEntries(displayMap)}
+              eliminatedTeams={[...eliminatedTeams]}
+              prizes={prizes}
+              groupStandings={groupStandings}
+              teamCount={participants.length}
+              inRunning={inRunning}
+            />
+          )}
 
         </div>
 

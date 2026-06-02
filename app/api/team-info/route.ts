@@ -111,7 +111,7 @@ export async function GET(req: NextRequest) {
     return null;
   }
 
-  type PlayerInfo = { photo: string | null; club: string | null; clubBadge: string | null };
+  type PlayerInfo = { photo: string | null; club: string | null; idTeam: string | null };
 
   async function fetchPlayerInfo(name: string): Promise<PlayerInfo> {
     try {
@@ -120,17 +120,47 @@ export async function GET(req: NextRequest) {
         {},
         3000
       );
-      if (!res.ok) return { photo: null, club: null, clubBadge: null };
-      const data = await res.json() as { player?: Array<{ strThumb?: string; strCutout?: string; strTeam?: string; strTeamBadge?: string }> };
+      if (!res.ok) return { photo: null, club: null, idTeam: null };
+      const data = await res.json() as { player?: Array<{ strThumb?: string; strCutout?: string; strTeam?: string; idTeam?: string }> };
       const p = data?.player?.[0];
       return {
         photo: p?.strThumb || p?.strCutout || null,
         club: p?.strTeam || null,
-        clubBadge: p?.strTeamBadge || null,
+        idTeam: p?.idTeam || null,
       };
     } catch {
-      return { photo: null, club: null, clubBadge: null };
+      return { photo: null, club: null, idTeam: null };
     }
+  }
+
+  async function fetchTeamBadge(idTeam: string): Promise<string | null> {
+    try {
+      const res = await fetchWithTimeout(
+        `https://www.thesportsdb.com/api/v1/json/3/lookupteam.php?id=${encodeURIComponent(idTeam)}`,
+        {},
+        3000
+      );
+      if (!res.ok) return null;
+      const data = await res.json() as { teams?: Array<{ strBadge?: string }> };
+      return data.teams?.[0]?.strBadge || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function enrichWithBadges(
+    sq: Array<{ name: string; position: string; shirtNumber: number | null }>,
+    infos: PlayerInfo[]
+  ): Promise<Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null }>> {
+    const uniqueIds = [...new Set(infos.map(i => i.idTeam).filter((id): id is string => !!id))];
+    const badgePairs = await Promise.all(uniqueIds.map(async id => [id, await fetchTeamBadge(id)] as const));
+    const badgeMap = new Map(badgePairs);
+    return sq.map((p, i) => ({
+      ...p,
+      photo: infos[i].photo,
+      club: infos[i].club,
+      clubBadge: infos[i].idTeam ? (badgeMap.get(infos[i].idTeam!) ?? null) : null,
+    }));
   }
 
   async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null }>> {
@@ -187,7 +217,7 @@ export async function GET(req: NextRequest) {
         console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
         if (sq.length) {
           const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
-          return sq.map((p, i) => ({ ...p, ...infos[i] }));
+          return enrichWithBadges(sq, infos);
         }
       } else {
         console.error(`[team-info] /teams/${matched.id} failed: ${teamRes.status}`);
@@ -198,7 +228,7 @@ export async function GET(req: NextRequest) {
           name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
         }));
         const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
-        return sq.map((p, i) => ({ ...p, ...infos[i] }));
+        return enrichWithBadges(sq, infos);
       }
       console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
     } catch (err) {
