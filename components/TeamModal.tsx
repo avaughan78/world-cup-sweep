@@ -377,12 +377,12 @@ export default function TeamModal({ team, participant, onClose }: {
                           >
                             {POS_LABEL[pos]}
                           </p>
-                          <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                          <div className="grid grid-cols-5 sm:grid-cols-6 gap-x-2 gap-y-3">
                             {byPos[pos].map(p => (
-                              <div key={p.name} className="flex flex-col items-center gap-1.5">
+                              <div key={p.name} className="flex flex-col items-center gap-1">
                                 <div
-                                  className="relative w-full overflow-hidden rounded-xl flex items-end justify-center"
-                                  style={{ aspectRatio: '3/4', background: 'var(--card)', border: '1px solid var(--border)' }}
+                                  className="relative overflow-hidden rounded-full flex items-center justify-center shrink-0"
+                                  style={{ width: 52, height: 52, background: 'var(--card)', border: '1px solid var(--border)' }}
                                 >
                                   {p.photo ? (
                                     <img
@@ -394,15 +394,15 @@ export default function TeamModal({ team, participant, onClose }: {
                                   ) : (
                                     <span
                                       className="font-black"
-                                      style={{ color: 'var(--text-muted)', fontSize: '1.6rem', paddingBottom: '0.4rem' }}
+                                      style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}
                                     >
                                       {p.shirtNumber ?? '?'}
                                     </span>
                                   )}
-                                  {p.shirtNumber !== null && (
+                                  {p.shirtNumber !== null && p.photo && (
                                     <span
-                                      className="absolute top-1 left-1 font-black leading-none rounded px-1 py-0.5"
-                                      style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.6rem' }}
+                                      className="absolute bottom-0 right-0 font-black leading-none rounded-tl px-1 py-0.5"
+                                      style={{ background: 'rgba(0,0,0,0.6)', color: '#fff', fontSize: '0.55rem' }}
                                     >
                                       {p.shirtNumber}
                                     </span>
@@ -410,7 +410,7 @@ export default function TeamModal({ team, participant, onClose }: {
                                 </div>
                                 <p
                                   className="text-center font-medium leading-tight w-full truncate px-0.5"
-                                  style={{ color: 'var(--text-primary)', fontSize: '0.7rem' }}
+                                  style={{ color: 'var(--text-primary)', fontSize: '0.65rem' }}
                                   title={p.name}
                                 >
                                   {p.name.split(' ').slice(-1)[0]}
