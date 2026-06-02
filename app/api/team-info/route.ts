@@ -117,12 +117,21 @@ export async function GET(req: NextRequest) {
     try {
       const season = process.env.FOOTBALL_SEASON ?? '2026';
       const headers = { 'X-Auth-Token': apiKey };
-      const listRes = await fetchWithTimeout(
-        `https://api.football-data.org/v4/competitions/WC/teams?season=${season}`,
+      // Try without season param first — the WC teams endpoint returns 400 for seasons
+      // not yet registered (pre-tournament). Fall back to season param if needed.
+      let listRes = await fetchWithTimeout(
+        `https://api.football-data.org/v4/competitions/WC/teams`,
         { headers, cache: 'no-store' }
       );
       if (!listRes.ok) {
-        console.error(`[team-info] WC teams list failed: ${listRes.status}`);
+        listRes = await fetchWithTimeout(
+          `https://api.football-data.org/v4/competitions/WC/teams?season=${season}`,
+          { headers, cache: 'no-store' }
+        );
+      }
+      if (!listRes.ok) {
+        const body = await listRes.text().catch(() => '');
+        console.error(`[team-info] WC teams list failed: ${listRes.status} — ${body.slice(0, 200)}`);
         return [];
       }
       type ApiTeamBasic = {
