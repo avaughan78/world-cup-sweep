@@ -13,7 +13,7 @@ interface TeamInfo {
   languages: string[];
   wikiImage: string | null;
   wikiExtract: string | null;
-  squad: Array<{ name: string; position: string; shirtNumber: number | null }>;
+  squad: Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null }>;
 }
 
 function fmtPop(n: number): string {
@@ -109,10 +109,10 @@ export default function TeamModal({ team, participant, onClose }: {
     info?.currencies[0] ? { label: 'Currency', value: info.currencies[0] } : null,
   ].filter((s): s is Stat => s !== null);
 
-  const byPos: Record<string, Array<{ name: string; shirtNumber: number | null }>> = {};
+  const byPos: Record<string, Array<{ name: string; shirtNumber: number | null; photo: string | null }>> = {};
   for (const p of info?.squad ?? []) {
     if (!byPos[p.position]) byPos[p.position] = [];
-    byPos[p.position].push({ name: p.name, shirtNumber: p.shirtNumber });
+    byPos[p.position].push({ name: p.name, shirtNumber: p.shirtNumber, photo: p.photo });
   }
   const hasSquad = Object.keys(byPos).length > 0;
 
@@ -368,29 +368,53 @@ export default function TeamModal({ team, participant, onClose }: {
                     Squad
                   </p>
                   {hasSquad ? (
-                    <div className="grid grid-cols-2 gap-x-4 sm:gap-x-8 gap-y-5">
+                    <div className="flex flex-col gap-6">
                       {POS_ORDER.filter(pos => byPos[pos]?.length).map(pos => (
                         <div key={pos}>
                           <p
-                            className="font-black uppercase tracking-widest mb-2"
+                            className="font-black uppercase tracking-widest mb-3"
                             style={{ color: 'var(--green)', fontSize: '0.7rem' }}
                           >
                             {POS_LABEL[pos]}
                           </p>
-                          <div className="space-y-1.5">
+                          <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
                             {byPos[pos].map(p => (
-                              <div key={p.name} className="flex items-center gap-2">
-                                {p.shirtNumber !== null && (
-                                  <span
-                                    className="font-mono text-right flex-shrink-0"
-                                    style={{ color: 'var(--text-muted)', fontSize: '0.75rem', width: '1.5rem' }}
-                                  >
-                                    {p.shirtNumber}
-                                  </span>
-                                )}
-                                <span style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                                  {p.name}
-                                </span>
+                              <div key={p.name} className="flex flex-col items-center gap-1.5">
+                                <div
+                                  className="relative w-full overflow-hidden rounded-xl flex items-end justify-center"
+                                  style={{ aspectRatio: '3/4', background: 'var(--card)', border: '1px solid var(--border)' }}
+                                >
+                                  {p.photo ? (
+                                    <img
+                                      src={p.photo}
+                                      alt={p.name}
+                                      className="w-full h-full object-cover object-top"
+                                      onError={e => { (e.target as HTMLImageElement).style.display = 'none' }}
+                                    />
+                                  ) : (
+                                    <span
+                                      className="font-black"
+                                      style={{ color: 'var(--text-muted)', fontSize: '1.6rem', paddingBottom: '0.4rem' }}
+                                    >
+                                      {p.shirtNumber ?? '?'}
+                                    </span>
+                                  )}
+                                  {p.shirtNumber !== null && (
+                                    <span
+                                      className="absolute top-1 left-1 font-black leading-none rounded px-1 py-0.5"
+                                      style={{ background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: '0.6rem' }}
+                                    >
+                                      {p.shirtNumber}
+                                    </span>
+                                  )}
+                                </div>
+                                <p
+                                  className="text-center font-medium leading-tight w-full truncate px-0.5"
+                                  style={{ color: 'var(--text-primary)', fontSize: '0.7rem' }}
+                                  title={p.name}
+                                >
+                                  {p.name.split(' ').slice(-1)[0]}
+                                </p>
                               </div>
                             ))}
                           </div>

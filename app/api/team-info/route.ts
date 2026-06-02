@@ -111,7 +111,23 @@ export async function GET(req: NextRequest) {
     return null;
   }
 
-  async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null }>> {
+  async function fetchPlayerPhoto(name: string): Promise<string | null> {
+    try {
+      const res = await fetchWithTimeout(
+        `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`,
+        {},
+        3000
+      );
+      if (!res.ok) return null;
+      const data = await res.json() as { player?: Array<{ strThumb?: string; strCutout?: string }> };
+      const p = data?.player?.[0];
+      return p?.strThumb || p?.strCutout || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null }>> {
     const apiKey = process.env.FOOTBALL_DATA_API_KEY;
     if (!apiKey) { console.warn('[team-info] No FOOTBALL_DATA_API_KEY'); return []; }
     try {
@@ -163,15 +179,20 @@ export async function GET(req: NextRequest) {
           name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
         }));
         console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
-        if (sq.length) return sq;
+        if (sq.length) {
+          const photos = await Promise.all(sq.map(p => fetchPlayerPhoto(p.name)));
+          return sq.map((p, i) => ({ ...p, photo: photos[i] }));
+        }
       } else {
         console.error(`[team-info] /teams/${matched.id} failed: ${teamRes.status}`);
       }
       if (matched.squad?.length) {
         console.log(`[team-info] Falling back to inline squad: ${matched.squad.length} players`);
-        return matched.squad.map(p => ({
+        const sq = matched.squad.map(p => ({
           name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
         }));
+        const photos = await Promise.all(sq.map(p => fetchPlayerPhoto(p.name)));
+        return sq.map((p, i) => ({ ...p, photo: photos[i] }));
       }
       console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
     } catch (err) {
