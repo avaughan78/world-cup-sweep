@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
 
   async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null }>> {
     const apiKey = process.env.FOOTBALL_DATA_API_KEY;
-    if (!apiKey) return [];
+    if (!apiKey) { console.warn('[team-info] No FOOTBALL_DATA_API_KEY'); return []; }
     try {
       const season = process.env.FOOTBALL_SEASON ?? '2026';
       const headers = { 'X-Auth-Token': apiKey };
@@ -121,19 +121,27 @@ export async function GET(req: NextRequest) {
         `https://api.football-data.org/v4/competitions/WC/teams?season=${season}`,
         { headers, cache: 'no-store' }
       );
-      if (!listRes.ok) return [];
+      if (!listRes.ok) {
+        console.error(`[team-info] WC teams list failed: ${listRes.status}`);
+        return [];
+      }
       type ApiTeamBasic = {
         id: number; name: string; shortName: string;
         squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
       };
       const listData = await listRes.json() as { teams: ApiTeamBasic[] };
+      const apiNames = listData.teams.map(t => t.name);
       const matched = listData.teams.find(t =>
         normaliseTeamName(t.name) === team ||
         normaliseTeamName(t.shortName) === team ||
         t.name.toLowerCase().includes(team.toLowerCase()) ||
         team.toLowerCase().includes(t.name.toLowerCase())
       );
-      if (!matched) return [];
+      if (!matched) {
+        console.warn(`[team-info] No match for "${team}" in API teams: ${apiNames.join(', ')}`);
+        return [];
+      }
+      console.log(`[team-info] "${team}" matched to API team "${matched.name}" (id ${matched.id})`);
       const teamRes = await fetchWithTimeout(
         `https://api.football-data.org/v4/teams/${matched.id}`,
         { headers, cache: 'no-store' }
@@ -145,14 +153,21 @@ export async function GET(req: NextRequest) {
         const sq = (teamData.squad ?? []).map(p => ({
           name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
         }));
+        console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
         if (sq.length) return sq;
+      } else {
+        console.error(`[team-info] /teams/${matched.id} failed: ${teamRes.status}`);
       }
       if (matched.squad?.length) {
+        console.log(`[team-info] Falling back to inline squad: ${matched.squad.length} players`);
         return matched.squad.map(p => ({
           name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
         }));
       }
-    } catch { /* ignore */ }
+      console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
+    } catch (err) {
+      console.error('[team-info] fetchSquad error:', err);
+    }
     return [];
   }
 
