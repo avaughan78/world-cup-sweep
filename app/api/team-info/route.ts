@@ -253,12 +253,17 @@ export async function GET(req: NextRequest) {
         return [];
       }
 
-      // ── Persist to cache ───────────────────────────────────────────────────
-      await setSquadCache(team, result.map(p => ({
-        player_name: p.name, position: p.position, shirt_number: p.shirtNumber,
-        photo_url: p.photo, club: p.club, club_badge_url: p.clubBadge,
-      })));
-      console.log(`[team-info] squad cached for "${team}" (${result.length} players)`);
+      // ── Persist to cache (only if TheSportsDB returned at least some data) ──
+      const hasAnyPhoto = result.some(p => p.photo !== null);
+      if (hasAnyPhoto) {
+        await setSquadCache(team, result.map(p => ({
+          player_name: p.name, position: p.position, shirt_number: p.shirtNumber,
+          photo_url: p.photo, club: p.club, club_badge_url: p.clubBadge,
+        })));
+        console.log(`[team-info] squad cached for "${team}" (${result.length} players)`);
+      } else {
+        console.warn(`[team-info] skipping cache for "${team}" — TheSportsDB returned no photos`);
+      }
 
       return result;
     } catch (err) {
