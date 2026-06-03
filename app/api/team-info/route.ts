@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normaliseTeamName } from '@/lib/football-api';
+import { getSquadCache, setSquadCache } from '@/lib/db';
 
 // Map sweepstake names → REST Countries search name
 // England & Scotland are not sovereign states — map to United Kingdom for stats
@@ -163,7 +164,20 @@ export async function GET(req: NextRequest) {
     }));
   }
 
-  async function fetchSquad(): Promise<Array<{ name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null }>> {
+  type SquadRow = { name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null };
+
+  async function fetchSquad(): Promise<SquadRow[]> {
+    // ── Cache hit ─────────────────────────────────────────────────────────────
+    const cached = await getSquadCache(team);
+    if (cached) {
+      console.log(`[team-info] squad cache hit for "${team}" (${cached.length} players)`);
+      return cached.map(p => ({
+        name: p.player_name, position: p.position, shirtNumber: p.shirt_number,
+        photo: p.photo_url, club: p.club, clubBadge: p.club_badge_url,
+      }));
+    }
+
+    // ── Cache miss: fetch from football-data.org + TheSportsDB ────────────────
     const apiKey = process.env.FOOTBALL_DATA_API_KEY;
     if (!apiKey) { console.warn('[team-info] No FOOTBALL_DATA_API_KEY'); return []; }
     try {
@@ -207,6 +221,8 @@ export async function GET(req: NextRequest) {
         `https://api.football-data.org/v4/teams/${matched.id}`,
         { headers, cache: 'no-store' }
       );
+
+      let result: SquadRow[] = [];
       if (teamRes.ok) {
         const teamData = await teamRes.json() as {
           squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
@@ -217,20 +233,34 @@ export async function GET(req: NextRequest) {
         console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
         if (sq.length) {
           const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
-          return enrichWithBadges(sq, infos);
+          result = await enrichWithBadges(sq, infos);
         }
       } else {
         console.error(`[team-info] /teams/${matched.id} failed: ${teamRes.status}`);
       }
-      if (matched.squad?.length) {
+
+      if (!result.length && matched.squad?.length) {
         console.log(`[team-info] Falling back to inline squad: ${matched.squad.length} players`);
         const sq = matched.squad.map(p => ({
           name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
         }));
         const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
-        return enrichWithBadges(sq, infos);
+        result = await enrichWithBadges(sq, infos);
       }
-      console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
+
+      if (!result.length) {
+        console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
+        return [];
+      }
+
+      // ── Persist to cache ───────────────────────────────────────────────────
+      await setSquadCache(team, result.map(p => ({
+        player_name: p.name, position: p.position, shirt_number: p.shirtNumber,
+        photo_url: p.photo, club: p.club, club_badge_url: p.clubBadge,
+      })));
+      console.log(`[team-info] squad cached for "${team}" (${result.length} players)`);
+
+      return result;
     } catch (err) {
       console.error('[team-info] fetchSquad error:', err);
     }

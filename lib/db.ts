@@ -302,6 +302,52 @@ export async function resetTournamentStats() {
   await sql`DELETE FROM prize_overrides WHERE category IN ('longest_shot', 'most_own_goals', 'bicycle')`;
 }
 
+// ── Squad cache (shared) ──────────────────────────────────────────────────────
+
+export interface SquadPlayer {
+  player_name: string;
+  position: string;
+  shirt_number: number | null;
+  photo_url: string | null;
+  club: string | null;
+  club_badge_url: string | null;
+}
+
+const SQUAD_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+export async function getSquadCache(teamName: string): Promise<SquadPlayer[] | null> {
+  try {
+    const rows = await sql`
+      SELECT player_name, position, shirt_number, photo_url, club, club_badge_url, updated_at
+      FROM squad_cache WHERE team_name = ${teamName}
+    `;
+    if (!rows.length) return null;
+    const oldest = rows.reduce<Date>((min, r) => {
+      const d = new Date(r.updated_at as string);
+      return d < min ? d : min;
+    }, new Date(rows[0].updated_at as string));
+    if (Date.now() - oldest.getTime() > SQUAD_CACHE_TTL_MS) return null;
+    return rows as SquadPlayer[];
+  } catch {
+    return null;
+  }
+}
+
+export async function setSquadCache(teamName: string, squad: SquadPlayer[]): Promise<void> {
+  if (!squad.length) return;
+  try {
+    await sql`DELETE FROM squad_cache WHERE team_name = ${teamName}`;
+    for (const p of squad) {
+      await sql`
+        INSERT INTO squad_cache (team_name, player_name, position, shirt_number, photo_url, club, club_badge_url, updated_at)
+        VALUES (${teamName}, ${p.player_name}, ${p.position}, ${p.shirt_number}, ${p.photo_url}, ${p.club}, ${p.club_badge_url}, NOW())
+      `;
+    }
+  } catch (err) {
+    console.error('[squad_cache] write error:', err);
+  }
+}
+
 // ── Sync log (shared) ─────────────────────────────────────────────────────────
 
 export async function logSync(syncType: string, status: string, message?: string) {
