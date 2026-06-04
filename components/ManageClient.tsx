@@ -524,12 +524,18 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <div className="flex flex-col gap-0" style={{ border: '1px solid var(--border)', borderRadius: '0.5rem', overflow: 'hidden' }}>
                 {(['most_own_goals', 'bicycle'] as const).map((slug, i) => {
                   const label = slug === 'most_own_goals' ? '😬 Oooops' : '🤸 The Bicycle';
+                  const description = slug === 'most_own_goals'
+                    ? 'The team conceding the most spectacular own goal'
+                    : 'Best overhead kick of the tournament';
                   const isHidden = hiddenPrizes.has(slug);
                   const isVisible = !isHidden;
                   return (
                     <div key={slug} className="flex items-center justify-between gap-3 px-3 py-2.5"
                       style={{ borderTop: i > 0 ? '1px solid var(--border)' : undefined }}>
-                      <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{label}</span>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{label}</span>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{description}</p>
+                      </div>
                       <button
                         role="switch"
                         aria-checked={isVisible}
