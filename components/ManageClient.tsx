@@ -505,25 +505,37 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             {/* Mystery prize visibility */}
             <div>
               <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Mystery prizes</p>
-              <div className="flex flex-wrap gap-2">
-                {(['most_own_goals', 'bicycle'] as const).map(slug => {
+              <div className="flex flex-col gap-0" style={{ border: '1px solid var(--border)', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                {(['most_own_goals', 'bicycle'] as const).map((slug, i) => {
                   const label = slug === 'most_own_goals' ? '😬 Oooops' : '🤸 The Bicycle';
                   const isHidden = hiddenPrizes.has(slug);
                   return (
-                    <button
-                      key={slug}
-                      onClick={() => handleTogglePrize(slug, !isHidden)}
-                      disabled={loading}
-                      className="font-bold px-4 py-2 rounded-lg text-sm transition-colors"
-                      style={{
-                        background: isHidden ? '#fee2e2' : 'var(--bg)',
-                        color: isHidden ? '#991b1b' : 'var(--text-muted)',
-                        border: `1px solid ${isHidden ? '#fecaca' : 'var(--border)'}`,
-                        opacity: loading ? 0.5 : 1,
-                      }}
-                    >
-                      {label} · {isHidden ? 'Hidden — Show' : 'Visible — Hide'}
-                    </button>
+                    <div key={slug} className="flex items-center justify-between gap-3 px-3 py-2.5"
+                      style={{ borderTop: i > 0 ? '1px solid var(--border)' : undefined }}>
+                      <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{label}</span>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                          style={{
+                            background: isHidden ? '#fee2e2' : '#f0fdf4',
+                            color: isHidden ? '#991b1b' : '#166534',
+                          }}>
+                          {isHidden ? 'Hidden' : 'Visible'}
+                        </span>
+                        <button
+                          onClick={() => handleTogglePrize(slug, !isHidden)}
+                          disabled={loading}
+                          className="font-bold px-3 py-1 rounded-lg text-xs transition-colors"
+                          style={{
+                            background: 'var(--bg)',
+                            color: 'var(--text-muted)',
+                            border: '1px solid var(--border)',
+                            opacity: loading ? 0.5 : 1,
+                          }}
+                        >
+                          {isHidden ? 'Show' : 'Hide'}
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
               </div>
