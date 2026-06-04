@@ -331,28 +331,35 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         </div>
       )}
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <header className="pt-10 pb-0">
-          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-            FIFA World Cup 2026
-          </p>
-          <div className="flex items-center justify-between mt-1.5">
+      {/* Hero header */}
+      <header style={{
+        backgroundImage: 'url(/wc2026-header-bg.png)',
+        backgroundSize: 'cover', backgroundPosition: 'center',
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%)' }} />
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                FIFA World Cup · 2026
+              </p>
+              <h1 className="text-3xl sm:text-5xl font-black tracking-tight mt-1" style={{ color: '#fff', lineHeight: 1 }}>
                 {company.name}
               </h1>
-              <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>Organiser Admin</p>
+              <p className="text-sm mt-1.5 font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>Organiser Admin</p>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 pt-1 flex-shrink-0">
               <ThemeToggle />
-              <a href={`/?code=${company.code}`} className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to draw</a>
-              <button type="button" onClick={handleLogout} className="text-sm" style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
+              <a href={`/?code=${company.code}`} className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>← Sweep</a>
+              <button type="button" onClick={handleLogout} className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.65)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
             </div>
           </div>
-          <hr className="mt-5" style={{ borderColor: 'var(--separator)' }} />
-        </header>
+        </div>
+      </header>
 
-        <div className="py-10 space-y-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+        <div className="py-8 space-y-8">
 
           {/* Workflow — numbered step cards */}
           <div className="space-y-3">
@@ -398,7 +405,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </p>
                 <button onClick={handleGenerateTokens} disabled={loading}
                   className="font-bold px-4 py-2 rounded-lg text-sm transition-opacity mt-1"
-                  style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1 }}>
+                  style={{ background: '#4D10C8', color: '#fff', opacity: loading ? 0.5 : 1 }}>
                   {loading ? 'Working…' : 'Generate →'}
                 </button>
               </div>
@@ -415,7 +422,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </p>
                 <a href={`/print?code=${company.code}`} target="_blank"
                   className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
-                  style={{ background: 'var(--green)', color: '#fff', display: 'block' }}>
+                  style={{ background: '#D40100', color: '#fff', display: 'block' }}>
                   Print tickets ↗
                 </a>
               </div>
@@ -432,7 +439,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </p>
                 <a href={`/advert?code=${company.code}`} target="_blank"
                   className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
-                  style={{ background: 'var(--border)', color: 'var(--text-primary)', display: 'block' }}>
+                  style={{ background: '#D40100', color: '#fff', display: 'block' }}>
                   Print advert ↗
                 </a>
               </div>
@@ -452,8 +459,8 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <div className="flex gap-2 flex-shrink-0">
                 <button onClick={handleCopyLink}
                   className="font-bold px-4 py-2 rounded-lg text-sm transition-colors"
-                  style={{ background: copied ? '#f0fdf4' : 'var(--bg)', color: copied ? '#166534' : 'var(--text-muted)', border: `1px solid ${copied ? '#bbf7d0' : 'var(--border)'}` }}>
-                  {copied ? 'Copied!' : 'Copy link'}
+                  style={{ background: copied ? 'var(--green)' : '#4D10C8', color: '#fff' }}>
+                  {copied ? 'Copied! ✓' : 'Copy link'}
                 </button>
                 <a href={`/?code=${company.code}`} target="_blank"
                   className="font-bold px-4 py-2 rounded-lg text-sm text-center"
