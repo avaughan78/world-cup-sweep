@@ -210,7 +210,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
         </div>
 
-        <footer className="pb-8 text-center">
+        <footer className="pb-8 text-center space-y-2">
+          <div>
+            <a
+              href="/"
+              onClick={() => localStorage.removeItem('company_code')}
+              className="text-xs font-semibold"
+              style={{ color: 'var(--text-muted)', textDecoration: 'none', opacity: 0.6 }}
+            >
+              Powered by WC26 Sweep
+            </a>
+          </div>
           <BugReport />
         </footer>
 
