@@ -31,10 +31,10 @@ export default function BugReport() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="text-xs transition-opacity hover:opacity-70"
+        className="text-sm transition-opacity hover:opacity-70"
         style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
       >
-        Report a bug
+        Report bug / get help
       </button>
 
       {open && (
@@ -49,7 +49,7 @@ export default function BugReport() {
             onClick={e => e.stopPropagation()}
           >
             <div className="px-6 pt-5 pb-4 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
-              <h2 className="font-black text-base" style={{ color: 'var(--text-primary)' }}>Report a bug</h2>
+              <h2 className="font-black text-base" style={{ color: 'var(--text-primary)' }}>Report bug / get help</h2>
               <button
                 onClick={() => setOpen(false)}
                 className="w-7 h-7 flex items-center justify-center rounded-full text-xs"

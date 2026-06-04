@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import FootballPhysics from './FootballPhysics';
 
 const HOW_IT_WORKS = [
   {
@@ -49,20 +50,6 @@ export default function CompanyGate({
   const [checking, setChecking] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
-  const heroRef = useRef<HTMLDivElement>(null);
-  const cardRef = useRef<HTMLDivElement>(null);
-  const ballOuterRef = useRef<HTMLDivElement>(null);
-
-  // Measure card position after mount so the ball lands precisely on its top-left corner
-  useEffect(() => {
-    if (!heroRef.current || !cardRef.current || !ballOuterRef.current) return;
-    const heroRect = heroRef.current.getBoundingClientRect();
-    const cardRect = cardRef.current.getBoundingClientRect();
-    ballOuterRef.current.style.top = `${cardRect.top - heroRect.top - 29}px`; // 29px = ball height (1.8rem)
-    ballOuterRef.current.style.left = `${cardRect.left - heroRect.left}px`;
-    heroRef.current.style.setProperty('--fb-exit-dx', `${cardRect.width + 60}px`);
-  }, []);
-
   useEffect(() => {
     if (invalidCode) {
       localStorage.removeItem('company_code');
@@ -106,7 +93,6 @@ export default function CompanyGate({
 
   const formCard = (
     <div
-      ref={cardRef}
       className="rounded-2xl overflow-hidden"
       style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.22)' }}
     >
@@ -189,41 +175,11 @@ export default function CompanyGate({
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
 
+      <FootballPhysics />
+
       {/* Hero */}
-      <style>{`
-        @property --fb-exit-dx {
-          syntax: '<length>';
-          initial-value: 320px;
-          inherits: false;
-        }
-        @keyframes fb-x {
-          0%   { transform: translateX(0); }
-          48%  { transform: translateX(0); }
-          80%  { transform: translateX(var(--fb-exit-dx)); }
-          100% { transform: translateX(var(--fb-exit-dx)); }
-        }
-        @keyframes fb-y {
-          0%   { transform: translateY(-200px); animation-timing-function: ease-in; }
-          12%  { transform: translateY(0);      animation-timing-function: ease-out; }
-          21%  { transform: translateY(-75px);  animation-timing-function: ease-in; }
-          29%  { transform: translateY(0);      animation-timing-function: ease-out; }
-          36%  { transform: translateY(-42px);  animation-timing-function: ease-in; }
-          43%  { transform: translateY(0);      animation-timing-function: ease-out; }
-          48%  { transform: translateY(-20px);  animation-timing-function: ease-in; }
-          53%  { transform: translateY(0);      animation-timing-function: linear; }
-          80%  { transform: translateY(0);      animation-timing-function: ease-in; }
-          100% { transform: translateY(600px); }
-        }
-        @keyframes fb-spin {
-          from { transform: rotate(0deg); }
-          to   { transform: rotate(720deg); }
-        }
-      `}</style>
       <div
-        ref={heroRef}
         style={{
-          position: 'relative',
-          overflow: 'hidden',
           backgroundImage: 'url(/wc2026-header-bg.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -324,23 +280,6 @@ export default function CompanyGate({
           </div>
         </div>
 
-        {/* Football — desktop only, drops onto card top-left, plays once after 1.5s */}
-        <div className="hidden sm:block" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
-          <div
-            ref={ballOuterRef}
-            style={{
-              position: 'absolute',
-              top: '-200px',
-              left: '52%',
-              animation: 'fb-x 4s linear 1.5s 1 normal both',
-              willChange: 'transform',
-            }}
-          >
-            <div style={{ animation: 'fb-y 4s linear 1.5s 1 normal both', willChange: 'transform' }}>
-              <span style={{ display: 'inline-block', fontSize: '1.8rem', lineHeight: 1, animation: 'fb-spin 4s linear 1.5s 1 normal both' }}>⚽</span>
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* Stats bar */}
