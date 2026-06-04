@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { GROUPS_2026 } from '@/lib/groups';
 import PasswordInput from '@/components/PasswordInput';
 import Flag from '@/components/Flag';
@@ -62,8 +62,18 @@ export default function AdminPage() {
   const [bicycleTeam, setBicycleTeam] = useState('');
   const [bicyclePlayer, setBicyclePlayer] = useState('');
   const [bicycleUrl, setBicycleUrl] = useState('');
-  const [manualPrizesSaved, setManualPrizesSaved] = useState(false);
+  const [shotSaved,    setShotSaved]    = useState(false);
+  const [ownGoalSaved, setOwnGoalSaved] = useState(false);
+  const [bicycleSaved, setBicycleSaved] = useState(false);
   const [globalRemoved, setGlobalRemoved] = useState<Set<string>>(new Set());
+
+  // Track last-persisted values so auto-save doesn't fire on initial load
+  const lastShot     = useRef({ team: '', player: '', url: '' });
+  const lastOwnGoal  = useRef({ team: '', url: '' });
+  const lastBicycle  = useRef({ team: '', player: '', url: '' });
+  const shotTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const ownGoalTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const bicycleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
 
@@ -106,16 +116,17 @@ export default function AdminPage() {
             hidden.add(o.category);
           } else {
             if (o.category === 'longest_shot') {
-              setShotTeam(o.team_name ?? '');
-              setShotPlayer(o.value_label ?? '');
-              setShotUrl(o.notes ?? '');
+              const team = o.team_name ?? '', player = o.value_label ?? '', url = o.notes ?? '';
+              setShotTeam(team); setShotPlayer(player); setShotUrl(url);
+              lastShot.current = { team, player, url };
             } else if (o.category === 'most_own_goals') {
-              setOwnGoalTeam(o.team_name ?? '');
-              setOwnGoalUrl(o.notes ?? '');
+              const team = o.team_name ?? '', url = o.notes ?? '';
+              setOwnGoalTeam(team); setOwnGoalUrl(url);
+              lastOwnGoal.current = { team, url };
             } else if (o.category === 'bicycle') {
-              setBicycleTeam(o.team_name ?? '');
-              setBicyclePlayer(o.value_label ?? '');
-              setBicycleUrl(o.notes ?? '');
+              const team = o.team_name ?? '', player = o.value_label ?? '', url = o.notes ?? '';
+              setBicycleTeam(team); setBicyclePlayer(player); setBicycleUrl(url);
+              lastBicycle.current = { team, player, url };
             }
           }
         }
@@ -152,6 +163,46 @@ export default function AdminPage() {
       })
       .catch(() => {});
   }, [authed, selectedCompanyId]);
+
+  // Auto-save prize fields 800ms after last change (skip if unchanged from last save)
+  useEffect(() => {
+    const ls = lastShot.current;
+    if (shotTeam === ls.team && shotPlayer === ls.player && shotUrl === ls.url) return;
+    clearTimeout(shotTimer.current);
+    shotTimer.current = setTimeout(async () => {
+      await fetch('/api/admin/shot', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_name: shotTeam, value_label: shotPlayer, notes: shotUrl }) });
+      lastShot.current = { team: shotTeam, player: shotPlayer, url: shotUrl };
+      setShotSaved(true);
+      setTimeout(() => setShotSaved(false), 2000);
+    }, 800);
+  }, [shotTeam, shotPlayer, shotUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const ls = lastOwnGoal.current;
+    if (ownGoalTeam === ls.team && ownGoalUrl === ls.url) return;
+    clearTimeout(ownGoalTimer.current);
+    ownGoalTimer.current = setTimeout(async () => {
+      await fetch('/api/admin/owngoal', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_name: ownGoalTeam, value_label: null, notes: ownGoalUrl }) });
+      lastOwnGoal.current = { team: ownGoalTeam, url: ownGoalUrl };
+      setOwnGoalSaved(true);
+      setTimeout(() => setOwnGoalSaved(false), 2000);
+    }, 800);
+  }, [ownGoalTeam, ownGoalUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const ls = lastBicycle.current;
+    if (bicycleTeam === ls.team && bicyclePlayer === ls.player && bicycleUrl === ls.url) return;
+    clearTimeout(bicycleTimer.current);
+    bicycleTimer.current = setTimeout(async () => {
+      await fetch('/api/admin/bicycle', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_name: bicycleTeam, value_label: bicyclePlayer, notes: bicycleUrl }) });
+      lastBicycle.current = { team: bicycleTeam, player: bicyclePlayer, url: bicycleUrl };
+      setBicycleSaved(true);
+      setTimeout(() => setBicycleSaved(false), 2000);
+    }, 800);
+  }, [bicycleTeam, bicyclePlayer, bicycleUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function handleLogin() {
     setLoginError('');
@@ -292,35 +343,6 @@ export default function AdminPage() {
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
       setStatus({ ok: ok && !!d?.ok, message: (d?.message as string) ?? raw });
-    } catch (e) {
-      setStatus({ ok: false, message: String(e) });
-    }
-    setLoading(false);
-  }
-
-  async function handleSaveAllManualPrizes() {
-    setLoading(true);
-    setStatus(null);
-    try {
-      await Promise.all([
-        fetch('/api/admin/shot', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ team_name: shotTeam, value_label: shotPlayer, notes: shotUrl }),
-        }),
-        fetch('/api/admin/owngoal', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ team_name: ownGoalTeam, value_label: null, notes: ownGoalUrl }),
-        }),
-        fetch('/api/admin/bicycle', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ team_name: bicycleTeam, value_label: bicyclePlayer, notes: bicycleUrl }),
-        }),
-      ]);
-      setManualPrizesSaved(true);
-      setTimeout(() => setManualPrizesSaved(false), 2000);
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -610,65 +632,60 @@ export default function AdminPage() {
                 <>
                   {/* Thunderbastard */}
                   <div className="flex flex-wrap gap-2 items-end mb-3">
-                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🚀 Thunderbastard — Longest Shot</p>
-                    {teamSelect(shotTeam, v => { setShotTeam(v); setManualPrizesSaved(false); })}
+                    <p className="w-full text-xs font-semibold mb-0.5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                      🚀 Thunderbastard — Longest Shot
+                      {shotSaved && <span style={{ color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
+                    </p>
+                    {teamSelect(shotTeam, v => setShotTeam(v))}
                     <input placeholder="Player name" value={shotPlayer}
-                      onChange={e => { setShotPlayer(e.target.value); setManualPrizesSaved(false); }}
+                      onChange={e => setShotPlayer(e.target.value)}
                       maxLength={60}
                       style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
                     <input placeholder="Video URL" value={shotUrl}
-                      onChange={e => { setShotUrl(e.target.value); setManualPrizesSaved(false); }}
+                      onChange={e => setShotUrl(e.target.value)}
                       maxLength={300}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {clearBtn(() => clearPrize('/api/admin/shot', [
-                      () => setShotTeam(''), () => setShotPlayer(''), () => setShotUrl(''), () => setManualPrizesSaved(false),
+                      () => { setShotTeam(''); setShotPlayer(''); setShotUrl(''); lastShot.current = { team: '', player: '', url: '' }; },
                     ]))}
                   </div>
 
                   {/* Oooops */}
                   <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>😬 OG — Most Spectacular Own Goal</p>
-                    {teamSelect(ownGoalTeam, v => { setOwnGoalTeam(v); setManualPrizesSaved(false); })}
+                    <p className="w-full text-xs font-semibold mb-0.5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                      😬 OG — Most Spectacular Own Goal
+                      {ownGoalSaved && <span style={{ color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
+                    </p>
+                    {teamSelect(ownGoalTeam, v => setOwnGoalTeam(v))}
                     <input placeholder="Video URL" value={ownGoalUrl}
-                      onChange={e => { setOwnGoalUrl(e.target.value); setManualPrizesSaved(false); }}
+                      onChange={e => setOwnGoalUrl(e.target.value)}
                       maxLength={300}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {clearBtn(() => clearPrize('/api/admin/owngoal', [
-                      () => setOwnGoalTeam(''), () => setOwnGoalUrl(''), () => setManualPrizesSaved(false),
+                      () => { setOwnGoalTeam(''); setOwnGoalUrl(''); lastOwnGoal.current = { team: '', url: '' }; },
                     ]))}
                   </div>
 
                   {/* Bicycle */}
                   <div className="flex flex-wrap gap-2 items-end mb-4 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <p className="w-full text-xs font-semibold mb-0.5" style={{ color: 'var(--text-secondary)' }}>🤸 The Bicycle — Best Overhead Kick</p>
-                    {teamSelect(bicycleTeam, v => { setBicycleTeam(v); setManualPrizesSaved(false); })}
+                    <p className="w-full text-xs font-semibold mb-0.5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
+                      🤸 The Bicycle — Best Overhead Kick
+                      {bicycleSaved && <span style={{ color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
+                    </p>
+                    {teamSelect(bicycleTeam, v => setBicycleTeam(v))}
                     <input placeholder="Player name" value={bicyclePlayer}
-                      onChange={e => { setBicyclePlayer(e.target.value); setManualPrizesSaved(false); }}
+                      onChange={e => setBicyclePlayer(e.target.value)}
                       maxLength={60}
                       style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
                     <input placeholder="Video URL" value={bicycleUrl}
-                      onChange={e => { setBicycleUrl(e.target.value); setManualPrizesSaved(false); }}
+                      onChange={e => setBicycleUrl(e.target.value)}
                       maxLength={300}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {clearBtn(() => clearPrize('/api/admin/bicycle', [
-                      () => setBicycleTeam(''), () => setBicyclePlayer(''), () => setBicycleUrl(''), () => setManualPrizesSaved(false),
+                      () => { setBicycleTeam(''); setBicyclePlayer(''); setBicycleUrl(''); lastBicycle.current = { team: '', player: '', url: '' }; },
                     ]))}
                   </div>
 
-                  {/* Single save button for all three */}
-                  <button
-                    onClick={handleSaveAllManualPrizes}
-                    disabled={loading || manualPrizesSaved}
-                    className="font-bold px-5 py-2 rounded-lg transition-all"
-                    style={{
-                      background: manualPrizesSaved ? 'var(--border)' : 'var(--green)',
-                      color: manualPrizesSaved ? 'var(--text-muted)' : '#fff',
-                      opacity: loading ? 0.5 : 1,
-                      fontSize: '0.9rem',
-                    }}
-                  >
-                    {manualPrizesSaved ? 'Saved ✓' : 'Save All'}
-                  </button>
                 </>
               );
             })()}
