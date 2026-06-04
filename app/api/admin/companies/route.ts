@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, setCompanyAdminPassword, updateCompany } from '@/lib/db';
-
-function auth(password?: string) {
-  return password === process.env.ADMIN_PASSWORD;
-}
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const password = req.headers.get('x-admin-password') ?? '';
-  if (!auth(password)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const denied = requireAdmin(req);
+  if (denied) return denied;
   const companies = await listCompanies();
   return NextResponse.json({ companies });
 }
 
 export async function POST(req: NextRequest) {
-  const { password, code, name } = await req.json() as { password?: string; code?: string; name?: string };
-  if (!auth(password)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+  const { code, name } = await req.json() as { code?: string; name?: string };
   if (!code?.trim() || !name?.trim()) return NextResponse.json({ error: 'code and name required' }, { status: 400 });
   try {
     const company = await createCompany(code.trim(), name.trim());
@@ -26,10 +24,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { password, id, ticket_price, admin_password, name, code } = await req.json() as {
-    password?: string; id?: number; ticket_price?: number | null; admin_password?: string; name?: string; code?: string;
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+  const { id, ticket_price, admin_password, name, code } = await req.json() as {
+    id?: number; ticket_price?: number | null; admin_password?: string; name?: string; code?: string;
   };
-  if (!auth(password)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   if (ticket_price !== undefined) {
     const price = ticket_price != null && ticket_price > 0 ? ticket_price : null;
@@ -46,8 +45,9 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const { password, id } = await req.json() as { password?: string; id?: number };
-  if (!auth(password)) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+  const { id } = await req.json() as { id?: number };
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   await deleteCompany(id);
   return NextResponse.json({ ok: true });

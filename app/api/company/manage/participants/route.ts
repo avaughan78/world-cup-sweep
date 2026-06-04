@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateCompanyAdmin, getParticipants } from '@/lib/db';
+import { getParticipants } from '@/lib/db';
+import { requireManage } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  const { code, password } = await req.json() as { code?: string; password?: string };
-  const auth = await authenticateCompanyAdmin(code ?? '', password ?? '');
-  if (!auth.ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const participants = await getParticipants(auth.company.id);
+  const auth = requireManage(req);
+  if (auth instanceof NextResponse) return auth;
+  const participants = await getParticipants(auth.companyId);
   return NextResponse.json({ ok: true, participants });
 }

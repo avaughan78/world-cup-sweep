@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
-// Sets or clears __hidden__ for a prize slug across ALL companies
 export async function POST(req: NextRequest) {
-  const body = await req.json() as { password?: string; slug?: string; hidden?: boolean };
-  if (!body.password || body.password !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = requireAdmin(req);
+  if (denied) return denied;
+  const body = await req.json() as { slug?: string; hidden?: boolean };
   if (!body.slug) return NextResponse.json({ error: 'slug required' }, { status: 400 });
 
-  const hide = body.hidden !== false; // default true for backwards compat
+  const hide = body.hidden !== false;
   const companies = await sql`SELECT id FROM companies`;
   for (const c of companies) {
     if (hide) {

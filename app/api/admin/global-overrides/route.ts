@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import sql from '@/lib/db';
+import { requireAdmin } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const pw = req.headers.get('x-admin-password');
-  if (!pw || pw !== process.env.ADMIN_PASSWORD) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const denied = requireAdmin(req);
+  if (denied) return denied;
   const rows = await sql`
     SELECT DISTINCT ON (category) category, team_name, value_label, notes
     FROM prize_overrides

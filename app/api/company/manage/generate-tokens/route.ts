@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateCompanyAdmin, generateClaimTokens } from '@/lib/db';
+import { generateClaimTokens } from '@/lib/db';
+import { requireManage } from '@/lib/auth';
+import { checkRateLimit, getIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
-  const { code, password } = await req.json() as { code?: string; password?: string };
-  const auth = await authenticateCompanyAdmin(code ?? '', password ?? '');
-  if (!auth.ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  const count = await generateClaimTokens(auth.company.id);
+  const auth = requireManage(req);
+  if (auth instanceof NextResponse) return auth;
+  if (!checkRateLimit(`gen-tokens:${auth.companyId}`, 3, 60 * 60 * 1000)) {
+    return NextResponse.json({ ok: false, error: 'Token generation rate limited — wait an hour before regenerating' }, { status: 429 });
+  }
+  const count = await generateClaimTokens(auth.companyId);
   return NextResponse.json({ ok: true, message: `QR codes ready for ${count} teams. You can now print tickets.` });
 }

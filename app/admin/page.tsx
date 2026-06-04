@@ -18,7 +18,7 @@ async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknow
 }
 
 export default function AdminPage() {
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(''); // only used during login form, never stored after
   const [authed, setAuthed] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
@@ -74,19 +74,17 @@ export default function AdminPage() {
     return () => clearTimeout(t);
   }, [status]);
 
-  // Restore session from cookie
+  // Restore session via HttpOnly cookie (server validates it)
   useEffect(() => {
-    const match = document.cookie.match(/(?:^|;\s*)admin_pw=([^;]*)/);
-    if (match) {
-      setPassword(decodeURIComponent(match[1]));
-      setAuthed(true);
-    }
+    fetch('/api/admin/companies')
+      .then(r => { if (r.ok) setAuthed(true); })
+      .catch(() => {});
   }, []);
 
   // Load companies after auth
   useEffect(() => {
     if (!authed) return;
-    fetch('/api/admin/companies', { headers: { 'x-admin-password': password } })
+    fetch('/api/admin/companies')
       .then(r => r.json())
       .then((d: { companies?: Company[] }) => {
         const list = d.companies ?? [];
@@ -94,12 +92,12 @@ export default function AdminPage() {
         if (list.length === 1) setSelectedCompanyId(list[0].id);
       })
       .catch(() => {});
-  }, [authed, password]);
+  }, [authed]);
 
   // Load global prize overrides after auth
   useEffect(() => {
     if (!authed) return;
-    fetch('/api/admin/global-overrides', { headers: { 'x-admin-password': password } })
+    fetch('/api/admin/global-overrides')
       .then(r => r.json())
       .then((d: { overrides?: Array<{ category: string; team_name: string | null; value_label: string | null; notes: string | null }> }) => {
         const hidden = new Set<string>();
@@ -124,7 +122,7 @@ export default function AdminPage() {
         setGlobalRemoved(hidden);
       })
       .catch(() => {});
-  }, [authed, password]);
+  }, [authed]);
 
   // Sync editable fields when company changes
   useEffect(() => {
@@ -143,7 +141,7 @@ export default function AdminPage() {
     fetch('/api/admin/participants', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, company_id: selectedCompanyId }),
+      body: JSON.stringify({ company_id: selectedCompanyId }),
     })
       .then(r => r.json())
       .then((d: { participants?: Array<{ team_name: string; participant_name: string | null }> }) => {
@@ -153,7 +151,7 @@ export default function AdminPage() {
         setSaved(map);
       })
       .catch(() => {});
-  }, [authed, password, selectedCompanyId]);
+  }, [authed, selectedCompanyId]);
 
   async function handleLogin() {
     setLoginError('');
@@ -165,8 +163,8 @@ export default function AdminPage() {
         body: JSON.stringify({ password }),
       });
       if (res.ok) {
-        document.cookie = `admin_pw=${encodeURIComponent(password)}; max-age=${7 * 24 * 3600}; path=/; SameSite=Strict; Secure`;
         setAuthed(true);
+        setPassword(''); // clear from memory; session is now in HttpOnly cookie
       } else {
         setLoginError('Wrong password');
       }
@@ -185,7 +183,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/companies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, code, name }),
+        body: JSON.stringify({ code, name }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as { company?: Company; message?: string } | null;
@@ -212,7 +210,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/companies', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, id: selectedCompany.id }),
+        body: JSON.stringify({ id: selectedCompany.id }),
       });
       const { ok } = await parseResponse(res);
       if (ok) {
@@ -235,7 +233,7 @@ export default function AdminPage() {
       await fetch('/api/admin/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, company_id: selectedCompanyId, team_name: team, participant_name: value }),
+        body: JSON.stringify({ company_id: selectedCompanyId, team_name: team, participant_name: value }),
       });
       setSaved(prev => ({ ...prev, [team]: value }));
       setJustSaved(prev => { const n = new Set(prev); n.add(team); return n; });
@@ -251,7 +249,6 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
@@ -270,7 +267,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({}),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
@@ -289,7 +286,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/generate-tokens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, company_id: selectedCompanyId }),
+        body: JSON.stringify({ company_id: selectedCompanyId }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
@@ -308,17 +305,17 @@ export default function AdminPage() {
         fetch('/api/admin/shot', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, team_name: shotTeam, value_label: shotPlayer, notes: shotUrl }),
+          body: JSON.stringify({ team_name: shotTeam, value_label: shotPlayer, notes: shotUrl }),
         }),
         fetch('/api/admin/owngoal', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, team_name: ownGoalTeam, value_label: null, notes: ownGoalUrl }),
+          body: JSON.stringify({ team_name: ownGoalTeam, value_label: null, notes: ownGoalUrl }),
         }),
         fetch('/api/admin/bicycle', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, team_name: bicycleTeam, value_label: bicyclePlayer, notes: bicycleUrl }),
+          body: JSON.stringify({ team_name: bicycleTeam, value_label: bicyclePlayer, notes: bicycleUrl }),
         }),
       ]);
       setManualPrizesSaved(true);
@@ -335,7 +332,7 @@ export default function AdminPage() {
       const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, team_name: '', value_label: null, notes: '' }),
+        body: JSON.stringify({ team_name: '', value_label: null, notes: '' }),
       });
       const { ok, data } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
@@ -355,7 +352,7 @@ export default function AdminPage() {
         fetch('/api/admin/remove-prize-global', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password, slug, hidden: hide }),
+          body: JSON.stringify({ slug, hidden: hide }),
         })
       ));
       setGlobalRemoved(hide ? new Set(['most_own_goals', 'bicycle']) : new Set());
@@ -374,7 +371,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/companies', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, id: selectedCompany.id, name, code }),
+        body: JSON.stringify({ id: selectedCompany.id, name, code }),
       });
       const { ok, data } = await parseResponse(res);
       const d = data as { ok?: boolean; company?: Company } | null;
@@ -397,7 +394,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/companies', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, id: selectedCompany.id, admin_password: adminPw }),
+        body: JSON.stringify({ id: selectedCompany.id, admin_password: adminPw }),
       });
       const { ok } = await parseResponse(res);
       if (ok) {
@@ -418,7 +415,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/companies', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, id: selectedCompany.id, ticket_price: isNaN(price) ? null : price }),
+        body: JSON.stringify({ id: selectedCompany.id, ticket_price: isNaN(price) ? null : price }),
       });
       const { ok } = await parseResponse(res);
       if (ok) {
@@ -449,7 +446,7 @@ export default function AdminPage() {
       const res = await fetch('/api/admin/reset', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password, company_id: selectedCompanyId }),
+        body: JSON.stringify({ company_id: selectedCompanyId }),
       });
       const { ok, data, raw } = await parseResponse(res);
       const d = data as Record<string, unknown> | null;
@@ -548,7 +545,6 @@ export default function AdminPage() {
                 className="text-sm"
                 style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                 onClick={() => {
-                  document.cookie = 'admin_pw=; max-age=0; path=/; SameSite=Strict';
                   const code = localStorage.getItem('company_code');
                   window.location.href = code ? `/?code=${code}` : '/';
                 }}

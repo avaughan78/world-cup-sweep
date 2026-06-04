@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { authenticateCompanyAdmin, setCompanyTicketPrice } from '@/lib/db';
+import { setCompanyTicketPrice } from '@/lib/db';
+import { requireManage } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest) {
-  const { code, password, ticket_price } = await req.json() as {
-    code?: string; password?: string; ticket_price?: number | null;
-  };
-  const auth = await authenticateCompanyAdmin(code ?? '', password ?? '');
-  if (!auth.ok) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const auth = requireManage(req);
+  if (auth instanceof NextResponse) return auth;
+  const { ticket_price } = await req.json() as { ticket_price?: number | null };
   const price = ticket_price != null && ticket_price > 0 ? ticket_price : null;
-  await setCompanyTicketPrice(auth.company.id, price);
+  await setCompanyTicketPrice(auth.companyId, price);
   return NextResponse.json({ ok: true });
 }

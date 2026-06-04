@@ -1,4 +1,5 @@
 import { neon } from '@neondatabase/serverless';
+import bcrypt from 'bcryptjs';
 import { GROUPS_2026 } from './groups';
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -73,7 +74,8 @@ export async function setCompanyTicketPrice(id: number, price: number | null): P
 }
 
 export async function setCompanyAdminPassword(id: number, password: string | null): Promise<void> {
-  await sql`UPDATE companies SET admin_password = ${password} WHERE id = ${id}`;
+  const hashed = password ? await bcrypt.hash(password, 12) : null;
+  await sql`UPDATE companies SET admin_password = ${hashed} WHERE id = ${id}`;
 }
 
 export async function authenticateCompanyAdmin(code: string, password: string): Promise<
@@ -84,7 +86,21 @@ export async function authenticateCompanyAdmin(code: string, password: string): 
   if (!rows[0]) return { ok: false, reason: 'not_found' };
   const row = rows[0] as Company & { admin_password: string | null };
   if (!row.admin_password) return { ok: false, reason: 'not_configured' };
-  if (row.admin_password.trim() !== password.trim()) return { ok: false, reason: 'wrong_password' };
+
+  const stored = row.admin_password;
+  let valid: boolean;
+  if (stored.startsWith('$2')) {
+    valid = await bcrypt.compare(password, stored);
+  } else {
+    // Plaintext legacy password — compare then upgrade to bcrypt
+    valid = stored.trim() === password.trim();
+    if (valid) {
+      const hashed = await bcrypt.hash(password, 12);
+      await sql`UPDATE companies SET admin_password = ${hashed} WHERE id = ${row.id}`;
+    }
+  }
+
+  if (!valid) return { ok: false, reason: 'wrong_password' };
   return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price } };
 }
 

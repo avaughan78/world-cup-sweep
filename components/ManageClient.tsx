@@ -10,7 +10,6 @@ import ThemeToggle from '@/components/ThemeToggle';
 export default function ManageClient({ company: initialCompany }: { company: Company }) {
   const [authenticated, setAuthenticated] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [sessionPw, setSessionPw] = useState('');
   const [inputPw, setInputPw] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
@@ -35,13 +34,11 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const STORAGE_KEY = `manage_pw_${initialCompany.code}`;
-
-  async function loadParticipants(pw: string) {
+  async function loadParticipants() {
     const res = await fetch('/api/company/manage/participants', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: initialCompany.code, password: pw }),
+      body: JSON.stringify({}),
     });
     const data = await res.json() as { participants?: Array<{ team_name: string; participant_name: string | null }> };
     const map: Record<string, string> = {};
@@ -50,11 +47,11 @@ export default function ManageClient({ company: initialCompany }: { company: Com
     setSaved(map);
   }
 
-  async function loadPrizeOverrides(pw: string) {
+  async function loadPrizeOverrides() {
     const res = await fetch('/api/company/manage/prize-overrides', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: initialCompany.code, password: pw }),
+      body: JSON.stringify({}),
     });
     const data = await res.json() as { overrides?: Array<{ category: string; team_name: string | null }> };
     const hidden = new Set<string>();
@@ -70,7 +67,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       const res = await fetch('/api/company/manage/prize-overrides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, slug, hidden: hide }),
+        body: JSON.stringify({ slug, hidden: hide }),
       });
       const data = await res.json() as { ok: boolean };
       if (data.ok) {
@@ -92,26 +89,33 @@ export default function ManageClient({ company: initialCompany }: { company: Com
     });
     const data = await res.json() as { ok: boolean; error?: string; company?: Company };
     if (data.ok && data.company) {
-      setSessionPw(pw);
       setCompany(data.company);
       setTicketPrice(data.company.ticket_price != null ? String(data.company.ticket_price) : '');
       setAuthenticated(true);
-      await Promise.all([loadParticipants(pw), loadPrizeOverrides(pw)]);
+      await Promise.all([loadParticipants(), loadPrizeOverrides()]);
       return true;
     }
     return false;
   }
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      doAuth(stored).then(ok => {
-        if (!ok) localStorage.removeItem(STORAGE_KEY);
-        setChecking(false);
-      });
-    } else {
+    // Try to restore session via HttpOnly cookie
+    fetch('/api/company/manage/participants', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    }).then(async r => {
+      if (r.ok) {
+        const data = await r.json() as { participants?: Array<{ team_name: string; participant_name: string | null }> };
+        const map: Record<string, string> = {};
+        for (const p of data.participants ?? []) map[p.team_name] = p.participant_name ?? '';
+        setNames(map);
+        setSaved(map);
+        await loadPrizeOverrides();
+        setAuthenticated(true);
+      }
       setChecking(false);
-    }
+    }).catch(() => setChecking(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -134,12 +138,10 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       });
       const data = await res.json() as { ok: boolean; error?: string; company?: Company };
       if (data.ok && data.company) {
-        localStorage.setItem(STORAGE_KEY, pw);
-        setSessionPw(pw);
         setCompany(data.company);
         setTicketPrice(data.company.ticket_price != null ? String(data.company.ticket_price) : '');
         setAuthenticated(true);
-        await Promise.all([loadParticipants(pw), loadPrizeOverrides(pw)]);
+        await Promise.all([loadParticipants(), loadPrizeOverrides()]);
       } else {
         setAuthError(data.error ?? 'Incorrect password');
       }
@@ -157,7 +159,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       await fetch('/api/company/manage/assign', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, team_name: team, participant_name: value }),
+        body: JSON.stringify({ team_name: team, participant_name: value }),
       });
       setSaved(prev => ({ ...prev, [team]: value }));
       setJustSaved(prev => { const n = new Set(prev); n.add(team); return n; });
@@ -172,7 +174,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       const res = await fetch('/api/company/manage/generate-tokens', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: initialCompany.code, password: sessionPw }),
+        body: JSON.stringify({}),
       });
       const data = await res.json() as { ok: boolean; message?: string };
       setStatus({ ok: !!data.ok, message: data.message ?? 'Done' });
@@ -187,7 +189,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       const res = await fetch('/api/company/manage/ticket-price', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, ticket_price: isNaN(price) ? null : price }),
+        body: JSON.stringify({ ticket_price: isNaN(price) ? null : price }),
       });
       const data = await res.json() as { ok: boolean };
       if (data.ok) {
@@ -200,7 +202,6 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   }
 
   function handleLogout() {
-    localStorage.removeItem(STORAGE_KEY);
     window.location.href = `/?code=${company.code}`;
   }
 
@@ -214,12 +215,10 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       const res = await fetch('/api/company/manage/details', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, new_password: trimmed }),
+        body: JSON.stringify({ new_password: trimmed }),
       });
-      const data = await res.json() as { ok: boolean; error?: string; new_password?: string };
-      if (data.ok && data.new_password) {
-        setSessionPw(data.new_password);
-        localStorage.setItem(STORAGE_KEY, data.new_password);
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (data.ok) {
         setNewPw('');
         setConfirmPw('');
         setPwSaved(true);
@@ -239,7 +238,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       const res = await fetch('/api/company/manage/details', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: initialCompany.code, password: sessionPw, name }),
+        body: JSON.stringify({ name }),
       });
       const data = await res.json() as { ok: boolean; company?: Company };
       if (data.ok && data.company) {
