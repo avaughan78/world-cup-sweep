@@ -376,21 +376,21 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
                   Used to calculate prize amounts on the sweep page.
                 </p>
-                <div className="flex gap-2 mt-1">
-                  <div className="flex items-center gap-1 flex-1"
-                    style={{ ...smallInputStyle, padding: '0.5rem 0.75rem' }}>
-                    <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
+                <div className="flex items-center justify-center mt-1">
+                  <div className="flex items-center gap-1"
+                    style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
+                    <span style={{ color: 'var(--text-muted)', userSelect: 'none', fontSize: '1rem' }}>£</span>
                     <input type="number" min="0" step="0.01" placeholder="0.00" value={ticketPrice}
                       onChange={e => setTicketPrice(e.target.value)}
                       onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
-                      style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
+                      style={{ background: 'transparent', border: 'none', outline: 'none', width: '4rem', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, textAlign: 'center' }} />
                   </div>
-                  <button onClick={handleSaveTicketPrice} disabled={loading}
-                    className="font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-shrink-0"
-                    style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1 }}>
-                    {priceSaved ? '✓' : 'Save'}
-                  </button>
                 </div>
+                <button onClick={handleSaveTicketPrice} disabled={loading}
+                  className="font-bold px-4 py-2 rounded-lg text-sm transition-colors w-full mt-1"
+                  style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1 }}>
+                  {priceSaved ? 'Saved ✓' : 'Set price'}
+                </button>
               </div>
 
               {/* Step 2 */}
