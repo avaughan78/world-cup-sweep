@@ -69,6 +69,7 @@ export default function BugReport() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
+                  maxLength={100}
                   autoFocus
                   style={inputStyle}
                 />
@@ -82,6 +83,7 @@ export default function BugReport() {
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && e.metaKey && handleSubmit()}
+                  maxLength={1000}
                   rows={4}
                   style={{ ...inputStyle, resize: 'vertical' }}
                 />

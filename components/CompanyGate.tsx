@@ -125,6 +125,7 @@ export default function CompanyGate({
           value={code}
           onChange={e => { setCode(e.target.value.toUpperCase()); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+          maxLength={10}
           autoFocus={!marketing}
           style={{
             width: '100%',

@@ -7,11 +7,13 @@ const COUNTDOWN_START = 3;
 export default function VideoEasterEgg({
   icon,
   label,
+  modalTitle,
   videoSrc,
   fontSize = '0.85rem',
 }: {
   icon: string;
   label: string;
+  modalTitle?: string;
   videoSrc: string;
   fontSize?: string;
 }) {
@@ -123,7 +125,7 @@ export default function VideoEasterEgg({
                 {icon} Easter Egg
               </p>
               <p className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                {label}
+                {modalTitle ?? label}
               </p>
             </div>
 

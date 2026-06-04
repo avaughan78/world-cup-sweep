@@ -92,6 +92,7 @@ export default function SetupPage() {
               placeholder="e.g. Acme Corp"
               value={companyName}
               onChange={e => handleNameChange(e.target.value)}
+              maxLength={60}
               autoFocus
               style={inputStyle}
             />
@@ -105,6 +106,7 @@ export default function SetupPage() {
               placeholder="e.g. ACME26"
               value={code}
               onChange={e => { setCode(e.target.value.toUpperCase()); setCodeTouched(true); }}
+              maxLength={10}
               style={{ ...inputStyle, letterSpacing: '0.1em', fontWeight: 700 }}
             />
           </div>

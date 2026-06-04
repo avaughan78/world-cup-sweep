@@ -29,6 +29,7 @@ export default function PasswordInput({
         onChange={e => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         placeholder={placeholder}
+        maxLength={72}
         autoFocus={autoFocus}
         style={{ width: '100%', paddingRight: '2.25rem', ...inputStyle }}
       />

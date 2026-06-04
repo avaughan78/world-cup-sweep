@@ -617,9 +617,11 @@ export default function AdminPage() {
                     {teamSelect(shotTeam, v => { setShotTeam(v); setManualPrizesSaved(false); })}
                     <input placeholder="Player name" value={shotPlayer}
                       onChange={e => { setShotPlayer(e.target.value); setManualPrizesSaved(false); }}
+                      maxLength={60}
                       style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
                     <input placeholder="Video URL" value={shotUrl}
                       onChange={e => { setShotUrl(e.target.value); setManualPrizesSaved(false); }}
+                      maxLength={300}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {clearBtn(() => clearPrize('/api/admin/shot', [
                       () => setShotTeam(''), () => setShotPlayer(''), () => setShotUrl(''), () => setManualPrizesSaved(false),
@@ -632,6 +634,7 @@ export default function AdminPage() {
                     {teamSelect(ownGoalTeam, v => { setOwnGoalTeam(v); setManualPrizesSaved(false); })}
                     <input placeholder="Video URL" value={ownGoalUrl}
                       onChange={e => { setOwnGoalUrl(e.target.value); setManualPrizesSaved(false); }}
+                      maxLength={300}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {clearBtn(() => clearPrize('/api/admin/owngoal', [
                       () => setOwnGoalTeam(''), () => setOwnGoalUrl(''), () => setManualPrizesSaved(false),
@@ -644,9 +647,11 @@ export default function AdminPage() {
                     {teamSelect(bicycleTeam, v => { setBicycleTeam(v); setManualPrizesSaved(false); })}
                     <input placeholder="Player name" value={bicyclePlayer}
                       onChange={e => { setBicyclePlayer(e.target.value); setManualPrizesSaved(false); }}
+                      maxLength={60}
                       style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
                     <input placeholder="Video URL" value={bicycleUrl}
                       onChange={e => { setBicycleUrl(e.target.value); setManualPrizesSaved(false); }}
+                      maxLength={300}
                       style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
                     {clearBtn(() => clearPrize('/api/admin/bicycle', [
                       () => setBicycleTeam(''), () => setBicyclePlayer(''), () => setBicycleUrl(''), () => setManualPrizesSaved(false),
@@ -723,12 +728,14 @@ export default function AdminPage() {
                 placeholder="Code (e.g. ACME26)"
                 value={newCode}
                 onChange={e => setNewCode(e.target.value.toUpperCase())}
+                maxLength={10}
                 style={{ ...smallInputStyle, flex: '1 1 120px', minWidth: 0 }}
               />
               <input
                 placeholder="Company name"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
+                maxLength={60}
                 style={{ ...smallInputStyle, flex: '2 1 180px', minWidth: 0 }}
               />
               <button
@@ -836,12 +843,14 @@ export default function AdminPage() {
                     placeholder="Company name"
                     value={editName}
                     onChange={e => setEditName(e.target.value)}
+                    maxLength={60}
                     style={{ flex: '2 1 180px', minWidth: 0, ...smallInputStyle }}
                   />
                   <input
                     placeholder="Code"
                     value={editCode}
                     onChange={e => setEditCode(e.target.value.toUpperCase())}
+                    maxLength={10}
                     style={{ flex: '1 1 100px', minWidth: 0, ...smallInputStyle }}
                   />
                   <button
@@ -920,6 +929,7 @@ export default function AdminPage() {
                               onChange={e => setNames(prev => ({ ...prev, [team]: e.target.value }))}
                               onBlur={() => saveName(team)}
                               onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                              maxLength={50}
                               style={{
                                 width: '100%',
                                 background: 'transparent',

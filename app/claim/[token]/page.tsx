@@ -116,6 +116,7 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
           value={name}
           onChange={e => { setName(e.target.value); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && handleClaim()}
+          maxLength={50}
           autoFocus
           style={{
             width: '100%',

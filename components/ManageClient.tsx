@@ -382,8 +382,8 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                   <div className="flex items-center gap-1"
                     style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
                     <span style={{ color: 'var(--text-muted)', userSelect: 'none', fontSize: '1rem' }}>£</span>
-                    <input type="number" min="0" step="0.01" placeholder="0.00" value={ticketPrice}
-                      onChange={e => setTicketPrice(e.target.value)}
+                    <input type="number" min="0" max="999" step="0.01" placeholder="0.00" value={ticketPrice}
+                      onChange={e => { const v = parseFloat(e.target.value); setTicketPrice(v > 999 ? '999' : e.target.value); }}
                       onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
                       style={{ background: 'transparent', border: 'none', outline: 'none', width: '4rem', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, textAlign: 'center' }} />
                   </div>
@@ -483,6 +483,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Group name</p>
               <input value={companyName} onChange={e => setCompanyName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSaveName()}
+                maxLength={60}
                 style={{ flex: '1 1 180px', minWidth: 0, ...smallInputStyle }} />
               <button onClick={handleSaveName} disabled={loading}
                 className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
@@ -600,6 +601,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                           onChange={e => setNames(prev => ({ ...prev, [team]: e.target.value }))}
                           onBlur={() => saveName(team)}
                           onKeyDown={e => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                          maxLength={50}
                           style={{
                             width: '100%', background: 'transparent', border: 'none',
                             borderBottom: `1px solid ${(names[team] ?? '') !== (saved[team] ?? '') ? 'var(--green)' : 'var(--border)'}`,
