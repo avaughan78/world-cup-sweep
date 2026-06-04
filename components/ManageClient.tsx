@@ -355,8 +355,8 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         <div className="py-10 space-y-8">
 
           {/* Workflow — numbered step cards */}
-          <div>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Setup steps</p>
+          <div className="space-y-3">
+            <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Setup steps</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
               {/* Step 1 */}
@@ -364,6 +364,33 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
                     style={{ background: '#4D10C8', color: '#fff' }}>1</span>
+                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Set ticket price</h3>
+                </div>
+                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                  Used to calculate prize amounts on the sweep page.
+                </p>
+                <div className="flex gap-2 mt-1">
+                  <div className="flex items-center gap-1 flex-1"
+                    style={{ ...smallInputStyle, padding: '0.5rem 0.75rem' }}>
+                    <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
+                    <input type="number" min="0" step="0.01" placeholder="0.00" value={ticketPrice}
+                      onChange={e => setTicketPrice(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
+                      style={{ background: 'transparent', border: 'none', outline: 'none', width: '100%', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
+                  </div>
+                  <button onClick={handleSaveTicketPrice} disabled={loading}
+                    className="font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-shrink-0"
+                    style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1 }}>
+                    {priceSaved ? '✓' : 'Save'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                    style={{ background: '#4D10C8', color: '#fff' }}>2</span>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Generate QR codes</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
@@ -376,11 +403,11 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </button>
               </div>
 
-              {/* Step 2 */}
+              {/* Step 3 */}
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff' }}>2</span>
+                    style={{ background: '#4D10C8', color: '#fff' }}>3</span>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
@@ -393,11 +420,11 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </a>
               </div>
 
-              {/* Step 3 */}
+              {/* Step 4 */}
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff' }}>3</span>
+                    style={{ background: '#4D10C8', color: '#fff' }}>4</span>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print advert</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
@@ -410,31 +437,32 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </a>
               </div>
 
-              {/* Step 4 */}
-              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                <div className="flex items-center gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff' }}>4</span>
-                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Share the sweep</h3>
-                </div>
-                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                  Send everyone the link so they can follow live standings and results.
-                </p>
-                <div className="flex gap-2 mt-1">
-                  <button onClick={handleCopyLink}
-                    className="flex-1 font-bold px-3 py-2 rounded-lg text-sm transition-colors"
-                    style={{ background: copied ? '#f0fdf4' : 'var(--bg)', color: copied ? '#166534' : 'var(--text-muted)', border: `1px solid ${copied ? '#bbf7d0' : 'var(--border)'}` }}>
-                    {copied ? 'Copied!' : 'Copy link'}
-                  </button>
-                  <a href={`/?code=${company.code}`} target="_blank"
-                    className="flex-1 font-bold px-3 py-2 rounded-lg text-sm text-center"
-                    style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-                    View ↗
-                  </a>
-                </div>
-              </div>
-
             </div>
+
+            {/* Share the sweep */}
+            <div className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div className="flex items-center gap-2.5 flex-shrink-0">
+                <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                  style={{ background: '#4D10C8', color: '#fff' }}>5</span>
+                <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Share the sweep</h3>
+              </div>
+              <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                Send everyone the link so they can follow live standings and results.
+              </p>
+              <div className="flex gap-2 flex-shrink-0">
+                <button onClick={handleCopyLink}
+                  className="font-bold px-4 py-2 rounded-lg text-sm transition-colors"
+                  style={{ background: copied ? '#f0fdf4' : 'var(--bg)', color: copied ? '#166534' : 'var(--text-muted)', border: `1px solid ${copied ? '#bbf7d0' : 'var(--border)'}` }}>
+                  {copied ? 'Copied!' : 'Copy link'}
+                </button>
+                <a href={`/?code=${company.code}`} target="_blank"
+                  className="font-bold px-4 py-2 rounded-lg text-sm text-center"
+                  style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                  View ↗
+                </a>
+              </div>
+            </div>
+
           </div>
 
           {/* Settings */}
@@ -452,27 +480,6 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 style={{ background: nameSaved ? '#f0fdf4' : 'var(--green)', color: nameSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
                 {nameSaved ? 'Saved ✓' : 'Save'}
               </button>
-            </div>
-
-            {/* Ticket price */}
-            <div className="flex flex-wrap gap-2 items-end mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Entry fee per ticket</p>
-              <div className="flex items-center gap-1 flex-shrink-0"
-                style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
-                <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
-                <input type="number" min="0" step="0.01" placeholder="0.00" value={ticketPrice}
-                  onChange={e => setTicketPrice(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
-                  style={{ background: 'transparent', border: 'none', outline: 'none', width: '5rem', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
-              </div>
-              <button onClick={handleSaveTicketPrice} disabled={loading}
-                className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
-                style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
-                {priceSaved ? 'Saved ✓' : 'Save'}
-              </button>
-              <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                Used to calculate prize amounts on the sweep page (48 tickets × fee × split).
-              </p>
             </div>
 
             {/* Change password */}
