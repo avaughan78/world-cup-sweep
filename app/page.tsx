@@ -90,7 +90,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               <div className="flex items-end gap-4">
                 <TrophyEasterEgg />
                 <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
-                  The Draw
+                  WC26 Sweep
                 </h1>
               </div>
               <div className="flex items-center gap-3">

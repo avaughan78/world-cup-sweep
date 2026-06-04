@@ -75,10 +75,10 @@ export default function SetupPage() {
             FIFA World Cup · 2026
           </p>
           <h1 className="album-title text-5xl font-black tracking-tight mt-1" style={{ color: '#fff', lineHeight: 1 }}>
-            The Draw
+            WC26 Sweep
           </h1>
           <p className="text-sm mt-2 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Set up your tracker
+            Set up your sweep
           </p>
         </div>
 

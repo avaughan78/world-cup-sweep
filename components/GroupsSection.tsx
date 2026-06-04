@@ -55,7 +55,7 @@ export default function GroupsSection({
         </div>
 
         <div className="album-section-label" style={{ marginBottom: 0 }}>
-          <span className="label-text">{view === 'standings' ? 'The Draw' : 'Fixtures'}</span>
+          <span className="label-text">{view === 'standings' ? 'WC26 Sweep' : 'Fixtures'}</span>
           <span className="label-line" />
           <span className="label-note">{view === 'standings' ? 'forty-eight teams' : 'all matches'}</span>
         </div>

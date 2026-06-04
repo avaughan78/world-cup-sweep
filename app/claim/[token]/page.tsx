@@ -71,7 +71,7 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
             className="inline-block mt-8 font-bold px-6 py-3 rounded-xl"
             style={{ background: 'var(--green)', color: '#fff', fontSize: '1rem' }}
           >
-            View the draw →
+            View the sweep →
           </a>
         </div>
       </main>

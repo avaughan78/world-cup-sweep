@@ -108,7 +108,7 @@ export default function CompanyGate({
           FIFA World Cup · 2026
         </p>
         <h2 className="album-title text-4xl font-black tracking-tight mt-1" style={{ color: '#fff', lineHeight: 1 }}>
-          The Draw
+          WC26 Sweep
         </h2>
         <p className="text-sm mt-1 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
           Office &amp; Friends Sweep
@@ -117,7 +117,7 @@ export default function CompanyGate({
 
       <div className="px-7 py-6" style={{ background: 'var(--card)' }}>
         <p className="text-sm mb-4" style={{ color: 'var(--text-muted)' }}>
-          Enter your company code to view the draw.
+          Enter your group code to view the sweep.
         </p>
         <input
           type="text"
@@ -147,7 +147,7 @@ export default function CompanyGate({
           className="w-full font-bold py-3 rounded-xl mt-3 transition-opacity"
           style={{ background: '#4D10C8', color: '#fff', opacity: loading ? 0.6 : 1, fontSize: '1rem' }}
         >
-          {loading ? 'Checking…' : 'View the Draw →'}
+          {loading ? 'Checking…' : 'View the sweep →'}
         </button>
         {!marketing && (
           <p className="text-xs text-center mt-4" style={{ color: 'var(--text-muted)' }}>
@@ -175,8 +175,55 @@ export default function CompanyGate({
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
 
       {/* Hero */}
+      <style>{`
+        @keyframes fb-x-1 {
+          0%   { transform: translateX(0); }
+          38%  { transform: translateX(52vw); }
+          100% { transform: translateX(52vw); }
+        }
+        @keyframes fb-y-1 {
+          0%   { transform: translateY(-60px); animation-timing-function: ease-in; }
+          8%   { transform: translateY(51px);  animation-timing-function: ease-out; }
+          14%  { transform: translateY(-13px); animation-timing-function: ease-in; }
+          20%  { transform: translateY(51px);  animation-timing-function: ease-out; }
+          24%  { transform: translateY(23px);  animation-timing-function: ease-in; }
+          28%  { transform: translateY(51px);  animation-timing-function: ease-out; }
+          31%  { transform: translateY(39px);  animation-timing-function: ease-in; }
+          34%  { transform: translateY(51px);  animation-timing-function: ease-in; }
+          38%  { transform: translateY(700px); }
+          100% { transform: translateY(700px); }
+        }
+        @keyframes fb-spin-1 {
+          0%   { transform: rotate(0deg); }
+          38%  { transform: rotate(380deg); }
+          100% { transform: rotate(380deg); }
+        }
+        @keyframes fb-x-2 {
+          0%   { transform: translateX(0); }
+          40%  { transform: translateX(48vw); }
+          100% { transform: translateX(48vw); }
+        }
+        @keyframes fb-y-2 {
+          0%   { transform: translateY(-60px); animation-timing-function: ease-in; }
+          10%  { transform: translateY(58px);  animation-timing-function: ease-out; }
+          17%  { transform: translateY(2px);   animation-timing-function: ease-in; }
+          24%  { transform: translateY(58px);  animation-timing-function: ease-out; }
+          29%  { transform: translateY(30px);  animation-timing-function: ease-in; }
+          33%  { transform: translateY(58px);  animation-timing-function: ease-out; }
+          36%  { transform: translateY(47px);  animation-timing-function: ease-in; }
+          40%  { transform: translateY(700px); }
+          100% { transform: translateY(700px); }
+        }
+        @keyframes fb-spin-2 {
+          0%   { transform: rotate(0deg); }
+          40%  { transform: rotate(340deg); }
+          100% { transform: rotate(340deg); }
+        }
+      `}</style>
       <div
         style={{
+          position: 'relative',
+          overflow: 'hidden',
           backgroundImage: 'url(/wc2026-header-bg.png)',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
@@ -209,7 +256,7 @@ export default function CompanyGate({
                     className="album-title font-black tracking-tight"
                     style={{ color: '#fff', fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', lineHeight: 0.9 }}
                   >
-                    The Draw
+                    WC26 Sweep
                   </h1>
                 </div>
                 <p className="text-lg sm:text-xl font-bold mt-5 mb-2" style={{ color: 'rgba(255,255,255,0.92)' }}>
@@ -268,11 +315,27 @@ export default function CompanyGate({
                     className="inline-block font-bold px-6 py-2.5 rounded-xl transition-opacity hover:opacity-90"
                     style={{ background: '#fff', color: '#4D10C8', fontSize: '0.95rem' }}
                   >
-                    Set up your draw →
+                    Set up your sweep →
                   </a>
                 </div>
               </div>
 
+            </div>
+          </div>
+        </div>
+
+        {/* Animated footballs — desktop only, loop with pause */}
+        <div className="hidden sm:block" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
+          {/* Ball 1 — larger, 0.8s head-start */}
+          <div style={{ position: 'absolute', top: 0, left: '52%', animation: 'fb-x-1 9s linear 0.8s infinite', willChange: 'transform' }}>
+            <div style={{ animation: 'fb-y-1 9s linear 0.8s infinite', willChange: 'transform' }}>
+              <span style={{ display: 'inline-block', fontSize: '1.8rem', lineHeight: 1, animation: 'fb-spin-1 9s linear 0.8s infinite' }}>⚽</span>
+            </div>
+          </div>
+          {/* Ball 2 — smaller, staggered 5s later */}
+          <div style={{ position: 'absolute', top: 0, left: '54%', animation: 'fb-x-2 9s linear 5s infinite', willChange: 'transform' }}>
+            <div style={{ animation: 'fb-y-2 9s linear 5s infinite', willChange: 'transform' }}>
+              <span style={{ display: 'inline-block', fontSize: '1.4rem', lineHeight: 1, animation: 'fb-spin-2 9s linear 5s infinite' }}>⚽</span>
             </div>
           </div>
         </div>

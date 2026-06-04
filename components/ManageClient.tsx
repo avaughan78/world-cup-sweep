@@ -280,7 +280,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               FIFA World Cup · 2026 · {company.name}
             </p>
             <h1 className="album-title text-5xl font-black tracking-tight mt-1" style={{ color: '#fff', lineHeight: 1 }}>
-              The Draw
+              WC26 Sweep
             </h1>
             <p className="text-sm mt-2 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
               Organiser Admin

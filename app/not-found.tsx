@@ -25,14 +25,14 @@ export default function NotFound() {
         </div>
         <div className="px-7 py-6" style={{ background: 'var(--card)' }}>
           <p className="text-sm mb-5" style={{ color: 'var(--text-muted)' }}>
-            That page doesn&apos;t exist. Head back to the draw or set up your own tracker.
+            That page doesn&apos;t exist. Head back to the sweep or set up your own.
           </p>
           <a
             href="/"
             className="block w-full text-center font-bold py-3 rounded-xl transition-opacity hover:opacity-90"
             style={{ background: '#4D10C8', color: '#fff', fontSize: '1rem' }}
           >
-            Go to The Draw →
+            Go to the sweep →
           </a>
         </div>
       </div>
