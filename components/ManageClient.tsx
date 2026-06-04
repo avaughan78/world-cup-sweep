@@ -21,7 +21,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [justSaved, setJustSaved] = useState<Set<string>>(new Set());
 
-  const [ticketPrice, setTicketPrice] = useState('');
+  const [ticketPrice, setTicketPrice] = useState(initialCompany.ticket_price != null ? String(initialCompany.ticket_price) : '');
   const [priceSaved, setPriceSaved] = useState(false);
   const [companyName, setCompanyName] = useState(initialCompany.name);
   const [nameSaved, setNameSaved] = useState(false);
