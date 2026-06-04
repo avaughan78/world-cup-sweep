@@ -104,7 +104,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           {/* ── HERO — same background image as the main site header ── */}
           <div style={{
             position: 'relative',
-            height: '82mm',
+            height: '65mm',
             flexShrink: 0,
             backgroundImage: 'url(/wc2026-header-bg.png)',
             backgroundSize: 'cover',
@@ -117,50 +117,51 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
               background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)',
             }} />
 
-            {/* Faded trophy */}
-            <img src="/world-cup-trophy.png" alt="" style={{
-              position: 'absolute', right: '-5mm', bottom: '-8mm',
-              height: '95mm', width: 'auto', opacity: 0.22,
-              filter: 'brightness(1.8)',
-            }} />
+            <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '7mm 12mm', display: 'flex', gap: '4mm' }}>
 
-            <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '8mm 12mm', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-
-              <p className="oswald" style={{ margin: 0, fontSize: '10pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
-                FIFA World Cup · USA · Canada · Mexico
-              </p>
-
-              <div>
-                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '12.5pt', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffcc00' }}>
-                  Kicks off
+              {/* Left: tournament info */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <p className="oswald" style={{ margin: 0, fontSize: '9pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
+                  FIFA World Cup · USA · Canada · Mexico
                 </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '38pt', lineHeight: 0.95, color: '#fff', letterSpacing: '0.01em', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
-                  11 June
-                </p>
-                <p className="bungee" style={{ margin: '1.5mm 0 0', fontSize: '22pt', lineHeight: 1, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.01em' }}>
-                  2026
-                </p>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '10.5pt', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffcc00' }}>
+                    Kicks off
+                  </p>
+                  <p className="bungee" style={{ margin: 0, fontSize: '30pt', lineHeight: 0.95, color: '#fff', letterSpacing: '0.01em', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
+                    11 June
+                  </p>
+                  <p className="bungee" style={{ margin: '1.5mm 0 0', fontSize: '17pt', lineHeight: 1, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.01em' }}>
+                    2026
+                  </p>
+                </div>
                 <div style={{ display: 'flex', gap: '3mm', alignItems: 'center' }}>
                   {HOST_FLAGS.map(({ code, label }) => (
                     <div key={code} style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
                       <img
                         src={`https://flagcdn.com/w40/${code}.png`}
                         alt={label}
-                        style={{ height: '14px', width: 'auto', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
+                        style={{ height: '13px', width: 'auto', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
                       />
-                      <span className="oswald" style={{ fontSize: '9pt', fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      <span className="oswald" style={{ fontSize: '8.5pt', fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                         {label}
                       </span>
                     </div>
                   ))}
                 </div>
-                <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 600, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                  Final · 19 July 2026
+              </div>
+
+              {/* Right: trophy + sweep name */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', gap: '2mm', flexShrink: 0 }}>
+                <img src="/world-cup-trophy.png" alt="World Cup trophy" style={{
+                  height: '38mm', width: 'auto', opacity: 0.88,
+                  filter: 'brightness(1.1) drop-shadow(0 2px 8px rgba(0,0,0,0.5))',
+                }} />
+                <p className="bungee" style={{ margin: 0, fontSize: '13pt', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, textAlign: 'right', textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}>
+                  WC26 Sweep
                 </p>
               </div>
+
             </div>
           </div>
 
@@ -175,16 +176,16 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── ALL 48 TEAMS ─────────────────────────────────────── */}
-          <div style={{ background: '#f5f4ee', padding: '5mm 12mm' }}>
-            <p className="oswald" style={{ margin: '0 0 3.5mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8a8678' }}>
+          <div style={{ background: '#f5f4ee', padding: '4mm 12mm' }}>
+            <p className="oswald" style={{ margin: '0 0 3mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8a8678' }}>
               The 48 nations
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '3mm 1mm' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '1.5mm 3mm' }}>
               {ALL_TEAMS.map(team => {
                 const url = getFlagUrl(team);
                 return (
-                  <div key={team} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5mm' }}>
-                    <div style={{ width: '20px', height: '14px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <div key={team} style={{ display: 'flex', alignItems: 'center', gap: '2mm', minWidth: 0 }}>
+                    <div style={{ width: '22px', height: '15px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       {url ? (
                         <img
                           src={url}
@@ -197,13 +198,13 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                     </div>
                     <span style={{
                       fontFamily: 'system-ui, sans-serif',
-                      fontSize: '8pt',
-                      color: '#6b6760',
-                      textAlign: 'center',
-                      lineHeight: 1.2,
-                      wordBreak: 'break-word',
-                      hyphens: 'auto',
-                      maxWidth: '14mm',
+                      fontSize: '7.5pt',
+                      color: '#3a3830',
+                      lineHeight: 1.25,
+                      overflow: 'hidden',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
                     }}>
                       {team}
                     </span>
@@ -249,7 +250,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4mm' }}>
               <div>
                 <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a8678' }}>
-                  Tracker organised by
+                  Sweep organised by
                 </p>
                 <p className="bungee" style={{ margin: 0, fontSize: '18pt', color: '#4D10C8', lineHeight: 1 }}>
                   {company.name}
