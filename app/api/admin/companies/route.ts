@@ -19,7 +19,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, company });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ ok: false, message: msg }, { status: 500 });
+    const duplicate = msg.toLowerCase().includes('unique') || msg.toLowerCase().includes('duplicate');
+    return NextResponse.json(
+      { ok: false, message: duplicate ? 'That code is already taken — try another' : msg },
+      { status: duplicate ? 409 : 500 }
+    );
   }
 }
 
