@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 const HOW_IT_WORKS = [
@@ -49,6 +49,20 @@ export default function CompanyGate({
   const [checking, setChecking] = useState(true);
   const [showModal, setShowModal] = useState(false);
 
+  const heroRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const ballOuterRef = useRef<HTMLDivElement>(null);
+
+  // Measure card position after mount so the ball lands precisely on its top-left corner
+  useEffect(() => {
+    if (!heroRef.current || !cardRef.current || !ballOuterRef.current) return;
+    const heroRect = heroRef.current.getBoundingClientRect();
+    const cardRect = cardRef.current.getBoundingClientRect();
+    ballOuterRef.current.style.top = `${cardRect.top - heroRect.top - 29}px`; // 29px = ball height (1.8rem)
+    ballOuterRef.current.style.left = `${cardRect.left - heroRect.left}px`;
+    heroRef.current.style.setProperty('--fb-exit-dx', `${cardRect.width + 60}px`);
+  }, []);
+
   useEffect(() => {
     if (invalidCode) {
       localStorage.removeItem('company_code');
@@ -92,6 +106,7 @@ export default function CompanyGate({
 
   const formCard = (
     <div
+      ref={cardRef}
       className="rounded-2xl overflow-hidden"
       style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.22)' }}
     >
@@ -176,51 +191,36 @@ export default function CompanyGate({
 
       {/* Hero */}
       <style>{`
-        @keyframes fb-x-1 {
+        @property --fb-exit-dx {
+          syntax: '<length>';
+          initial-value: 320px;
+          inherits: false;
+        }
+        @keyframes fb-x {
           0%   { transform: translateX(0); }
-          38%  { transform: translateX(52vw); }
-          100% { transform: translateX(52vw); }
+          48%  { transform: translateX(0); }
+          80%  { transform: translateX(var(--fb-exit-dx)); }
+          100% { transform: translateX(var(--fb-exit-dx)); }
         }
-        @keyframes fb-y-1 {
-          0%   { transform: translateY(-60px); animation-timing-function: ease-in; }
-          8%   { transform: translateY(51px);  animation-timing-function: ease-out; }
-          14%  { transform: translateY(-13px); animation-timing-function: ease-in; }
-          20%  { transform: translateY(51px);  animation-timing-function: ease-out; }
-          24%  { transform: translateY(23px);  animation-timing-function: ease-in; }
-          28%  { transform: translateY(51px);  animation-timing-function: ease-out; }
-          31%  { transform: translateY(39px);  animation-timing-function: ease-in; }
-          34%  { transform: translateY(51px);  animation-timing-function: ease-in; }
-          38%  { transform: translateY(700px); }
-          100% { transform: translateY(700px); }
+        @keyframes fb-y {
+          0%   { transform: translateY(-200px); animation-timing-function: ease-in; }
+          12%  { transform: translateY(0);      animation-timing-function: ease-out; }
+          21%  { transform: translateY(-75px);  animation-timing-function: ease-in; }
+          29%  { transform: translateY(0);      animation-timing-function: ease-out; }
+          36%  { transform: translateY(-42px);  animation-timing-function: ease-in; }
+          43%  { transform: translateY(0);      animation-timing-function: ease-out; }
+          48%  { transform: translateY(-20px);  animation-timing-function: ease-in; }
+          53%  { transform: translateY(0);      animation-timing-function: linear; }
+          80%  { transform: translateY(0);      animation-timing-function: ease-in; }
+          100% { transform: translateY(600px); }
         }
-        @keyframes fb-spin-1 {
-          0%   { transform: rotate(0deg); }
-          38%  { transform: rotate(380deg); }
-          100% { transform: rotate(380deg); }
-        }
-        @keyframes fb-x-2 {
-          0%   { transform: translateX(0); }
-          40%  { transform: translateX(48vw); }
-          100% { transform: translateX(48vw); }
-        }
-        @keyframes fb-y-2 {
-          0%   { transform: translateY(-60px); animation-timing-function: ease-in; }
-          10%  { transform: translateY(58px);  animation-timing-function: ease-out; }
-          17%  { transform: translateY(2px);   animation-timing-function: ease-in; }
-          24%  { transform: translateY(58px);  animation-timing-function: ease-out; }
-          29%  { transform: translateY(30px);  animation-timing-function: ease-in; }
-          33%  { transform: translateY(58px);  animation-timing-function: ease-out; }
-          36%  { transform: translateY(47px);  animation-timing-function: ease-in; }
-          40%  { transform: translateY(700px); }
-          100% { transform: translateY(700px); }
-        }
-        @keyframes fb-spin-2 {
-          0%   { transform: rotate(0deg); }
-          40%  { transform: rotate(340deg); }
-          100% { transform: rotate(340deg); }
+        @keyframes fb-spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(720deg); }
         }
       `}</style>
       <div
+        ref={heroRef}
         style={{
           position: 'relative',
           overflow: 'hidden',
@@ -324,18 +324,20 @@ export default function CompanyGate({
           </div>
         </div>
 
-        {/* Animated footballs — desktop only, loop with pause */}
+        {/* Football — desktop only, drops onto card top-left, plays once after 1.5s */}
         <div className="hidden sm:block" style={{ position: 'absolute', inset: 0, pointerEvents: 'none', zIndex: 10 }}>
-          {/* Ball 1 — larger, 0.8s head-start */}
-          <div style={{ position: 'absolute', top: 0, left: '52%', animation: 'fb-x-1 9s linear 0.8s infinite', willChange: 'transform' }}>
-            <div style={{ animation: 'fb-y-1 9s linear 0.8s infinite', willChange: 'transform' }}>
-              <span style={{ display: 'inline-block', fontSize: '1.8rem', lineHeight: 1, animation: 'fb-spin-1 9s linear 0.8s infinite' }}>⚽</span>
-            </div>
-          </div>
-          {/* Ball 2 — smaller, staggered 5s later */}
-          <div style={{ position: 'absolute', top: 0, left: '54%', animation: 'fb-x-2 9s linear 5s infinite', willChange: 'transform' }}>
-            <div style={{ animation: 'fb-y-2 9s linear 5s infinite', willChange: 'transform' }}>
-              <span style={{ display: 'inline-block', fontSize: '1.4rem', lineHeight: 1, animation: 'fb-spin-2 9s linear 5s infinite' }}>⚽</span>
+          <div
+            ref={ballOuterRef}
+            style={{
+              position: 'absolute',
+              top: '-200px',
+              left: '52%',
+              animation: 'fb-x 4s linear 1.5s 1 normal both',
+              willChange: 'transform',
+            }}
+          >
+            <div style={{ animation: 'fb-y 4s linear 1.5s 1 normal both', willChange: 'transform' }}>
+              <span style={{ display: 'inline-block', fontSize: '1.8rem', lineHeight: 1, animation: 'fb-spin 4s linear 1.5s 1 normal both' }}>⚽</span>
             </div>
           </div>
         </div>
