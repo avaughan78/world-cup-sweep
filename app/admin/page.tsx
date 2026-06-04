@@ -207,16 +207,17 @@ export default function AdminPage() {
     if (!confirm(`Delete "${selectedCompany.name}" and all its participant data? This cannot be undone.`)) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/companies', {
+      const res = await fetch(`/api/admin/companies?id=${selectedCompany.id}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: selectedCompany.id }),
       });
-      const { ok } = await parseResponse(res);
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as { error?: string } | null;
       if (ok) {
         setCompanies(prev => prev.filter(c => c.id !== selectedCompany.id));
         setSelectedCompanyId(null);
         setStatus({ ok: true, message: `"${selectedCompany.name}" deleted.` });
+      } else {
+        setStatus({ ok: false, message: d?.error ?? raw });
       }
     } catch (e) {
       setStatus({ ok: false, message: String(e) });

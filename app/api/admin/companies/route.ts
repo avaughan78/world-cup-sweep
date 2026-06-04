@@ -51,7 +51,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const denied = requireAdmin(req);
   if (denied) return denied;
-  const { id } = await req.json() as { id?: number };
+  const id = Number(req.nextUrl.searchParams.get('id'));
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   await deleteCompany(id);
   return NextResponse.json({ ok: true });
