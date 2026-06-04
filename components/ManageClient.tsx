@@ -331,34 +331,36 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         </div>
       )}
 
-      {/* Hero header */}
-      <header style={{
-        backgroundImage: 'url(/wc2026-header-bg.png)',
-        backgroundSize: 'cover', backgroundPosition: 'center',
-        position: 'relative', overflow: 'hidden',
-      }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 100%)' }} />
-        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 py-8 sm:py-10" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                FIFA World Cup · 2026
-              </p>
-              <h1 className="text-3xl sm:text-5xl font-black tracking-tight mt-1" style={{ color: '#fff', lineHeight: 1 }}>
-                {company.name}
-              </h1>
-              <p className="text-sm mt-1.5 font-semibold" style={{ color: 'rgba(255,255,255,0.6)' }}>Organiser Admin</p>
-            </div>
-            <div className="flex items-center gap-3 pt-1 flex-shrink-0">
-              <ThemeToggle />
-              <a href={`/?code=${company.code}`} className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>← Sweep</a>
-              <button type="button" onClick={handleLogout} className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.65)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-6">
+        <header
+          className="rounded-2xl overflow-hidden"
+          style={{
+            backgroundImage: 'url(/wc2026-header-bg.png)',
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'center',
+          }}
+        >
+          <div className="px-6 sm:px-8 pt-5 pb-5">
+            <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              FIFA World Cup · 2026 · {company.name}
+            </p>
+            <div className="flex items-end justify-between mt-1.5">
+              <div>
+                <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
+                  WC26 Sweep
+                </h1>
+                <p className="text-sm mt-1 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>Organiser Admin · {company.name}</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <ThemeToggle />
+                <a href={`/?code=${company.code}`} className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>← Sweep</a>
+                <button type="button" onClick={handleLogout} className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.65)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>Log out</button>
+              </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
         <div className="py-8 space-y-8">
 
           {/* Workflow — numbered step cards */}
@@ -370,7 +372,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff' }}>1</span>
+                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>1</span>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Set ticket price</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
@@ -397,7 +399,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff' }}>2</span>
+                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>2</span>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Generate QR codes</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
@@ -414,7 +416,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff' }}>3</span>
+                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>3</span>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
@@ -431,7 +433,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff' }}>4</span>
+                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>4</span>
                   <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print advert</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
@@ -450,7 +452,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             <div className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
               <div className="flex items-center gap-2.5 flex-shrink-0">
                 <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                  style={{ background: '#4D10C8', color: '#fff' }}>5</span>
+                  style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>5</span>
                 <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Share the sweep</h3>
               </div>
               <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
