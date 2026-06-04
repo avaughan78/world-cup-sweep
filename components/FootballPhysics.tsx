@@ -54,7 +54,7 @@ export default function FootballPhysics() {
     s.current.raf = requestAnimationFrame(tick);
   }, []);
 
-  useEffect(() => {
+  function drop() {
     const c = s.current;
     c.x   = window.innerWidth * 0.15 + Math.random() * window.innerWidth * 0.7;
     c.y   = -SIZE;
@@ -62,7 +62,32 @@ export default function FootballPhysics() {
     c.vy  = 0;
     c.rot = 0;
     startLoop();
-    return () => cancelAnimationFrame(s.current.raf);
+  }
+
+  useEffect(() => {
+    const el = elRef.current;
+    if (!el) return;
+
+    const visible = localStorage.getItem('football-visible') !== 'false';
+    if (!visible) {
+      el.style.display = 'none';
+    } else {
+      drop();
+    }
+
+    const onToggle = (e: Event) => {
+      const show = (e as CustomEvent<boolean>).detail;
+      el.style.display = show ? '' : 'none';
+      if (show) drop();
+      else cancelAnimationFrame(s.current.raf);
+    };
+
+    window.addEventListener('football-toggle', onToggle);
+    return () => {
+      cancelAnimationFrame(s.current.raf);
+      window.removeEventListener('football-toggle', onToggle);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startLoop]);
 
   function kick(e: React.MouseEvent) {

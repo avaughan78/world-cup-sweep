@@ -14,9 +14,8 @@ export default function SimunicModal() {
           style={{ cursor: 'pointer', borderBottom: '1px dotted currentColor' }}
           title="Read the story"
         >
-          Josip Simunic
+          Filthy Play
         </span>
-        {' '}Award
       </span>
 
       {open && (
