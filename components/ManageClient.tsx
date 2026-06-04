@@ -509,32 +509,38 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 {(['most_own_goals', 'bicycle'] as const).map((slug, i) => {
                   const label = slug === 'most_own_goals' ? '😬 Oooops' : '🤸 The Bicycle';
                   const isHidden = hiddenPrizes.has(slug);
+                  const isVisible = !isHidden;
                   return (
                     <div key={slug} className="flex items-center justify-between gap-3 px-3 py-2.5"
                       style={{ borderTop: i > 0 ? '1px solid var(--border)' : undefined }}>
                       <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{label}</span>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-full"
-                          style={{
-                            background: isHidden ? '#fee2e2' : '#f0fdf4',
-                            color: isHidden ? '#991b1b' : '#166534',
-                          }}>
-                          {isHidden ? 'Hidden' : 'Visible'}
+                      <button
+                        role="switch"
+                        aria-checked={isVisible}
+                        onClick={() => handleTogglePrize(slug, !isHidden)}
+                        disabled={loading}
+                        className="flex items-center gap-2 flex-shrink-0"
+                        style={{ background: 'none', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', padding: 0, opacity: loading ? 0.5 : 1 }}
+                      >
+                        <span className="text-xs font-semibold" style={{ color: isVisible ? '#166534' : 'var(--text-muted)', minWidth: '3rem', textAlign: 'right' }}>
+                          {isVisible ? 'Visible' : 'Hidden'}
                         </span>
-                        <button
-                          onClick={() => handleTogglePrize(slug, !isHidden)}
-                          disabled={loading}
-                          className="font-bold px-3 py-1 rounded-lg text-xs transition-colors"
-                          style={{
-                            background: 'var(--bg)',
-                            color: 'var(--text-muted)',
-                            border: '1px solid var(--border)',
-                            opacity: loading ? 0.5 : 1,
-                          }}
-                        >
-                          {isHidden ? 'Show' : 'Hide'}
-                        </button>
-                      </div>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center',
+                          width: '2.5rem', height: '1.375rem', borderRadius: '9999px', padding: '0.125rem',
+                          background: isVisible ? 'var(--green)' : 'var(--border)',
+                          transition: 'background 0.2s',
+                          flexShrink: 0,
+                        }}>
+                          <span style={{
+                            width: '1.125rem', height: '1.125rem', borderRadius: '9999px', background: '#fff',
+                            transform: isVisible ? 'translateX(1.125rem)' : 'translateX(0)',
+                            transition: 'transform 0.2s',
+                            display: 'block',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                          }} />
+                        </span>
+                      </button>
                     </div>
                   );
                 })}
