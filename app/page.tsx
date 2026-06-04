@@ -76,7 +76,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
         {/* Header with image backdrop — constrained to content width */}
         <header
-          className="rounded-2xl overflow-hidden"
+          className="relative rounded-2xl overflow-hidden"
           style={{
             backgroundImage: 'url(/wc2026-header-bg.png)',
             backgroundSize: 'cover',
@@ -84,6 +84,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             backgroundPosition: 'center',
           }}
         >
+          <div className="absolute top-3 right-3">
+            <HomeExitLink />
+          </div>
           <div className="px-6 sm:px-8 pt-5 pb-5">
             <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
               FIFA World Cup · 2026 · {company.name}
@@ -118,7 +121,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                     <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
                   </svg>
                 </a>
-                <HomeExitLink />
                 <ThemeToggle />
               </div>
             </div>
