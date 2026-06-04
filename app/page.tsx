@@ -9,6 +9,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import BugReport from '@/components/BugReport';
 import CompanyGate from '@/components/CompanyGate';
 import HowItWorksModal from '@/components/HowItWorksModal';
+import PoweredByLink from '@/components/PoweredByLink';
 
 export const dynamic = 'force-dynamic';
 
@@ -210,18 +211,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
         </div>
 
-        <footer className="pb-8 text-center space-y-2">
-          <div>
-            <a
-              href="/"
-              onClick={() => localStorage.removeItem('company_code')}
-              className="text-xs font-semibold"
-              style={{ color: 'var(--text-muted)', textDecoration: 'none', opacity: 0.6 }}
-            >
-              Powered by WC26 Sweep
-            </a>
+        <footer className="pb-8">
+          <div className="relative text-center">
+            <BugReport />
+            <div className="absolute right-0 top-1/2 -translate-y-1/2">
+              <PoweredByLink />
+            </div>
           </div>
-          <BugReport />
         </footer>
 
       </div>
