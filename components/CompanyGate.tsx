@@ -111,7 +111,7 @@ export default function CompanyGate({
           The Draw
         </h2>
         <p className="text-sm mt-1 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
-          Office Tracker
+          Office &amp; Friends Sweep
         </p>
       </div>
 
@@ -199,20 +199,27 @@ export default function CompanyGate({
                 >
                   FIFA World Cup · USA · Canada · Mexico · 2026
                 </p>
-                <h1
-                  className="album-title font-black tracking-tight"
-                  style={{ color: '#fff', fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', lineHeight: 0.9 }}
-                >
-                  The Draw
-                </h1>
+                <div className="flex items-center gap-4">
+                  <img
+                    src="/world-cup-trophy.png"
+                    alt=""
+                    style={{ height: 'clamp(3.5rem, 8vw, 5.5rem)', width: 'auto', flexShrink: 0 }}
+                  />
+                  <h1
+                    className="album-title font-black tracking-tight"
+                    style={{ color: '#fff', fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', lineHeight: 0.9 }}
+                  >
+                    The Draw
+                  </h1>
+                </div>
                 <p className="text-lg sm:text-xl font-bold mt-5 mb-2" style={{ color: 'rgba(255,255,255,0.92)' }}>
-                  The office tracker, done right.
+                  Your World Cup sweep, done right.
                 </p>
                 <p
                   className="text-sm leading-relaxed mb-7 max-w-sm"
                   style={{ color: 'rgba(255,255,255,0.58)' }}
                 >
-                  48 teams. QR codes, live stats, and automatic tracking — from the group stage to the final on 19 July 2026.
+                  Pick a nation from the hat, follow them all tournament long, and settle it when the final whistle blows. 48 teams, live stats, QR claims — no spreadsheet needed.
                 </p>
                 <button
                   onClick={() => setShowModal(true)}
@@ -251,10 +258,10 @@ export default function CompanyGate({
                   style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)' }}
                 >
                   <p className="font-black text-base mb-1" style={{ color: '#fff' }}>
-                    Running your own tracker?
+                    Want to run your own sweep?
                   </p>
                   <p className="text-sm mb-4" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                    Set up The Draw for your office or group in under two minutes. Free, no account needed.
+                    Set up a sweep for your office or group of mates in two minutes. Free, no account needed.
                   </p>
                   <a
                     href="/setup"
