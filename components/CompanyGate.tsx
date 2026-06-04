@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import FootballPhysics from './FootballPhysics';
 
 const HOW_IT_WORKS = [
   {
@@ -174,8 +173,6 @@ export default function CompanyGate({
   // Full marketing landing page
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
-
-      <FootballPhysics />
 
       {/* Hero */}
       <div
