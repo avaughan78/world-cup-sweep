@@ -26,6 +26,7 @@ const EVENT_META: Record<string, { label: string; icon: string; colour: string }
   tokens_generated:    { label: 'Tokens generated',   icon: '🔗', colour: '#0ea5e9' },
   company_reset:       { label: 'Sweep reset',         icon: '♻️',  colour: '#f97316' },
   tournament_reset:    { label: 'Tournament reset',    icon: '🔄', colour: '#ef4444' },
+  page_view:           { label: 'Page view',           icon: '👁️',  colour: 'var(--text-muted)' },
 };
 
 function formatDetails(details: Record<string, unknown> | null): string {
@@ -126,7 +127,7 @@ export default function AuditPage() {
         {!loading && !error && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[
-              { label: 'Total events', value: entries.length },
+              { label: 'Page views', value: entries.filter(e => e.event === 'page_view').length },
               { label: 'Logins (ok)', value: entries.filter(e => e.event.endsWith('_ok')).length },
               { label: 'Failed logins', value: entries.filter(e => e.event.endsWith('_fail')).length },
               { label: 'Teams claimed', value: entries.filter(e => e.event === 'participant_claimed').length },

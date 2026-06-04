@@ -11,6 +11,8 @@ import CompanyGate from '@/components/CompanyGate';
 import HowItWorksModal from '@/components/HowItWorksModal';
 import PoweredByLink from '@/components/PoweredByLink';
 import HomeExitLink from '@/components/HomeExitLink';
+import { headers } from 'next/headers';
+import { writeAudit } from '@/lib/audit';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,12 +31,18 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   const company = await getCompanyByCode(code);
   if (!company) return <CompanyGate invalidCode marketing />;
 
+  const hdrs = await headers();
+  const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+
   const [participants, lastSync, allTeamStats, groupStandings] = await Promise.all([
     getParticipants(company.id),
     getLastSync('stats'),
     getAllTeamStats(),
     getGroupStandings(),
   ]);
+
+  // Fire-and-forget — never blocks render
+  void writeAudit('page_view', { actor: company.code, companyId: company.id, ip });
 
   const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
 

@@ -398,8 +398,8 @@ export default function TeamModal({ team, participant, onClose }: {
                             {byPos[pos].map(p => (
                               <div key={p.name} className="flex flex-col items-center gap-1.5">
                                 <div
-                                  className="relative overflow-hidden rounded-full flex items-center justify-center shrink-0"
-                                  style={{ width: 104, height: 104, background: 'var(--card)', border: '1px solid var(--border)' }}
+                                  className="relative overflow-hidden rounded-full flex items-center justify-center shrink-0 w-full aspect-square"
+                                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
                                 >
                                   {p.photo ? (
                                     <img

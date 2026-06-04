@@ -6,8 +6,8 @@ const csp = [
   "script-src 'self' 'unsafe-inline'",
   // Tailwind + React inline style props require 'unsafe-inline'
   "style-src 'self' 'unsafe-inline'",
-  // flagcdn.com: flag images on the advert/print pages; data: for any base64 images
-  "img-src 'self' data: https://flagcdn.com",
+  // flagcdn.com: flag images; thesportsdb.com: squad player photos; wikimedia.org: team hero images
+  "img-src 'self' data: https://flagcdn.com https://www.thesportsdb.com https://upload.wikimedia.org",
   // Google Fonts are self-hosted by Next.js at build time
   "font-src 'self'",
   // Local video files (.mp4) for prize easter eggs

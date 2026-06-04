@@ -12,7 +12,8 @@ export type AuditEvent =
   | 'participant_claimed'
   | 'tokens_generated'
   | 'company_reset'
-  | 'tournament_reset';
+  | 'tournament_reset'
+  | 'page_view';
 
 export async function writeAudit(
   event: AuditEvent,
