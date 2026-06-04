@@ -354,40 +354,96 @@ export default function ManageClient({ company: initialCompany }: { company: Com
 
         <div className="py-10 space-y-8">
 
-          {/* Actions + settings */}
-          <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Actions</p>
-            <div className="flex flex-wrap gap-3">
-              <button onClick={handleGenerateTokens} disabled={loading}
-                className="font-bold px-5 py-2 rounded-lg transition-opacity"
-                style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
-                {loading ? 'Working…' : 'Generate QR Codes'}
-              </button>
-              <a href={`/print?code=${company.code}`} target="_blank"
-                className="font-bold px-5 py-2 rounded-lg"
-                style={{ background: 'var(--green)', color: '#fff', fontSize: '0.9rem' }}>
-                Print Tickets ↗
-              </a>
-              <a href={`/advert?code=${company.code}`} target="_blank"
-                className="font-bold px-5 py-2 rounded-lg"
-                style={{ background: 'var(--border)', color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                Print Advert ↗
-              </a>
-              <a href={`/?code=${company.code}`} target="_blank"
-                className="font-bold px-5 py-2 rounded-lg"
-                style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', fontSize: '0.9rem' }}>
-                View Draw ↗
-              </a>
-              <button onClick={handleCopyLink}
-                className="font-bold px-5 py-2 rounded-lg transition-colors"
-                style={{ background: copied ? '#f0fdf4' : 'var(--bg)', color: copied ? '#166534' : 'var(--text-muted)', border: `1px solid ${copied ? '#bbf7d0' : 'var(--border)'}`, fontSize: '0.9rem' }}>
-                {copied ? 'Copied!' : 'Copy Link'}
-              </button>
+          {/* Workflow — numbered step cards */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Setup steps</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+
+              {/* Step 1 */}
+              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                    style={{ background: '#4D10C8', color: '#fff' }}>1</span>
+                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Generate QR codes</h3>
+                </div>
+                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                  Create a unique claim link for each of the 48 nations. Do this once, before printing.
+                </p>
+                <button onClick={handleGenerateTokens} disabled={loading}
+                  className="font-bold px-4 py-2 rounded-lg text-sm transition-opacity mt-1"
+                  style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1 }}>
+                  {loading ? 'Working…' : 'Generate →'}
+                </button>
+              </div>
+
+              {/* Step 2 */}
+              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                    style={{ background: '#4D10C8', color: '#fff' }}>2</span>
+                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
+                </div>
+                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                  Print and cut up the QR-coded tickets ready to fold and draw from a hat.
+                </p>
+                <a href={`/print?code=${company.code}`} target="_blank"
+                  className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
+                  style={{ background: 'var(--green)', color: '#fff', display: 'block' }}>
+                  Print tickets ↗
+                </a>
+              </div>
+
+              {/* Step 3 */}
+              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                    style={{ background: '#4D10C8', color: '#fff' }}>3</span>
+                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print advert</h3>
+                </div>
+                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                  An A4 poster with the sweep details and a QR code so latecomers can find the page.
+                </p>
+                <a href={`/advert?code=${company.code}`} target="_blank"
+                  className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
+                  style={{ background: 'var(--border)', color: 'var(--text-primary)', display: 'block' }}>
+                  Print advert ↗
+                </a>
+              </div>
+
+              {/* Step 4 */}
+              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                    style={{ background: '#4D10C8', color: '#fff' }}>4</span>
+                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Share the sweep</h3>
+                </div>
+                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                  Send everyone the link so they can follow live standings and results.
+                </p>
+                <div className="flex gap-2 mt-1">
+                  <button onClick={handleCopyLink}
+                    className="flex-1 font-bold px-3 py-2 rounded-lg text-sm transition-colors"
+                    style={{ background: copied ? '#f0fdf4' : 'var(--bg)', color: copied ? '#166534' : 'var(--text-muted)', border: `1px solid ${copied ? '#bbf7d0' : 'var(--border)'}` }}>
+                    {copied ? 'Copied!' : 'Copy link'}
+                  </button>
+                  <a href={`/?code=${company.code}`} target="_blank"
+                    className="flex-1 font-bold px-3 py-2 rounded-lg text-sm text-center"
+                    style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                    View ↗
+                  </a>
+                </div>
+              </div>
+
             </div>
+          </div>
+
+          {/* Settings */}
+          <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Settings</p>
 
             {/* Company name */}
-            <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Company Name</p>
+            <div className="flex flex-wrap gap-2 items-end mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Group name</p>
               <input value={companyName} onChange={e => setCompanyName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleSaveName()}
                 style={{ flex: '1 1 180px', minWidth: 0, ...smallInputStyle }} />
@@ -398,9 +454,30 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               </button>
             </div>
 
+            {/* Ticket price */}
+            <div className="flex flex-wrap gap-2 items-end mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Entry fee per ticket</p>
+              <div className="flex items-center gap-1 flex-shrink-0"
+                style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
+                <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
+                <input type="number" min="0" step="0.01" placeholder="0.00" value={ticketPrice}
+                  onChange={e => setTicketPrice(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
+                  style={{ background: 'transparent', border: 'none', outline: 'none', width: '5rem', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
+              </div>
+              <button onClick={handleSaveTicketPrice} disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
+                {priceSaved ? 'Saved ✓' : 'Save'}
+              </button>
+              <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                Used to calculate prize amounts on the sweep page (48 tickets × fee × split).
+              </p>
+            </div>
+
             {/* Change password */}
-            <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Change Password</p>
+            <div className="flex flex-wrap gap-2 items-end mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Change password</p>
               <PasswordInput
                 value={newPw}
                 onChange={v => { setNewPw(v); setPwError(''); }}
@@ -425,30 +502,9 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               {pwError && <p className="w-full text-xs mt-1" style={{ color: '#ef4444' }}>{pwError}</p>}
             </div>
 
-            {/* Ticket price */}
-            <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Ticket Price</p>
-              <div className="flex items-center gap-1 flex-shrink-0"
-                style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
-                <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
-                <input type="number" min="0" step="0.01" placeholder="0.00" value={ticketPrice}
-                  onChange={e => setTicketPrice(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
-                  style={{ background: 'transparent', border: 'none', outline: 'none', width: '5rem', color: 'var(--text-primary)', fontSize: '0.875rem' }} />
-              </div>
-              <button onClick={handleSaveTicketPrice} disabled={loading}
-                className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
-                style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
-                {priceSaved ? 'Saved ✓' : 'Save'}
-              </button>
-              <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                Sets prize amounts shown on the draw page (48 tickets × price × split).
-              </p>
-            </div>
-
             {/* Mystery prize visibility */}
-            <div className="mt-4 pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Mystery Prizes</p>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Mystery prizes</p>
               <div className="flex flex-wrap gap-2">
                 {(['most_own_goals', 'bicycle'] as const).map(slug => {
                   const label = slug === 'most_own_goals' ? '😬 Oooops' : '🤸 The Bicycle';
