@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, setCompanyAdminPassword, updateCompany } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
+import { writeAudit } from '@/lib/audit';
+import { getIp } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest) {
   const denied = requireAdmin(req);
@@ -16,6 +18,7 @@ export async function POST(req: NextRequest) {
   if (!code?.trim() || !name?.trim()) return NextResponse.json({ error: 'code and name required' }, { status: 400 });
   try {
     const company = await createCompany(code.trim(), name.trim());
+    await writeAudit('company_created', { actor: 'admin', companyId: company.id, details: { code: company.code, name: company.name }, ip: getIp(req) });
     return NextResponse.json({ ok: true, company });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -43,6 +46,7 @@ export async function PATCH(req: NextRequest) {
   }
   if (name?.trim() || code?.trim()) {
     const updated = await updateCompany(id, { name: name?.trim(), code: code?.trim() });
+    await writeAudit('company_updated', { actor: 'admin', companyId: id, details: { name: name?.trim(), code: code?.trim() }, ip: getIp(req) });
     return NextResponse.json({ ok: true, company: updated });
   }
   return NextResponse.json({ ok: true });
@@ -54,5 +58,6 @@ export async function DELETE(req: NextRequest) {
   const id = Number(req.nextUrl.searchParams.get('id'));
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   await deleteCompany(id);
+  await writeAudit('company_deleted', { actor: 'admin', companyId: id, ip: getIp(req) });
   return NextResponse.json({ ok: true });
 }

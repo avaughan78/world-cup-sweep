@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createCompany, setCompanyAdminPassword, getCompanyByCode } from '@/lib/db';
 import { checkRateLimit, getIp } from '@/lib/rate-limit';
+import { writeAudit } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
   if (!checkRateLimit(`create-company:${getIp(req)}`, 3, 60 * 60 * 1000)) {
@@ -24,8 +25,10 @@ export async function POST(req: NextRequest) {
   const existing = await getCompanyByCode(trimmedCode);
   if (existing) return NextResponse.json({ error: 'That code is already taken — try another' }, { status: 409 });
 
+  const ip = getIp(req);
   const company = await createCompany(trimmedCode, trimmedName);
   await setCompanyAdminPassword(company.id, trimmedPw);
+  await writeAudit('sweep_created', { actor: trimmedCode, companyId: company.id, details: { name: trimmedName }, ip });
 
   return NextResponse.json({ ok: true, company });
 }

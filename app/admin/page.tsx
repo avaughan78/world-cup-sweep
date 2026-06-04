@@ -562,6 +562,7 @@ export default function AdminPage() {
             <h1 className="text-3xl sm:text-5xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>Admin</h1>
             <div className="flex items-center gap-4">
               <ThemeToggle />
+              <a href="/admin/audit" className="text-sm" style={{ color: 'var(--text-muted)' }}>Audit log</a>
               <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
               <button
                 type="button"

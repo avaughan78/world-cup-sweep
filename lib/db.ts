@@ -378,3 +378,27 @@ export async function getLastSync(syncType: string): Promise<string | null> {
   `;
   return (rows[0]?.created_at as string) ?? null;
 }
+
+// ── Audit log ─────────────────────────────────────────────────────────────────
+
+export interface AuditEntry {
+  id: number;
+  event: string;
+  actor: string | null;
+  company_id: number | null;
+  company_name: string | null;
+  details: Record<string, unknown> | null;
+  ip: string | null;
+  created_at: string;
+}
+
+export async function listAuditLogs(limit = 200): Promise<AuditEntry[]> {
+  const rows = await sql`
+    SELECT a.id, a.event, a.actor, a.company_id, c.name AS company_name, a.details, a.ip, a.created_at
+    FROM audit_log a
+    LEFT JOIN companies c ON c.id = a.company_id
+    ORDER BY a.created_at DESC
+    LIMIT ${limit}
+  `;
+  return rows as AuditEntry[];
+}

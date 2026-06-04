@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getParticipantByToken, claimTeam } from '@/lib/db';
 import { checkRateLimit, getIp } from '@/lib/rate-limit';
+import { writeAudit } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req);
@@ -18,5 +19,10 @@ export async function POST(req: NextRequest) {
   if (!participant) return NextResponse.json({ error: 'Invalid token' }, { status: 404 });
 
   await claimTeam(token, trimmed);
+  await writeAudit('participant_claimed', {
+    actor: trimmed,
+    details: { team: participant.team_name, company: participant.company_code },
+    ip,
+  });
   return NextResponse.json({ ok: true, team: participant.team_name, name: trimmed, company_code: participant.company_code });
 }
