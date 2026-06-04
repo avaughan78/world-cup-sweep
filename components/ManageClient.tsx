@@ -418,11 +418,6 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                   style={{ background: 'var(--green)', color: '#fff', display: 'block' }}>
                   Print tickets ↗
                 </a>
-                <a href={`/register?code=${company.code}`} target="_blank"
-                  className="font-bold px-4 py-2 rounded-lg text-sm text-center"
-                  style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', display: 'block' }}>
-                  Print draw register ↗
-                </a>
               </div>
 
               {/* Step 4 */}
