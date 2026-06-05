@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { error } = await resend.emails.send({
-    from: 'WC26 Sweep <onboarding@resend.dev>',
+    from: 'WC26 Sweep <hello@puntandprominence.co.uk>',
     to: 'avaughan78@gmail.com',
     replyTo: trimmedEmail,
     subject: `Bug report / help request — WC26 Sweep${company_code ? ` (${company_code})` : ''}`,
