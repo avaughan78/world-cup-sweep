@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error }, { status: 401 });
   }
 
-  const token = createManageSession(result.company.id);
+  const token = await createManageSession(result.company.id);
   await writeAudit('company_login_ok', { actor: result.company.code, companyId: result.company.id, ip });
   const res = NextResponse.json({ ok: true, company: result.company });
   res.headers.set('Set-Cookie', `${MANAGE_COOKIE}=${token}; ${COOKIE_OPTS}`);

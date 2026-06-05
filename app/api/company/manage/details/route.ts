@@ -3,7 +3,7 @@ import { updateCompany, setCompanyAdminPassword } from '@/lib/db';
 import { requireManage } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest) {
-  const auth = requireManage(req);
+  const auth = await requireManage(req);
   if (auth instanceof NextResponse) return auth;
   const { name, new_password } = await req.json() as { name?: string; new_password?: string };
 

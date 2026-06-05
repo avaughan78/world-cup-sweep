@@ -4,7 +4,7 @@ import { setPrizeOverride } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const company_id = req.nextUrl.searchParams.get('company_id');
   if (!company_id) return NextResponse.json({ error: 'company_id required' }, { status: 400 });
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const body = await req.json() as { company_id?: number; slug?: string; hidden?: boolean };
   if (!body.company_id || !body.slug) {

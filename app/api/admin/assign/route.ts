@@ -3,7 +3,7 @@ import { adminSetParticipant } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const { company_id, team_name, participant_name } = await req.json() as {
     company_id?: number; team_name?: string; participant_name?: string;

@@ -3,7 +3,7 @@ import { runSync } from '@/lib/run-sync';
 import { requireAdmin } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const result = await runSync();
   return NextResponse.json(result);

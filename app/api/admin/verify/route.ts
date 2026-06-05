@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
   }
 
-  const token = createAdminSession();
+  const token = await createAdminSession();
   await writeAudit('admin_login_ok', { actor: 'admin', ip });
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', `${ADMIN_COOKIE}=${token}; ${COOKIE_OPTS}`);

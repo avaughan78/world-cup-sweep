@@ -3,7 +3,7 @@ import { setCompanyTicketPrice } from '@/lib/db';
 import { requireManage } from '@/lib/auth';
 
 export async function PATCH(req: NextRequest) {
-  const auth = requireManage(req);
+  const auth = await requireManage(req);
   if (auth instanceof NextResponse) return auth;
   const { ticket_price } = await req.json() as { ticket_price?: number | null };
   const price = ticket_price != null && ticket_price > 0 ? ticket_price : null;

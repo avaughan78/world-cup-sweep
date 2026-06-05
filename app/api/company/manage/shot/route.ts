@@ -11,7 +11,7 @@ function safeUrl(val: string | undefined): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = requireManage(req);
+  const auth = await requireManage(req);
   if (auth instanceof NextResponse) return auth;
   const { team_name, value_label, notes } = await req.json() as {
     team_name?: string; value_label?: string; notes?: string;

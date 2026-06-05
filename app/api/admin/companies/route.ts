@@ -5,14 +5,14 @@ import { writeAudit } from '@/lib/audit';
 import { getIp } from '@/lib/rate-limit';
 
 export async function GET(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const companies = await listCompanies();
   return NextResponse.json({ companies });
 }
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const { code, name } = await req.json() as { code?: string; name?: string };
   if (!code?.trim() || !name?.trim()) return NextResponse.json({ error: 'code and name required' }, { status: 400 });
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const { id, ticket_price, admin_password, name, code } = await req.json() as {
     id?: number; ticket_price?: number | null; admin_password?: string; name?: string; code?: string;
@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const id = Number(req.nextUrl.searchParams.get('id'));
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });

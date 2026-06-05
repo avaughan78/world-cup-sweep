@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const body = await req.json() as { slug?: string; hidden?: boolean };
   if (!body.slug) return NextResponse.json({ error: 'slug required' }, { status: 400 });

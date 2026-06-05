@@ -5,7 +5,7 @@ import { writeAudit } from '@/lib/audit';
 import { getIp } from '@/lib/rate-limit';
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const { company_id } = await req.json() as { company_id?: number };
   if (!company_id) return NextResponse.json({ error: 'company_id required' }, { status: 400 });

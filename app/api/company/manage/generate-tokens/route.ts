@@ -5,7 +5,7 @@ import { checkRateLimit, getIp } from '@/lib/rate-limit';
 import { writeAudit } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
-  const auth = requireManage(req);
+  const auth = await requireManage(req);
   if (auth instanceof NextResponse) return auth;
   if (!checkRateLimit(`gen-tokens:${auth.companyId}`, 3, 60 * 60 * 1000)) {
     return NextResponse.json({ ok: false, error: 'Token generation rate limited — wait an hour before regenerating' }, { status: 429 });

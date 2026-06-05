@@ -12,7 +12,7 @@ function safeUrl(val: string | undefined): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const body = await req.json() as { team_name?: string; value_label?: string; notes?: string };
   const companies = await sql`SELECT id FROM companies`;

@@ -3,7 +3,7 @@ import sql from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 
 export async function GET(req: NextRequest) {
-  const denied = requireAdmin(req);
+  const denied = await requireAdmin(req);
   if (denied) return denied;
   const rows = await sql`
     SELECT DISTINCT ON (category) category, team_name, value_label, notes
