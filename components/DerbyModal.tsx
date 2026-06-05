@@ -7,16 +7,12 @@ export default function DerbyModal() {
 
   return (
     <>
-      <span>
-        The{' '}
-        <span
-          onClick={() => setOpen(true)}
-          style={{ cursor: 'pointer', borderBottom: '1px dotted currentColor' }}
-          title="Read the story"
-        >
-          Derby County
-        </span>
-        {' '}Award
+      <span
+        onClick={() => setOpen(true)}
+        style={{ cursor: 'pointer', borderBottom: '1px dotted currentColor' }}
+        title="Read the story"
+      >
+        Derby County
       </span>
 
       {open && (
@@ -40,20 +36,20 @@ export default function DerbyModal() {
             {/* Header */}
             <div
               className="px-6 pt-6 pb-5"
-              style={{ background: 'linear-gradient(135deg, #1c3f6e 0%, #ffffff 50%, #1c3f6e 100%)' }}
+              style={{ background: 'linear-gradient(135deg, #4D10C8 0%, #D40100 100%)' }}
             >
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Close"
                 className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full font-bold text-sm"
-                style={{ background: 'rgba(28,63,110,0.2)', color: '#1c3f6e', border: '1px solid rgba(28,63,110,0.3)' }}
+                style={{ background: 'rgba(255,255,255,0.15)', color: '#fff', border: '1px solid rgba(255,255,255,0.25)' }}
               >
                 ✕
               </button>
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(28,63,110,0.7)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'rgba(255,255,255,0.65)' }}>
                 🪣 Premier League · 2007–08
               </p>
-              <h2 className="text-2xl font-black tracking-tight" style={{ color: '#1c3f6e' }}>
+              <h2 className="text-2xl font-black tracking-tight" style={{ color: '#fff' }}>
                 Derby County — 2008
               </h2>
             </div>
