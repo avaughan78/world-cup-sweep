@@ -84,6 +84,11 @@ async function wikiData(title: string): Promise<{ image: string | null; extract:
   }
 }
 
+type SquadRow = { name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null };
+
+// Prevents stampede: concurrent requests for the same uncached team share one API fetch
+const inflight = new Map<string, Promise<SquadRow[]>>();
+
 export async function GET(req: NextRequest) {
   const teamParam = req.nextUrl.searchParams.get('team');
   if (!teamParam) return NextResponse.json({ error: 'Missing team' }, { status: 400 });
@@ -164,10 +169,8 @@ export async function GET(req: NextRequest) {
     }));
   }
 
-  type SquadRow = { name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null };
-
   async function fetchSquad(): Promise<SquadRow[]> {
-    // ── Cache hit ─────────────────────────────────────────────────────────────
+    // ── DB cache hit ──────────────────────────────────────────────────────────
     const cached = await getSquadCache(team);
     if (cached) {
       console.log(`[team-info] squad cache hit for "${team}" (${cached.length} players)`);
@@ -177,8 +180,13 @@ export async function GET(req: NextRequest) {
       }));
     }
 
-    // ── Cache miss: fetch from football-data.org + TheSportsDB ────────────────
-    const apiKey = process.env.FOOTBALL_DATA_API_KEY;
+    // ── Stampede guard: join any in-flight fetch for the same team ─────────────
+    const existing = inflight.get(team);
+    if (existing) return existing;
+
+    // ── Cache miss: start fetch, register promise so concurrent requests join it ──
+    const fetchPromise = (async (): Promise<SquadRow[]> => {
+      const apiKey = process.env.FOOTBALL_DATA_API_KEY;
     if (!apiKey) { console.warn('[team-info] No FOOTBALL_DATA_API_KEY'); return []; }
     try {
       const season = process.env.FOOTBALL_SEASON ?? '2026';
@@ -270,6 +278,10 @@ export async function GET(req: NextRequest) {
       console.error('[team-info] fetchSquad error:', err);
     }
     return [];
+    })().finally(() => inflight.delete(team));
+
+    inflight.set(team, fetchPromise);
+    return fetchPromise;
   }
 
   // Run country data + Wikipedia extract + squad fetch in parallel

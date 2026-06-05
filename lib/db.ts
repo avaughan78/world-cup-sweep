@@ -109,16 +109,13 @@ export async function createCompany(code: string, name: string): Promise<Company
     INSERT INTO companies (code, name) VALUES (UPPER(${code}), ${name}) RETURNING id, code, name
   `;
   const company = rows[0] as Company;
-  // Seed all 48 teams as empty participant slots
-  for (const teams of Object.values(GROUPS_2026)) {
-    for (const team of teams) {
-      await sql`
-        INSERT INTO participants (company_id, team_name)
-        VALUES (${company.id}, ${team})
-        ON CONFLICT (company_id, team_name) DO NOTHING
-      `;
-    }
-  }
+  // Seed all 48 teams in one query via unnest (was 48 sequential round-trips)
+  const allTeams = Object.values(GROUPS_2026).flat();
+  await sql`
+    INSERT INTO participants (company_id, team_name)
+    SELECT ${company.id}, unnest(${allTeams}::text[])
+    ON CONFLICT (company_id, team_name) DO NOTHING
+  `;
   return company;
 }
 
@@ -162,16 +159,12 @@ export async function getParticipantsWithTokens(companyId: number): Promise<(Par
 }
 
 export async function generateClaimTokens(companyId: number) {
-  const rows = await sql`
-    SELECT team_name FROM participants WHERE company_id = ${companyId} AND claim_token IS NULL
+  // Single UPDATE — gen_random_uuid() produces a distinct UUID per row (was 48 sequential updates)
+  await sql`
+    UPDATE participants
+    SET claim_token = gen_random_uuid()::text
+    WHERE company_id = ${companyId} AND claim_token IS NULL
   `;
-  for (const row of rows) {
-    const token = crypto.randomUUID();
-    await sql`
-      UPDATE participants SET claim_token = ${token}
-      WHERE company_id = ${companyId} AND team_name = ${row.team_name}
-    `;
-  }
   const all = await sql`
     SELECT COUNT(*) as n FROM participants WHERE company_id = ${companyId} AND claim_token IS NOT NULL
   `;
