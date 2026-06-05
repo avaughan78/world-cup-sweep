@@ -37,7 +37,7 @@ const WIKI_IMAGE_TITLE: Record<string, string> = {
   'Austria':       'Vienna',
   'Panama':        'Panama City',
   'Ghana':         'Accra',
-  'Uzbekistan':    'Tashent',
+  'Uzbekistan':    'Tashkent',
   'Iraq':          'Baghdad',
   'New Zealand':   'Auckland',
   'Cape Verde':    'Praia',
@@ -317,7 +317,7 @@ export async function GET(req: NextRequest) {
     : [];
 
   const hasPhotos = squad.some(p => p.photo !== null);
-  const cacheControl = hasPhotos
+  const cacheControl = (hasPhotos && wikiImage)
     ? 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
     : 'no-store';
 

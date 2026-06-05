@@ -41,8 +41,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     getGroupStandings(),
   ]);
 
-  // Fire-and-forget — never blocks render
-  void writeAudit('page_view', { actor: company.code, companyId: company.id, ip });
 
   const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
 
