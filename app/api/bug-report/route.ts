@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { checkRateLimit, getIp } from '@/lib/rate-limit';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(req: NextRequest) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   if (!checkRateLimit(`bug-report:${getIp(req)}`, 3, 60 * 60 * 1000)) {
     return NextResponse.json({ error: 'Too many submissions — try again later' }, { status: 429 });
   }
