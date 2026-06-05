@@ -317,25 +317,33 @@ export default function AdminPage() {
     let remaining = 999;
     let fetched = 0;
     let lastTeam = '';
-    let stalled = 0;
+    const skipped = new Set<string>();
     try {
       while (remaining > 0) {
         const res = await fetch('/api/admin/prewarm-squads', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({}),
+          body: JSON.stringify({ skipTeams: [...skipped] }),
         });
         const { ok, data } = await parseResponse(res);
         const d = data as Record<string, unknown> | null;
         if (!ok || !d) { setStatus({ ok: false, message: 'Pre-warm request failed' }); break; }
-        if (d.done) { setStatus({ ok: true, message: `All squad photos are cached.` }); break; }
+        if (d.done) {
+          const skippedNote = skipped.size ? ` (${skipped.size} team${skipped.size !== 1 ? 's' : ''} skipped — retry later)` : '';
+          setStatus({ ok: true, message: `Done — all teams processed.${skippedNote}` });
+          break;
+        }
         remaining = (d.remaining as number) ?? 0;
         const thisTeam = d.team as string;
-        if (thisTeam === lastTeam) { stalled++; } else { stalled = 0; }
-        if (stalled >= 2) { setStatus({ ok: false, message: `Stalled on ${thisTeam} — TheSportsDB may be rate limiting. Try again in a few minutes.` }); break; }
+        // If we got the same team again it didn't improve — skip it and continue
+        if (thisTeam === lastTeam) {
+          skipped.add(thisTeam);
+          setStatus({ ok: true, message: `Pre-warming… skipping ${thisTeam} (low coverage), trying next — ${remaining} remaining` });
+        } else {
+          fetched++;
+          setStatus({ ok: true, message: `Pre-warming… fetched ${fetched} team${fetched !== 1 ? 's' : ''} — ${remaining} remaining (${thisTeam}: ${d.photos}/${d.players} photos)` });
+        }
         lastTeam = thisTeam;
-        fetched++;
-        setStatus({ ok: true, message: `Pre-warming… fetched ${fetched} team${fetched !== 1 ? 's' : ''} — ${remaining} remaining (${thisTeam}: ${d.photos}/${d.players} photos)` });
         if (remaining === 0) { setStatus({ ok: true, message: `Done — all ${fetched} teams pre-warmed.` }); break; }
       }
     } catch (e) {

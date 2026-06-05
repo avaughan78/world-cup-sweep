@@ -59,15 +59,17 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
   if (!apiKey) return NextResponse.json({ error: 'FOOTBALL_DATA_API_KEY not set' }, { status: 500 });
 
-  const body = await req.json().catch(() => ({})) as { team?: string; force?: boolean };
+  const body = await req.json().catch(() => ({})) as { team?: string; force?: boolean; skipTeams?: string[] };
 
   // Pick the team to process: explicit request or next uncached team
   const COVERAGE_THRESHOLD = 0.75;
+  const skipSet = new Set(body.skipTeams ?? []);
 
   let team: string | null = body.team ?? null;
   if (!team || body.force) {
-    // Find first team below the coverage threshold
+    // Find first team below the coverage threshold that isn't in the skip list
     for (const t of ALL_TEAMS) {
+      if (skipSet.has(t)) continue;
       const cached = await getSquadCache(t);
       const players = cached?.length ?? 0;
       const photos = cached?.filter(p => p.photo_url).length ?? 0;
@@ -146,9 +148,22 @@ export async function POST(req: NextRequest) {
     club_badge_url: infos[i].idTeam ? (badgeMap.get(infos[i].idTeam!) ?? null) : null,
   }));
 
-  await setSquadCache(team, enriched);
+  // Merge with existing cache: keep old photo/club if new fetch got nothing for that player
+  const existingCache = await getSquadCache(team);
+  const existingMap = new Map(existingCache?.map(p => [p.player_name, p]) ?? []);
+  const merged = enriched.map(p => {
+    const old = existingMap.get(p.player_name);
+    return {
+      ...p,
+      photo_url:     p.photo_url     ?? old?.photo_url     ?? null,
+      club:          p.club          ?? old?.club          ?? null,
+      club_badge_url: p.club_badge_url ?? old?.club_badge_url ?? null,
+    };
+  });
 
-  const photoCount = enriched.filter(p => p.photo_url).length;
+  await setSquadCache(team, merged);
+
+  const photoCount = merged.filter(p => p.photo_url).length;
 
   // Count remaining teams below coverage threshold
   let remaining = 0;
