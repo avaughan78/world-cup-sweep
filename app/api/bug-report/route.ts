@@ -17,8 +17,8 @@ export async function POST(req: NextRequest) {
   const trimmedEmail = email?.trim();
   const trimmedDesc = description?.trim();
 
-  if (!trimmedEmail || !trimmedDesc) {
-    return NextResponse.json({ error: 'Email and description are required' }, { status: 400 });
+  if (!trimmedDesc) {
+    return NextResponse.json({ error: 'Description is required' }, { status: 400 });
   }
   if (trimmedDesc.length > 1000) {
     return NextResponse.json({ error: 'Description too long' }, { status: 400 });
@@ -27,10 +27,10 @@ export async function POST(req: NextRequest) {
   const { error } = await resend.emails.send({
     from: 'WC26 Sweep <hello@puntandprominence.co.uk>',
     to: 'avaughan78@gmail.com',
-    replyTo: trimmedEmail,
+    ...(trimmedEmail ? { replyTo: trimmedEmail } : {}),
     subject: `Bug report / help request — WC26 Sweep${company_code ? ` (${company_code})` : ''}`,
     text: [
-      `From: ${trimmedEmail}`,
+      trimmedEmail ? `From: ${trimmedEmail}` : 'From: (no email provided)',
       company_code ? `Sweep: ${company_code}` : '',
       '',
       trimmedDesc,
