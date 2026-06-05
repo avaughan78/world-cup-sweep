@@ -428,14 +428,14 @@ export default function TeamModal({ team, participant, onClose }: {
                                 <div className="flex flex-col items-center gap-0.5 w-full px-0.5">
                                   <p
                                     className="text-center leading-tight w-full truncate"
-                                    style={{ color: 'var(--text-muted)', fontSize: '0.68rem' }}
+                                    style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}
                                     title={p.name}
                                   >
                                     {p.name.split(' ').slice(0, -1).join(' ') || p.name}
                                   </p>
                                   <p
                                     className="text-center font-bold leading-tight w-full truncate"
-                                    style={{ color: 'var(--text-primary)', fontSize: '0.8rem' }}
+                                    style={{ color: 'var(--text-primary)', fontSize: '0.92rem' }}
                                     title={p.name}
                                   >
                                     {p.name.split(' ').slice(-1)[0]}
