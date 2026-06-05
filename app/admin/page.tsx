@@ -311,18 +311,27 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function handlePrewarmSquads(force = false) {
+  async function handlePrewarmSquads() {
     setLoading(true);
-    setStatus(null);
+    setStatus({ ok: true, message: 'Starting squad photo pre-warm…' });
+    let remaining = 999;
+    let fetched = 0;
     try {
-      const res = await fetch('/api/admin/prewarm-squads', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ force }),
-      });
-      const { ok, data, raw } = await parseResponse(res);
-      const d = data as Record<string, unknown> | null;
-      setStatus({ ok, message: (d?.message as string) ?? raw });
+      while (remaining > 0) {
+        const res = await fetch('/api/admin/prewarm-squads', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({}),
+        });
+        const { ok, data } = await parseResponse(res);
+        const d = data as Record<string, unknown> | null;
+        if (!ok || !d) { setStatus({ ok: false, message: 'Pre-warm request failed' }); break; }
+        if (d.done) { setStatus({ ok: true, message: `All squad photos are cached.` }); break; }
+        remaining = (d.remaining as number) ?? 0;
+        fetched++;
+        setStatus({ ok: true, message: `Pre-warming… fetched ${fetched} team${fetched !== 1 ? 's' : ''} — ${remaining} remaining (${d.team}: ${d.photos}/${d.players} photos)` });
+        if (remaining === 0) { setStatus({ ok: true, message: `Done — all ${fetched} teams pre-warmed.` }); break; }
+      }
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
     }
@@ -611,22 +620,13 @@ export default function AdminPage() {
                 {loading ? 'Working…' : 'Sync Now'}
               </button>
               <button
-                onClick={() => handlePrewarmSquads(false)}
+                onClick={handlePrewarmSquads}
                 disabled={loading}
                 className="font-bold px-5 py-2 rounded-lg transition-opacity"
                 style={{ background: 'var(--card)', color: 'var(--text-primary)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
                 title="Fetch squad photos for all teams that don't have them yet"
               >
-                {loading ? 'Working…' : 'Pre-warm Squad Photos'}
-              </button>
-              <button
-                onClick={() => { if (confirm('Re-fetch squad photos for ALL 48 teams, even those already cached?')) handlePrewarmSquads(true); }}
-                disabled={loading}
-                className="font-bold px-5 py-2 rounded-lg transition-opacity"
-                style={{ background: 'var(--card)', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
-                title="Force re-fetch squad photos for every team"
-              >
-                {loading ? 'Working…' : 'Force Refresh All Squads'}
+                {loading ? 'Pre-warming…' : 'Pre-warm Squad Photos'}
               </button>
               <button
                 onClick={handleResetStats}
