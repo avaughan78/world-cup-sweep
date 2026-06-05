@@ -322,7 +322,8 @@ export interface SquadPlayer {
   club_badge_url: string | null;
 }
 
-const SQUAD_CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const SQUAD_CACHE_TTL_MS       = 7 * 24 * 60 * 60 * 1000; // 7 days  (squad has photos)
+const SQUAD_CACHE_NO_PHOTO_TTL = 2 * 60 * 60 * 1000;       // 2 hours (no photos yet — retry soon)
 
 export async function getSquadCache(teamName: string): Promise<SquadPlayer[] | null> {
   try {
@@ -335,7 +336,9 @@ export async function getSquadCache(teamName: string): Promise<SquadPlayer[] | n
       const d = new Date(r.updated_at as string);
       return d < min ? d : min;
     }, new Date(rows[0].updated_at as string));
-    if (Date.now() - oldest.getTime() > SQUAD_CACHE_TTL_MS) return null;
+    const hasPhotos = rows.some(r => r.photo_url);
+    const ttl = hasPhotos ? SQUAD_CACHE_TTL_MS : SQUAD_CACHE_NO_PHOTO_TTL;
+    if (Date.now() - oldest.getTime() > ttl) return null;
     return rows as SquadPlayer[];
   } catch {
     return null;
@@ -346,12 +349,18 @@ export async function setSquadCache(teamName: string, squad: SquadPlayer[]): Pro
   if (!squad.length) return;
   try {
     await sql`DELETE FROM squad_cache WHERE team_name = ${teamName}`;
-    for (const p of squad) {
-      await sql`
-        INSERT INTO squad_cache (team_name, player_name, position, shirt_number, photo_url, club, club_badge_url, updated_at)
-        VALUES (${teamName}, ${p.player_name}, ${p.position}, ${p.shirt_number}, ${p.photo_url}, ${p.club}, ${p.club_badge_url}, NOW())
-      `;
-    }
+    await sql`
+      INSERT INTO squad_cache (team_name, player_name, position, shirt_number, photo_url, club, club_badge_url, updated_at)
+      SELECT
+        ${teamName},
+        unnest(${squad.map(p => p.player_name)}::text[]),
+        unnest(${squad.map(p => p.position)}::text[]),
+        unnest(${squad.map(p => p.shirt_number)}::int[]),
+        unnest(${squad.map(p => p.photo_url)}::text[]),
+        unnest(${squad.map(p => p.club)}::text[]),
+        unnest(${squad.map(p => p.club_badge_url)}::text[]),
+        NOW()
+    `;
   } catch (err) {
     console.error('[squad_cache] write error:', err);
   }
