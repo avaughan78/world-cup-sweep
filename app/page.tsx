@@ -92,14 +92,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
             backgroundPosition: 'center',
           }}
         >
-          <div className="px-6 sm:px-8 pt-5 pb-5">
+          <div className="px-6 sm:px-8 pt-3 pb-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 FIFA World Cup · 2026 · {company.name}
               </p>
               <HomeExitLink />
             </div>
-            <div className="flex items-end justify-between mt-1.5">
+            <div className="flex items-end justify-between mt-1">
               <div className="flex items-end gap-4">
                 <TrophyEasterEgg />
                 <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
