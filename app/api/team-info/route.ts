@@ -154,6 +154,18 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  async function fetchPlayerInfosBatched(names: string[]): Promise<PlayerInfo[]> {
+    const results: PlayerInfo[] = [];
+    const BATCH = 5;
+    for (let i = 0; i < names.length; i += BATCH) {
+      const batch = names.slice(i, i + BATCH);
+      const batchResults = await Promise.all(batch.map(fetchPlayerInfo));
+      results.push(...batchResults);
+      if (i + BATCH < names.length) await new Promise(r => setTimeout(r, 200));
+    }
+    return results;
+  }
+
   async function enrichWithBadges(
     sq: Array<{ name: string; position: string; shirtNumber: number | null }>,
     infos: PlayerInfo[]
@@ -240,7 +252,7 @@ export async function GET(req: NextRequest) {
         }));
         console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
         if (sq.length) {
-          const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
+          const infos = await fetchPlayerInfosBatched(sq.map(p => p.name));
           result = await enrichWithBadges(sq, infos);
         }
       } else {
