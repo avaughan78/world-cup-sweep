@@ -3,6 +3,7 @@ import Flag from './Flag';
 import TicketBadge from './TicketBadge';
 import VideoEasterEgg from './VideoEasterEgg';
 import SimunicModal from './SimunicModal';
+import DerbyModal from './DerbyModal';
 
 const MYSTERY_QS = [
   { top:  '4%', left: '38%', size: '1.3rem', opacity: 0.05, rotate:  '10deg' },
@@ -145,7 +146,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           {prizeAmount && <TicketBadge amount={prizeAmount} />}
         </div>
         <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
-          {prize.slug === 'most_cards' ? <SimunicModal /> : prize.name}
+          {prize.slug === 'most_cards' ? <SimunicModal /> : prize.slug === 'sieve' ? <DerbyModal /> : prize.name}
         </p>
         <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
           {prize.description}
