@@ -44,7 +44,8 @@ export async function GET(req: NextRequest) {
     return { team, players, photos, cached: players > 0 };
   }));
 
-  const done  = status.filter(s => s.photos > 0).length;
+  const COVERAGE_THRESHOLD = 0.75;
+  const done  = status.filter(s => s.players > 0 && s.photos / s.players >= COVERAGE_THRESHOLD).length;
   const total = ALL_TEAMS.length;
 
   return NextResponse.json({ done, total, remaining: total - done, teams: status });
@@ -61,13 +62,17 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({})) as { team?: string; force?: boolean };
 
   // Pick the team to process: explicit request or next uncached team
+  const COVERAGE_THRESHOLD = 0.75;
+
   let team: string | null = body.team ?? null;
   if (!team || body.force) {
-    // Find first team with no photos
+    // Find first team below the coverage threshold
     for (const t of ALL_TEAMS) {
       const cached = await getSquadCache(t);
-      const hasPhotos = cached?.some(p => p.photo_url) ?? false;
-      if (!hasPhotos) { team = t; break; }
+      const players = cached?.length ?? 0;
+      const photos = cached?.filter(p => p.photo_url).length ?? 0;
+      const belowThreshold = players === 0 || (players > 0 && photos / players < COVERAGE_THRESHOLD);
+      if (belowThreshold) { team = t; break; }
     }
   }
 
@@ -145,11 +150,13 @@ export async function POST(req: NextRequest) {
 
   const photoCount = enriched.filter(p => p.photo_url).length;
 
-  // Count remaining teams
+  // Count remaining teams below coverage threshold
   let remaining = 0;
   for (const t of ALL_TEAMS) {
     const cached = await getSquadCache(t);
-    if (!cached?.some(p => p.photo_url)) remaining++;
+    const players = cached?.length ?? 0;
+    const photos = cached?.filter(p => p.photo_url).length ?? 0;
+    if (players === 0 || photos / players < COVERAGE_THRESHOLD) remaining++;
   }
 
   return NextResponse.json({

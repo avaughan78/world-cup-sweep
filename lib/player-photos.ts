@@ -10,28 +10,39 @@ export type PlayerPhotoResult = {
   idTeam: string | null;
 };
 
+// TheSportsDB sometimes matches a lower-league namesake instead of the international.
+// Entries here skip TheSportsDB entirely and go straight to Wikipedia for the photo.
+// Club is set to the correct value.
+const PLAYER_OVERRIDE: Record<string, { club: string }> = {
+  'Reece James': { club: 'Chelsea' },
+};
+
 export async function fetchPlayerPhoto(name: string): Promise<PlayerPhotoResult> {
+  const override = PLAYER_OVERRIDE[name];
+
   // ── TheSportsDB first (clean cutout headshots) ────────────────────────────
-  try {
-    const res = await fetchWithTimeout(
-      `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`,
-      {},
-      4000
-    );
-    if (res.ok) {
-      const data = await res.json() as {
-        player?: Array<{ strThumb?: string; strCutout?: string; strTeam?: string; idTeam?: string }>;
-      };
-      const p = data?.player?.[0];
-      if (p?.strThumb || p?.strCutout) {
-        return {
-          photo: p.strThumb || p.strCutout || null,
-          club: p.strTeam || null,
-          idTeam: p.idTeam || null,
+  if (!override) {
+    try {
+      const res = await fetchWithTimeout(
+        `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`,
+        {},
+        4000
+      );
+      if (res.ok) {
+        const data = await res.json() as {
+          player?: Array<{ strThumb?: string; strCutout?: string; strTeam?: string; idTeam?: string }>;
         };
+        const p = data?.player?.[0];
+        if (p?.strThumb || p?.strCutout) {
+          return {
+            photo: p.strThumb || p.strCutout || null,
+            club: p.strTeam || null,
+            idTeam: p.idTeam || null,
+          };
+        }
       }
-    }
-  } catch { /* fall through to Wikipedia */ }
+    } catch { /* fall through to Wikipedia */ }
+  }
 
   // ── Wikipedia fallback ────────────────────────────────────────────────────
   // Try "{name}" and "{name} (footballer)" in one request
@@ -51,9 +62,9 @@ export async function fetchPlayerPhoto(name: string): Promise<PlayerPhotoResult>
       const image = pages
         .filter(p => !('missing' in p) && p.thumbnail?.source)
         .map(p => p.thumbnail!.source)[0] ?? null;
-      if (image) return { photo: image, club: null, idTeam: null };
+      if (image) return { photo: image, club: override?.club ?? null, idTeam: null };
     }
   } catch { /* ignore */ }
 
-  return { photo: null, club: null, idTeam: null };
+  return { photo: null, club: override?.club ?? null, idTeam: null };
 }
