@@ -86,8 +86,42 @@ async function wikiData(title: string): Promise<{ image: string | null; extract:
 
 type SquadRow = { name: string; position: string; shirtNumber: number | null; photo: string | null; club: string | null; clubBadge: string | null };
 
+type ApiTeamBasic = {
+  id: number; name: string; shortName: string;
+  squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
+};
+
+// Module-level cache for the WC teams list — fetched once per process, not per request.
+// The list of 48 WC teams doesn't change during the tournament.
+let wcTeamsCache: ApiTeamBasic[] | null = null;
+let wcTeamsCacheTime = 0;
+const WC_TEAMS_CACHE_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+async function getWcTeams(apiKey: string): Promise<ApiTeamBasic[]> {
+  if (wcTeamsCache && Date.now() - wcTeamsCacheTime < WC_TEAMS_CACHE_MS) {
+    return wcTeamsCache;
+  }
+  const season = process.env.FOOTBALL_SEASON ?? '2026';
+  const headers = { 'X-Auth-Token': apiKey };
+  let res = await fetchWithTimeout(`https://api.football-data.org/v4/competitions/WC/teams`, { headers, cache: 'no-store' });
+  if (!res.ok) {
+    res = await fetchWithTimeout(`https://api.football-data.org/v4/competitions/WC/teams?season=${season}`, { headers, cache: 'no-store' });
+  }
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`WC teams list failed: ${res.status} — ${body.slice(0, 200)}`);
+  }
+  const data = await res.json() as { teams: ApiTeamBasic[] };
+  wcTeamsCache = data.teams;
+  wcTeamsCacheTime = Date.now();
+  return data.teams;
+}
+
 // Prevents stampede: concurrent requests for the same uncached team share one API fetch
 const inflight = new Map<string, Promise<SquadRow[]>>();
+
+// Exported so the pre-warm endpoint can use the same fetch logic
+export { getWcTeams };
 
 export async function GET(req: NextRequest) {
   const teamParam = req.nextUrl.searchParams.get('team');
@@ -199,93 +233,71 @@ export async function GET(req: NextRequest) {
     // ── Cache miss: start fetch, register promise so concurrent requests join it ──
     const fetchPromise = (async (): Promise<SquadRow[]> => {
       const apiKey = process.env.FOOTBALL_DATA_API_KEY;
-    if (!apiKey) { console.warn('[team-info] No FOOTBALL_DATA_API_KEY'); return []; }
-    try {
-      const season = process.env.FOOTBALL_SEASON ?? '2026';
-      const headers = { 'X-Auth-Token': apiKey };
-      // Try without season param first — the WC teams endpoint returns 400 for seasons
-      // not yet registered (pre-tournament). Fall back to season param if needed.
-      let listRes = await fetchWithTimeout(
-        `https://api.football-data.org/v4/competitions/WC/teams`,
-        { headers, cache: 'no-store' }
-      );
-      if (!listRes.ok) {
-        listRes = await fetchWithTimeout(
-          `https://api.football-data.org/v4/competitions/WC/teams?season=${season}`,
-          { headers, cache: 'no-store' }
+      if (!apiKey) { console.warn('[team-info] No FOOTBALL_DATA_API_KEY'); return []; }
+      try {
+        const apiHeaders = { 'X-Auth-Token': apiKey };
+        const teams = await getWcTeams(apiKey);
+        const matched = teams.find(t =>
+          normaliseTeamName(t.name) === team ||
+          normaliseTeamName(t.shortName) === team ||
+          t.name.toLowerCase().includes(team.toLowerCase()) ||
+          team.toLowerCase().includes(t.name.toLowerCase())
         );
-      }
-      if (!listRes.ok) {
-        const body = await listRes.text().catch(() => '');
-        console.error(`[team-info] WC teams list failed: ${listRes.status} — ${body.slice(0, 200)}`);
-        return [];
-      }
-      type ApiTeamBasic = {
-        id: number; name: string; shortName: string;
-        squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
-      };
-      const listData = await listRes.json() as { teams: ApiTeamBasic[] };
-      const apiNames = listData.teams.map(t => t.name);
-      const matched = listData.teams.find(t =>
-        normaliseTeamName(t.name) === team ||
-        normaliseTeamName(t.shortName) === team ||
-        t.name.toLowerCase().includes(team.toLowerCase()) ||
-        team.toLowerCase().includes(t.name.toLowerCase())
-      );
-      if (!matched) {
-        console.warn(`[team-info] No match for "${team}" in API teams: ${apiNames.join(', ')}`);
-        return [];
-      }
-      console.log(`[team-info] "${team}" matched to API team "${matched.name}" (id ${matched.id})`);
-      const teamRes = await fetchWithTimeout(
-        `https://api.football-data.org/v4/teams/${matched.id}`,
-        { headers, cache: 'no-store' }
-      );
+        if (!matched) {
+          console.warn(`[team-info] No match for "${team}" in API teams: ${teams.map(t => t.name).join(', ')}`);
+          return [];
+        }
+        console.log(`[team-info] "${team}" matched to API team "${matched.name}" (id ${matched.id})`);
 
-      let result: SquadRow[] = [];
-      if (teamRes.ok) {
-        const teamData = await teamRes.json() as {
-          squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
-        };
-        const sq = (teamData.squad ?? []).map(p => ({
-          name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
-        }));
-        console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
-        if (sq.length) {
+        const teamRes = await fetchWithTimeout(
+          `https://api.football-data.org/v4/teams/${matched.id}`,
+          { headers: apiHeaders, cache: 'no-store' }
+        );
+
+        let result: SquadRow[] = [];
+        if (teamRes.ok) {
+          const teamData = await teamRes.json() as {
+            squad?: Array<{ name: string; position: string; shirtNumber?: number }>;
+          };
+          const sq = (teamData.squad ?? []).map(p => ({
+            name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
+          }));
+          console.log(`[team-info] /teams/${matched.id} squad: ${sq.length} players`);
+          if (sq.length) {
+            const infos = await fetchPlayerInfosBatched(sq.map(p => p.name));
+            result = await enrichWithBadges(sq, infos);
+          }
+        } else {
+          console.error(`[team-info] /teams/${matched.id} failed: ${teamRes.status}`);
+        }
+
+        if (!result.length && matched.squad?.length) {
+          console.log(`[team-info] Falling back to inline squad: ${matched.squad.length} players`);
+          const sq = matched.squad.map(p => ({
+            name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
+          }));
           const infos = await fetchPlayerInfosBatched(sq.map(p => p.name));
           result = await enrichWithBadges(sq, infos);
         }
-      } else {
-        console.error(`[team-info] /teams/${matched.id} failed: ${teamRes.status}`);
+
+        if (!result.length) {
+          console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
+          return [];
+        }
+
+        // ── Always persist to cache; TTL is shorter when photos are missing ──
+        const photoCount = result.filter(p => p.photo !== null).length;
+        await setSquadCache(team, result.map(p => ({
+          player_name: p.name, position: p.position, shirt_number: p.shirtNumber,
+          photo_url: p.photo, club: p.club, club_badge_url: p.clubBadge,
+        })));
+        console.log(`[team-info] squad cached for "${team}" (${result.length} players, ${photoCount} photos)`);
+
+        return result;
+      } catch (err) {
+        console.error('[team-info] fetchSquad error:', err);
       }
-
-      if (!result.length && matched.squad?.length) {
-        console.log(`[team-info] Falling back to inline squad: ${matched.squad.length} players`);
-        const sq = matched.squad.map(p => ({
-          name: p.name, position: p.position, shirtNumber: p.shirtNumber ?? null,
-        }));
-        const infos = await Promise.all(sq.map(p => fetchPlayerInfo(p.name)));
-        result = await enrichWithBadges(sq, infos);
-      }
-
-      if (!result.length) {
-        console.warn(`[team-info] Squad empty for "${team}" — API may not have WC 2026 squads yet`);
-        return [];
-      }
-
-      // ── Always persist to cache; TTL is shorter when photos are missing ──
-      const photoCount = result.filter(p => p.photo !== null).length;
-      await setSquadCache(team, result.map(p => ({
-        player_name: p.name, position: p.position, shirt_number: p.shirtNumber,
-        photo_url: p.photo, club: p.club, club_badge_url: p.clubBadge,
-      })));
-      console.log(`[team-info] squad cached for "${team}" (${result.length} players, ${photoCount} photos)`);
-
-      return result;
-    } catch (err) {
-      console.error('[team-info] fetchSquad error:', err);
-    }
-    return [];
+      return [];
     })().finally(() => inflight.delete(team));
 
     inflight.set(team, fetchPromise);
@@ -323,6 +335,11 @@ export async function GET(req: NextRequest) {
     ? Object.values(country.languages as Record<string, string>)
     : [];
 
+  const hasPhotos = squad.some(p => p.photo !== null);
+  const cacheControl = hasPhotos
+    ? 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
+    : 'no-store';
+
   return NextResponse.json({
     team,
     capital,
@@ -334,6 +351,6 @@ export async function GET(req: NextRequest) {
     wikiExtract,
     squad,
   }, {
-    headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' },
+    headers: { 'Cache-Control': cacheControl },
   });
 }

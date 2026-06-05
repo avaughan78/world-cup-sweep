@@ -322,8 +322,8 @@ export interface SquadPlayer {
   club_badge_url: string | null;
 }
 
-const SQUAD_CACHE_TTL_MS       = 7 * 24 * 60 * 60 * 1000; // 7 days  (squad has photos)
-const SQUAD_CACHE_NO_PHOTO_TTL = 2 * 60 * 60 * 1000;       // 2 hours (no photos yet — retry soon)
+const SQUAD_CACHE_TTL_MS       = 90 * 24 * 60 * 60 * 1000; // 90 days (squad has photos — essentially permanent for a tournament)
+const SQUAD_CACHE_NO_PHOTO_TTL =  2 * 60 * 60 * 1000;       // 2 hours (no photos yet — retry soon)
 
 export async function getSquadCache(teamName: string): Promise<SquadPlayer[] | null> {
   try {

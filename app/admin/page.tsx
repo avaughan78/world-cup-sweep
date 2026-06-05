@@ -311,6 +311,24 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function handlePrewarmSquads(force = false) {
+    setLoading(true);
+    setStatus(null);
+    try {
+      const res = await fetch('/api/admin/prewarm-squads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ force }),
+      });
+      const { ok, data, raw } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      setStatus({ ok, message: (d?.message as string) ?? raw });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
   async function handleResetStats() {
     if (!confirm('Clear all tournament stats, scores, and standings? This cannot be undone.')) return;
     setLoading(true);
@@ -591,6 +609,24 @@ export default function AdminPage() {
                 style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
                 {loading ? 'Working…' : 'Sync Now'}
+              </button>
+              <button
+                onClick={() => handlePrewarmSquads(false)}
+                disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                style={{ background: 'var(--card)', color: 'var(--text-primary)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                title="Fetch squad photos for all teams that don't have them yet"
+              >
+                {loading ? 'Working…' : 'Pre-warm Squad Photos'}
+              </button>
+              <button
+                onClick={() => { if (confirm('Re-fetch squad photos for ALL 48 teams, even those already cached?')) handlePrewarmSquads(true); }}
+                disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                style={{ background: 'var(--card)', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                title="Force re-fetch squad photos for every team"
+              >
+                {loading ? 'Working…' : 'Force Refresh All Squads'}
               </button>
               <button
                 onClick={handleResetStats}
