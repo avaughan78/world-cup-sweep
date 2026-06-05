@@ -95,7 +95,7 @@ export default function BugReport() {
                 <div className="space-y-3">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
-                      Your email <span style={{ color: 'var(--text-muted)', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span>
+                      Your email
                     </label>
                     <input
                       type="email"
@@ -126,12 +126,12 @@ export default function BugReport() {
                   )}
                   <button
                     onClick={handleSubmit}
-                    disabled={!description.trim() || status === 'sending'}
+                    disabled={!email.trim() || !description.trim() || status === 'sending'}
                     className="w-full font-bold py-2.5 rounded-xl transition-opacity"
                     style={{
                       background: '#4D10C8',
                       color: '#fff',
-                      opacity: (!description.trim() || status === 'sending') ? 0.4 : 1,
+                      opacity: (!email.trim() || !description.trim() || status === 'sending') ? 0.4 : 1,
                       fontSize: '0.95rem',
                     }}
                   >
