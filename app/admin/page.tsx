@@ -316,6 +316,8 @@ export default function AdminPage() {
     setStatus({ ok: true, message: 'Starting squad photo pre-warm…' });
     let remaining = 999;
     let fetched = 0;
+    let lastTeam = '';
+    let stalled = 0;
     try {
       while (remaining > 0) {
         const res = await fetch('/api/admin/prewarm-squads', {
@@ -328,8 +330,12 @@ export default function AdminPage() {
         if (!ok || !d) { setStatus({ ok: false, message: 'Pre-warm request failed' }); break; }
         if (d.done) { setStatus({ ok: true, message: `All squad photos are cached.` }); break; }
         remaining = (d.remaining as number) ?? 0;
+        const thisTeam = d.team as string;
+        if (thisTeam === lastTeam) { stalled++; } else { stalled = 0; }
+        if (stalled >= 2) { setStatus({ ok: false, message: `Stalled on ${thisTeam} — TheSportsDB may be rate limiting. Try again in a few minutes.` }); break; }
+        lastTeam = thisTeam;
         fetched++;
-        setStatus({ ok: true, message: `Pre-warming… fetched ${fetched} team${fetched !== 1 ? 's' : ''} — ${remaining} remaining (${d.team}: ${d.photos}/${d.players} photos)` });
+        setStatus({ ok: true, message: `Pre-warming… fetched ${fetched} team${fetched !== 1 ? 's' : ''} — ${remaining} remaining (${thisTeam}: ${d.photos}/${d.players} photos)` });
         if (remaining === 0) { setStatus({ ok: true, message: `Done — all ${fetched} teams pre-warmed.` }); break; }
       }
     } catch (e) {
