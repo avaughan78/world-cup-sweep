@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normaliseTeamName } from '@/lib/football-api';
 import { getSquadCache, setSquadCache } from '@/lib/db';
+import { fetchPlayerPhoto } from '@/lib/player-photos';
 
 // Map sweepstake names → REST Countries search name
 // England & Scotland are not sovereign states — map to United Kingdom for stats
@@ -153,26 +154,6 @@ export async function GET(req: NextRequest) {
 
   type PlayerInfo = { photo: string | null; club: string | null; idTeam: string | null };
 
-  async function fetchPlayerInfo(name: string): Promise<PlayerInfo> {
-    try {
-      const res = await fetchWithTimeout(
-        `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`,
-        {},
-        3000
-      );
-      if (!res.ok) return { photo: null, club: null, idTeam: null };
-      const data = await res.json() as { player?: Array<{ strThumb?: string; strCutout?: string; strTeam?: string; idTeam?: string }> };
-      const p = data?.player?.[0];
-      return {
-        photo: p?.strThumb || p?.strCutout || null,
-        club: p?.strTeam || null,
-        idTeam: p?.idTeam || null,
-      };
-    } catch {
-      return { photo: null, club: null, idTeam: null };
-    }
-  }
-
   async function fetchTeamBadge(idTeam: string): Promise<string | null> {
     try {
       const res = await fetchWithTimeout(
@@ -193,7 +174,7 @@ export async function GET(req: NextRequest) {
     const BATCH = 5;
     for (let i = 0; i < names.length; i += BATCH) {
       const batch = names.slice(i, i + BATCH);
-      const batchResults = await Promise.all(batch.map(fetchPlayerInfo));
+      const batchResults = await Promise.all(batch.map(fetchPlayerPhoto));
       results.push(...batchResults);
       if (i + BATCH < names.length) await new Promise(r => setTimeout(r, 200));
     }

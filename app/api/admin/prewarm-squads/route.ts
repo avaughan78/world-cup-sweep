@@ -3,6 +3,7 @@ import { requireAdmin } from '@/lib/auth';
 import { getSquadCache, setSquadCache } from '@/lib/db';
 import { normaliseTeamName } from '@/lib/football-api';
 import { GROUPS_2026 } from '@/lib/groups';
+import { fetchPlayerPhoto } from '@/lib/player-photos';
 
 const ALL_TEAMS = Object.values(GROUPS_2026).flat();
 
@@ -10,26 +11,6 @@ function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = 8000): Promi
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   return fetch(url, { ...opts, signal: controller.signal }).finally(() => clearTimeout(timer));
-}
-
-async function fetchPlayerInfo(name: string): Promise<{ photo: string | null; club: string | null; idTeam: string | null }> {
-  try {
-    const res = await fetchWithTimeout(
-      `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`,
-      {},
-      5000
-    );
-    if (!res.ok) return { photo: null, club: null, idTeam: null };
-    const data = await res.json() as { player?: Array<{ strThumb?: string; strCutout?: string; strTeam?: string; idTeam?: string }> };
-    const p = data?.player?.[0];
-    return {
-      photo: p?.strThumb || p?.strCutout || null,
-      club: p?.strTeam || null,
-      idTeam: p?.idTeam || null,
-    };
-  } catch {
-    return { photo: null, club: null, idTeam: null };
-  }
 }
 
 async function fetchTeamBadge(idTeam: string): Promise<string | null> {
@@ -137,12 +118,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, team, error: 'Empty squad from API' });
   }
 
-  // Fetch player photos sequentially with 500ms between each to avoid rate limiting
+  // Fetch player photos sequentially — 1500ms between each to stay under TheSportsDB
+  // free-tier rate limits. Falls back to Wikipedia if TheSportsDB returns nothing.
   const infos: Array<{ photo: string | null; club: string | null; idTeam: string | null }> = [];
   for (const player of squad) {
-    const info = await fetchPlayerInfo(player.name);
+    const info = await fetchPlayerPhoto(player.name);
     infos.push(info);
-    await delay(500);
+    await delay(1500);
   }
 
   // Resolve club badges
