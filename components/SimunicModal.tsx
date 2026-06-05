@@ -9,13 +9,12 @@ export default function SimunicModal() {
     <>
       <span>
         The{' '}
-        The{' '}
         <span
           onClick={() => setOpen(true)}
           style={{ cursor: 'pointer', borderBottom: '1px dotted currentColor' }}
           title="Read the story"
         >
-          Josip Simunic
+          Josip Šimunić
         </span>
         {' '}Award
       </span>
@@ -55,7 +54,7 @@ export default function SimunicModal() {
                 🟨 Germany 2006
               </p>
               <h2 className="text-2xl font-black tracking-tight" style={{ color: '#fff' }}>
-                Filthy Play
+                Josip Šimunić — 2006
               </h2>
             </div>
 
