@@ -56,10 +56,11 @@ export default function FootballPhysics() {
 
   function drop() {
     const c = s.current;
-    c.x   = window.innerWidth * 0.15 + Math.random() * window.innerWidth * 0.7;
-    c.y   = -SIZE;
-    c.vx  = (Math.random() - 0.5) * 4;
-    c.vy  = 0;
+    const fromLeft = Math.random() < 0.5;
+    c.x   = fromLeft ? -SIZE : window.innerWidth;
+    c.y   = window.innerHeight * (0.05 + Math.random() * 0.2);
+    c.vx  = fromLeft ? 7 + Math.random() * 5 : -(7 + Math.random() * 5);
+    c.vy  = 3 + Math.random() * 3;
     c.rot = 0;
     startLoop();
   }
