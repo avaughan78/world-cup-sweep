@@ -8,6 +8,9 @@ const mj = new Mailjet({
 const FROM_EMAIL = process.env.EMAIL_FROM_ADDRESS ?? 'noreply@wcsweep.dev';
 const FROM_NAME  = process.env.EMAIL_FROM_NAME    ?? 'WC26 Sweep';
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL
+  ?? (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : 'https://wcsweep.dev');
+
 export async function sendPasswordResetEmail({
   to,
   companyName,
@@ -27,50 +30,104 @@ export async function sendPasswordResetEmail({
         Subject: `Reset your WC26 Sweep password — ${companyCode}`,
         HTMLPart: `
 <!DOCTYPE html>
-<html>
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="font-family:system-ui,-apple-system,sans-serif;background:#0d0c0a;margin:0;padding:32px 16px;">
-  <div style="max-width:500px;margin:0 auto;">
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+</head>
+<body style="margin:0;padding:0;background:#0d0c0a;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0d0c0a;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="500" cellpadding="0" cellspacing="0" role="presentation" style="max-width:500px;width:100%;">
 
-    <!-- Header -->
-    <div style="background:linear-gradient(135deg,#4D10C8 0%,#8B1A1A 60%,#D40100 100%);border-radius:16px 16px 0 0;padding:32px 36px 28px;">
-      <p style="margin:0 0 6px;font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.55);">
-        FIFA World Cup · USA · Canada · Mexico · 2026
-      </p>
-      <p style="margin:0;font-size:32px;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.01em;">WC26 Sweep</p>
-      <p style="margin:6px 0 0;font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);">Organiser Admin · ${companyCode}</p>
-    </div>
+        <!-- ── HEADER ── -->
+        <tr><td style="border-radius:16px 16px 0 0;overflow:hidden;padding:0;background:linear-gradient(135deg,#4D10C8 0%,#8B1A1A 60%,#D40100 100%);">
+          <!-- BG image layer -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation"
+            style="background-image:url('${BASE_URL}/wc2026-header-bg.png');background-size:cover;background-position:center;border-radius:16px 16px 0 0;">
+            <tr>
+              <td style="padding:32px 36px 28px;">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                  <tr>
+                    <td style="vertical-align:top;">
+                      <p style="margin:0 0 4px;font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.6);">
+                        FIFA World Cup · USA · Canada · Mexico · 2026
+                      </p>
+                      <p style="margin:0;font-size:36px;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.02em;">
+                        WC26 Sweep
+                      </p>
+                      <p style="margin:6px 0 0;font-size:13px;font-weight:600;color:rgba(255,255,255,0.55);">
+                        Organiser Admin &middot; ${companyCode}
+                      </p>
+                    </td>
+                    <td style="vertical-align:bottom;text-align:right;width:80px;padding-left:16px;">
+                      <img src="${BASE_URL}/world-cup-trophy.png" alt="World Cup trophy"
+                        width="60" style="display:block;margin-left:auto;opacity:0.9;filter:brightness(1.1);" />
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
 
-    <!-- Body -->
-    <div style="background:#1a1816;border-radius:0 0 16px 16px;padding:32px 36px 36px;">
-      <h2 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#f5f4ee;letter-spacing:-0.01em;">Reset your password</h2>
-      <p style="margin:0 0 6px;font-size:14px;color:#8a8678;">
-        Sweep: <strong style="color:#f5f4ee;">${companyName}</strong>
-      </p>
-      <p style="margin:0 0 28px;font-size:14px;color:#8a8678;line-height:1.6;">
-        Click the button below to set a new admin password. This link expires in <strong style="color:#f5f4ee;">1 hour</strong>.
-      </p>
+        <!-- ── BODY ── -->
+        <tr><td style="background:#1a1816;border-radius:0 0 16px 16px;padding:36px 36px 40px;">
 
-      <a href="${resetUrl}"
-        style="display:inline-block;background:#4D10C8;color:#fff;font-size:15px;font-weight:700;text-decoration:none;padding:14px 32px;border-radius:10px;letter-spacing:0.01em;">
-        Reset password →
-      </a>
+          <!-- Eyebrow -->
+          <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#4D10C8;">
+            Password reset
+          </p>
 
-      <div style="margin-top:32px;padding-top:24px;border-top:1px solid #2a2820;">
-        <p style="margin:0 0 6px;font-size:12px;color:#4a4840;">
-          If you didn't request this, you can safely ignore this email — your password won't change.
-        </p>
-        <p style="margin:0;font-size:11px;color:#333;word-break:break-all;">
-          ${resetUrl}
-        </p>
-      </div>
-    </div>
+          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;color:#f5f4ee;letter-spacing:-0.01em;line-height:1.2;">
+            Set a new password for<br><span style="color:#a78bfa;">${companyName}</span>
+          </h1>
 
-    <!-- Footer -->
-    <p style="margin:16px 0 0;text-align:center;font-size:11px;color:#3a3830;">
-      48 teams · 104 matches · 11 Jun – 19 Jul 2026
-    </p>
-  </div>
+          <p style="margin:0 0 28px;font-size:15px;color:#8a8678;line-height:1.6;">
+            Click the button below to choose a new admin password.
+            This link is valid for <strong style="color:#f5f4ee;">1 hour</strong> and can only be used once.
+          </p>
+
+          <!-- CTA button -->
+          <table cellpadding="0" cellspacing="0" role="presentation">
+            <tr>
+              <td style="border-radius:12px;background:#4D10C8;">
+                <a href="${resetUrl}"
+                  style="display:inline-block;padding:16px 36px;font-size:16px;font-weight:700;color:#fff;text-decoration:none;letter-spacing:0.02em;border-radius:12px;">
+                  Reset password &rarr;
+                </a>
+              </td>
+            </tr>
+          </table>
+
+          <!-- Divider -->
+          <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:36px;">
+            <tr><td style="border-top:1px solid #2a2820;padding-top:24px;">
+              <p style="margin:0 0 10px;font-size:12px;color:#4a4840;line-height:1.5;">
+                If you didn&rsquo;t request this reset, you can safely ignore this email &mdash; your password won&rsquo;t change.
+              </p>
+              <p style="margin:0;font-size:11px;color:#2e2c28;word-break:break-all;">
+                ${resetUrl}
+              </p>
+            </td></tr>
+          </table>
+
+        </td></tr>
+
+        <!-- ── FOOTER ── -->
+        <tr><td style="padding:20px 36px 8px;text-align:center;">
+          <p style="margin:0 0 4px;font-size:11px;color:#3a3830;letter-spacing:0.04em;">
+            48 teams &middot; 104 matches &middot; 11 Jun &ndash; 19 Jul 2026
+          </p>
+          <p style="margin:0;font-size:10px;color:#2a2820;">
+            <a href="${BASE_URL}" style="color:#4D10C8;text-decoration:none;">${BASE_URL.replace(/^https?:\/\//, '')}</a>
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
 </body>
 </html>`,
       },
