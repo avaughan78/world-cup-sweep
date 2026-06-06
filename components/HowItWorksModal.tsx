@@ -6,7 +6,7 @@ const STEPS = [
   {
     icon: '🖨️',
     title: 'Print the tickets',
-    body: 'The organiser prints the team ticket sheet. Each ticket has a team name and a unique QR code.',
+    body: 'The organiser logs in to their admin page, sets the ticket price, and prints the ticket sheet. QR codes are set up automatically.',
   },
   {
     icon: '🎩',

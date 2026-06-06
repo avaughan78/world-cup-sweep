@@ -405,7 +405,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                       <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
                     </div>
                     <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                      Print and cut up the QR-coded tickets ready to fold and draw from a hat.
+                      QR codes are generated automatically — just print, cut, fold, and draw from the hat.
                     </p>
                     <a href={`/print?code=${company.code}`} target="_blank"
                       className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
@@ -448,15 +448,15 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
                   Send everyone the link so they can follow live standings and results.
                 </p>
-                <div className="flex gap-2 mt-1">
+                <div className="flex flex-col gap-2 mt-1">
                   <button onClick={handleCopyLink}
-                    className="font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-1"
+                    className="font-bold px-4 py-2 rounded-lg text-sm transition-colors w-full"
                     style={{ background: copied ? 'var(--green)' : '#4D10C8', color: '#fff' }}>
                     {copied ? 'Copied! ✓' : 'Copy link'}
                   </button>
                   <a href={`/?code=${company.code}`} target="_blank"
-                    className="font-bold px-4 py-2 rounded-lg text-sm text-center flex-shrink-0"
-                    style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                    className="font-bold px-4 py-2 rounded-lg text-sm text-center w-full"
+                    style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', display: 'block' }}>
                     View ↗
                   </a>
                 </div>
