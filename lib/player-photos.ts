@@ -55,12 +55,11 @@ export async function fetchPlayerPhoto(name: string): Promise<PlayerPhotoResult>
     const res = await fetchWithTimeout(url, {}, 5000);
     if (res.ok) {
       const data = await res.json() as {
-        query?: { pages?: Record<string, { thumbnail?: { source: string }; missing?: string }> };
+        query?: { pages?: Record<string, { title?: string; thumbnail?: { source: string }; missing?: string }> };
       };
-      const pages = Object.values(data.query?.pages ?? {});
-      const image = pages
-        .filter(p => !('missing' in p) && p.thumbnail?.source)
-        .map(p => p.thumbnail!.source)[0] ?? null;
+      const pages = Object.values(data.query?.pages ?? {}).filter(p => !('missing' in p) && p.thumbnail?.source);
+      // Prefer the (footballer) disambiguation over a plain-name article (e.g. George Hirst the cricketer)
+      const image = (pages.find(p => p.title?.includes('(footballer)')) ?? pages[0])?.thumbnail?.source ?? null;
       if (image) return { photo: image, club: override?.club ?? null, idTeam: null };
     }
   } catch { /* ignore */ }
