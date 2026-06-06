@@ -2,16 +2,20 @@
 
 import { useCallback, useEffect, useRef } from 'react';
 
-const G      = 0.5;   // gravity px/frame²
-const BOUNCE = 0.62;  // energy kept on bounce
-const AIR_F  = 0.993; // horizontal air friction per frame
-const ROLL_F = 0.88;  // horizontal friction per frame when on floor
-const SIZE   = 44;    // ball diameter px
+const G      = 0.5;
+const BOUNCE = 0.62;
+const AIR_F  = 0.993;
+const ROLL_F = 0.88;
+const SIZE   = 44;
 const HALF   = SIZE / 2;
+const MAX_V  = 28;       // px/frame cap so it can't escape the screen
+const TRAIL  = 5;        // number of pointer samples to average for throw velocity
 
 export default function FootballPhysics() {
-  const elRef = useRef<HTMLDivElement>(null);
-  const s = useRef({ x: -SIZE, y: -SIZE, vx: 0, vy: 0, rot: 0, raf: 0 });
+  const elRef    = useRef<HTMLDivElement>(null);
+  const s        = useRef({ x: -SIZE, y: -SIZE, vx: 0, vy: 0, rot: 0, raf: 0 });
+  const dragging = useRef(false);
+  const trail    = useRef<{ x: number; y: number; t: number }[]>([]);
 
   const startLoop = useCallback(() => {
     cancelAnimationFrame(s.current.raf);
@@ -19,10 +23,10 @@ export default function FootballPhysics() {
     const tick = () => {
       const c = s.current;
       const el = elRef.current;
-      if (!el) return;
+      if (!el || dragging.current) return;
 
-      const W = window.innerWidth;
-      const H = window.innerHeight;
+      const W      = window.innerWidth;
+      const H      = window.innerHeight;
       const floorY = H - SIZE;
       const wallR  = W - SIZE;
 
@@ -39,8 +43,8 @@ export default function FootballPhysics() {
         c.vx *= AIR_F;
       }
 
-      if (c.x < 0)      { c.x = 0;     c.vx =  Math.abs(c.vx) * BOUNCE; }
-      if (c.x > wallR)  { c.x = wallR; c.vx = -Math.abs(c.vx) * BOUNCE; }
+      if (c.x < 0)     { c.x = 0;     c.vx =  Math.abs(c.vx) * BOUNCE; }
+      if (c.x > wallR) { c.x = wallR; c.vx = -Math.abs(c.vx) * BOUNCE; }
 
       if (Math.abs(c.vx) < 0.05) c.vx = 0;
 
@@ -91,40 +95,101 @@ export default function FootballPhysics() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startLoop]);
 
-  function kick(e: React.MouseEvent) {
-    const c = s.current;
+  function onPointerDown(e: React.PointerEvent) {
     const el = elRef.current;
     if (!el) return;
+    e.preventDefault();
     e.stopPropagation();
 
-    const rect = el.getBoundingClientRect();
-    const cx = rect.left + HALF;
-    const cy = rect.top  + HALF;
-    const dx = cx - e.clientX;
-    const dy = cy - e.clientY;
-    const dist = Math.hypot(dx, dy) || 1;
-    const speed = 16 + Math.random() * 10;
+    cancelAnimationFrame(s.current.raf);
+    dragging.current = true;
+    trail.current = [];
 
-    c.vx = (dx / dist) * speed;
-    c.vy = (dy / dist) * speed - speed * 0.55; // upward bias so kicks feel natural
+    el.setPointerCapture(e.pointerId);
+
+    const c = s.current;
+    c.x = e.clientX - HALF;
+    c.y = e.clientY - HALF;
+    trail.current.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
+
+    el.style.transform = `translate(${c.x}px, ${c.y}px) rotate(${c.rot}deg)`;
+  }
+
+  function onPointerMove(e: React.PointerEvent) {
+    if (!dragging.current) return;
+    e.preventDefault();
+
+    const c  = s.current;
+    const el = elRef.current;
+    if (!el) return;
+
+    c.x = e.clientX - HALF;
+    c.y = e.clientY - HALF;
+
+    trail.current.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
+    if (trail.current.length > TRAIL) trail.current.shift();
+
+    el.style.transform = `translate(${c.x}px, ${c.y}px) rotate(${c.rot}deg)`;
+  }
+
+  function onPointerUp(e: React.PointerEvent) {
+    if (!dragging.current) return;
+    e.preventDefault();
+    dragging.current = false;
+
+    const c = s.current;
+    const t = trail.current;
+
+    if (t.length >= 2) {
+      const oldest = t[0];
+      const newest = t[t.length - 1];
+      const dt = (newest.t - oldest.t) || 1;
+
+      let vx = ((newest.x - oldest.x) / dt) * 16;
+      let vy = ((newest.y - oldest.y) / dt) * 16;
+
+      // If it was basically a tap (tiny movement), treat as a kick away from centre
+      if (Math.hypot(vx, vy) < 2) {
+        const el = elRef.current;
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          const dx = rect.left + HALF - e.clientX;
+          const dy = rect.top  + HALF - e.clientY;
+          const dist = Math.hypot(dx, dy) || 1;
+          const speed = 16 + Math.random() * 10;
+          vx = (dx / dist) * speed;
+          vy = (dy / dist) * speed - speed * 0.55;
+        }
+      }
+
+      // Clamp
+      const mag = Math.hypot(vx, vy);
+      if (mag > MAX_V) { vx = vx / mag * MAX_V; vy = vy / mag * MAX_V; }
+
+      c.vx = vx;
+      c.vy = vy;
+    }
+
     startLoop();
   }
 
   return (
     <div
       ref={elRef}
-      onClick={kick}
-      title="Click to kick!"
+      onPointerDown={onPointerDown}
+      onPointerMove={onPointerMove}
+      onPointerUp={onPointerUp}
+      title="Grab and throw!"
       style={{
         position: 'fixed',
         top: 0, left: 0,
         width: SIZE, height: SIZE,
         fontSize: SIZE, lineHeight: 1,
-        cursor: 'pointer',
+        cursor: 'grab',
         userSelect: 'none',
         zIndex: 9999,
         willChange: 'transform',
-        transform: 'translate(-200px, -200px)', // off-screen until first tick
+        transform: 'translate(-200px, -200px)',
         touchAction: 'none',
       }}
     >
