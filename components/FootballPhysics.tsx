@@ -87,10 +87,25 @@ export default function FootballPhysics() {
       else cancelAnimationFrame(s.current.raf);
     };
 
+    // Safety net: if pointer capture is lost (iOS scroll cancels the gesture,
+    // or setPointerCapture threw), make sure physics always restarts.
+    const recover = () => {
+      if (dragging.current) {
+        dragging.current = false;
+        s.current.vx = 0;
+        s.current.vy = 0;
+        startLoop();
+      }
+    };
+
     window.addEventListener('football-toggle', onToggle);
+    window.addEventListener('pointerup',     recover);
+    window.addEventListener('pointercancel', recover);
     return () => {
       cancelAnimationFrame(s.current.raf);
       window.removeEventListener('football-toggle', onToggle);
+      window.removeEventListener('pointerup',     recover);
+      window.removeEventListener('pointercancel', recover);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startLoop]);
@@ -105,7 +120,7 @@ export default function FootballPhysics() {
     dragging.current = true;
     trail.current = [];
 
-    el.setPointerCapture(e.pointerId);
+    try { el.setPointerCapture(e.pointerId); } catch { /* not supported on all iOS versions */ }
 
     const c = s.current;
     c.x = e.clientX - HALF;
@@ -173,12 +188,21 @@ export default function FootballPhysics() {
     startLoop();
   }
 
+  function onPointerCancel() {
+    if (!dragging.current) return;
+    dragging.current = false;
+    s.current.vx = 0;
+    s.current.vy = 0;
+    startLoop();
+  }
+
   return (
     <div
       ref={elRef}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      onPointerCancel={onPointerCancel}
       title="Grab and throw!"
       style={{
         position: 'fixed',
