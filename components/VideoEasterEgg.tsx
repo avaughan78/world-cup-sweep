@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { parseVideoUrl } from '@/lib/parse-video-url';
 
 const COUNTDOWN_START = 3;
 
@@ -105,9 +106,6 @@ export default function VideoEasterEgg({
               background: 'var(--bg)',
               border: '1px solid var(--border)',
               boxShadow: '0 40px 100px rgba(0,0,0,0.6)',
-              maxHeight: '92vh',
-              overflowY: 'auto',
-              scrollbarWidth: 'none',
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -131,15 +129,31 @@ export default function VideoEasterEgg({
 
             <hr style={{ borderColor: 'var(--border)' }} />
 
-            <div style={{ background: '#000' }}>
-              <video
-                ref={videoRef}
-                src={videoSrc}
-                autoPlay
-                controls
-                style={{ width: '100%', display: 'block', maxHeight: '60vh' }}
-              />
-            </div>
+            {(() => {
+              const { type, embedSrc } = parseVideoUrl(videoSrc, { muted: true });
+              return (
+                <div style={{ background: '#000', aspectRatio: '16/9', width: '100%' }}>
+                  {type === 'direct' ? (
+                    <video
+                      ref={videoRef}
+                      src={embedSrc}
+                      autoPlay
+                      muted
+                      controls
+                      playsInline
+                      style={{ width: '100%', height: '100%', display: 'block' }}
+                    />
+                  ) : (
+                    <iframe
+                      src={embedSrc}
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                    />
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
