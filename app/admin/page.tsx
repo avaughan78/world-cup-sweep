@@ -56,6 +56,7 @@ export default function AdminPage() {
   // Manual prize overrides
   const [shotTeam, setShotTeam] = useState('');
   const [shotPlayer, setShotPlayer] = useState('');
+  const [shotYards, setShotYards] = useState('');
   const [shotUrl, setShotUrl] = useState('');
   const [ownGoalTeam, setOwnGoalTeam] = useState('');
   const [ownGoalUrl, setOwnGoalUrl] = useState('');
@@ -116,9 +117,10 @@ export default function AdminPage() {
             hidden.add(o.category);
           } else {
             if (o.category === 'longest_shot') {
-              const team = o.team_name ?? '', player = o.value_label ?? '', url = o.notes ?? '';
-              setShotTeam(team); setShotPlayer(player); setShotUrl(url);
-              lastShot.current = { team, player, url };
+              const team = o.team_name ?? '', raw = o.value_label ?? '', url = o.notes ?? '';
+              const [player, yards] = raw.includes('|') ? raw.split('|') : [raw, ''];
+              setShotTeam(team); setShotPlayer(player); setShotYards(yards); setShotUrl(url);
+              lastShot.current = { team, player: raw, url };
             } else if (o.category === 'most_own_goals') {
               const team = o.team_name ?? '', url = o.notes ?? '';
               setOwnGoalTeam(team); setOwnGoalUrl(url);
@@ -167,16 +169,17 @@ export default function AdminPage() {
   // Auto-save prize fields 800ms after last change (skip if unchanged from last save)
   useEffect(() => {
     const ls = lastShot.current;
-    if (shotTeam === ls.team && shotPlayer === ls.player && shotUrl === ls.url) return;
+    const encoded = shotYards.trim() ? `${shotPlayer}|${shotYards.trim()}` : shotPlayer;
+    if (shotTeam === ls.team && encoded === ls.player && shotUrl === ls.url) return;
     clearTimeout(shotTimer.current);
     shotTimer.current = setTimeout(async () => {
       await fetch('/api/admin/shot', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team_name: shotTeam, value_label: shotPlayer, notes: shotUrl }) });
-      lastShot.current = { team: shotTeam, player: shotPlayer, url: shotUrl };
+        body: JSON.stringify({ team_name: shotTeam, value_label: encoded, notes: shotUrl }) });
+      lastShot.current = { team: shotTeam, player: encoded, url: shotUrl };
       setShotSaved(true);
       setTimeout(() => setShotSaved(false), 2000);
     }, 800);
-  }, [shotTeam, shotPlayer, shotUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [shotTeam, shotPlayer, shotYards, shotUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const ls = lastOwnGoal.current;
@@ -655,89 +658,91 @@ export default function AdminPage() {
 
           {/* Global manual prizes */}
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Manual Prizes (Global — all companies)</p>
+            <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Manual Prizes (Global — all companies)</p>
 
             {(() => {
               const allTeams = Object.values(GROUPS_2026).flat().sort();
               const teamSelect = (value: string, onChange: (v: string) => void) => (
-                <select value={value} onChange={e => onChange(e.target.value)}
-                  style={{ flex: '1 1 160px', minWidth: 0, ...smallInputStyle }}>
+                <select value={value} onChange={e => onChange(e.target.value)} style={{ width: '100%', ...smallInputStyle }}>
                   <option value="">— Select team —</option>
                   {allTeams.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               );
-              const clearBtn = (onClear: () => void) => (
-                <button onClick={onClear} disabled={loading}
-                  className="font-bold px-4 py-2 rounded-lg transition-opacity flex-shrink-0"
-                  style={{
-                    background: 'transparent',
-                    color: 'var(--text-muted)',
-                    border: '1px solid var(--border)',
-                    opacity: loading ? 0.5 : 1,
-                    fontSize: '0.85rem',
-                  }}>
-                  Clear
-                </button>
-              );
+              const cardStyle: React.CSSProperties = { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem' };
+              const labelStyle: React.CSSProperties = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' };
               return (
-                <>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+
                   {/* Thunderbastard */}
-                  <div className="flex flex-wrap gap-2 items-end mb-3">
-                    <p className="w-full text-xs font-semibold mb-0.5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                      🚀 Thunderbastard — Longest Shot
-                      {shotSaved && <span style={{ color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
-                    </p>
-                    {teamSelect(shotTeam, v => setShotTeam(v))}
-                    <input placeholder="Player name" value={shotPlayer}
-                      onChange={e => setShotPlayer(e.target.value)}
-                      maxLength={60}
-                      style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
-                    <input placeholder="Video URL" value={shotUrl}
-                      onChange={e => setShotUrl(e.target.value)}
-                      maxLength={300}
-                      style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
-                    {clearBtn(() => clearPrize('/api/admin/shot', [
-                      () => { setShotTeam(''); setShotPlayer(''); setShotUrl(''); lastShot.current = { team: '', player: '', url: '' }; },
-                    ]))}
+                  <div style={cardStyle}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>🚀 Thunderbastard</span>
+                      {shotSaved && <span style={{ color: '#22c55e', fontSize: '0.75rem', fontWeight: 700 }}>Saved ✓</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div><label style={labelStyle}>Team</label>{teamSelect(shotTeam, setShotTeam)}</div>
+                      <div><label style={labelStyle}>Player</label>
+                        <input placeholder="Player name" value={shotPlayer} onChange={e => setShotPlayer(e.target.value)} maxLength={60} style={{ width: '100%', ...smallInputStyle }} />
+                      </div>
+                      <div><label style={labelStyle}>Distance</label>
+                        <input placeholder="Yards (e.g. 35)" value={shotYards} onChange={e => setShotYards(e.target.value)} maxLength={6} style={{ width: '100%', ...smallInputStyle }} />
+                      </div>
+                      <div><label style={labelStyle}>Video URL</label>
+                        <input placeholder="https://…" value={shotUrl} onChange={e => setShotUrl(e.target.value)} maxLength={300} style={{ width: '100%', ...smallInputStyle }} />
+                      </div>
+                      <button onClick={() => clearPrize('/api/admin/shot', [
+                        () => { setShotTeam(''); setShotPlayer(''); setShotYards(''); setShotUrl(''); lastShot.current = { team: '', player: '', url: '' }; },
+                      ])} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
+                        style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
+                        Clear
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Oooops */}
-                  <div className="flex flex-wrap gap-2 items-end mb-3 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <p className="w-full text-xs font-semibold mb-0.5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                      😬 OG — Most Spectacular Own Goal
-                      {ownGoalSaved && <span style={{ color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
-                    </p>
-                    {teamSelect(ownGoalTeam, v => setOwnGoalTeam(v))}
-                    <input placeholder="Video URL" value={ownGoalUrl}
-                      onChange={e => setOwnGoalUrl(e.target.value)}
-                      maxLength={300}
-                      style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
-                    {clearBtn(() => clearPrize('/api/admin/owngoal', [
-                      () => { setOwnGoalTeam(''); setOwnGoalUrl(''); lastOwnGoal.current = { team: '', url: '' }; },
-                    ]))}
+                  {/* OG */}
+                  <div style={cardStyle}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>😬 OG</span>
+                      {ownGoalSaved && <span style={{ color: '#22c55e', fontSize: '0.75rem', fontWeight: 700 }}>Saved ✓</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div><label style={labelStyle}>Team</label>{teamSelect(ownGoalTeam, setOwnGoalTeam)}</div>
+                      <div><label style={labelStyle}>Video URL</label>
+                        <input placeholder="https://…" value={ownGoalUrl} onChange={e => setOwnGoalUrl(e.target.value)} maxLength={300} style={{ width: '100%', ...smallInputStyle }} />
+                      </div>
+                      <button onClick={() => clearPrize('/api/admin/owngoal', [
+                        () => { setOwnGoalTeam(''); setOwnGoalUrl(''); lastOwnGoal.current = { team: '', url: '' }; },
+                      ])} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
+                        style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
+                        Clear
+                      </button>
+                    </div>
                   </div>
 
                   {/* Bicycle */}
-                  <div className="flex flex-wrap gap-2 items-end mb-4 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
-                    <p className="w-full text-xs font-semibold mb-0.5 flex items-center gap-2" style={{ color: 'var(--text-secondary)' }}>
-                      🤸 The Bicycle — Best Overhead Kick
-                      {bicycleSaved && <span style={{ color: 'var(--green)', fontWeight: 700 }}>Saved ✓</span>}
-                    </p>
-                    {teamSelect(bicycleTeam, v => setBicycleTeam(v))}
-                    <input placeholder="Player name" value={bicyclePlayer}
-                      onChange={e => setBicyclePlayer(e.target.value)}
-                      maxLength={60}
-                      style={{ flex: '1 1 150px', minWidth: 0, ...smallInputStyle }} />
-                    <input placeholder="Video URL" value={bicycleUrl}
-                      onChange={e => setBicycleUrl(e.target.value)}
-                      maxLength={300}
-                      style={{ flex: '2 1 200px', minWidth: 0, ...smallInputStyle }} />
-                    {clearBtn(() => clearPrize('/api/admin/bicycle', [
-                      () => { setBicycleTeam(''); setBicyclePlayer(''); setBicycleUrl(''); lastBicycle.current = { team: '', player: '', url: '' }; },
-                    ]))}
+                  <div style={cardStyle}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>🤸 The Bicycle</span>
+                      {bicycleSaved && <span style={{ color: '#22c55e', fontSize: '0.75rem', fontWeight: 700 }}>Saved ✓</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div><label style={labelStyle}>Team</label>{teamSelect(bicycleTeam, setBicycleTeam)}</div>
+                      <div><label style={labelStyle}>Player</label>
+                        <input placeholder="Player name" value={bicyclePlayer} onChange={e => setBicyclePlayer(e.target.value)} maxLength={60} style={{ width: '100%', ...smallInputStyle }} />
+                      </div>
+                      <div><label style={labelStyle}>Video URL</label>
+                        <input placeholder="https://…" value={bicycleUrl} onChange={e => setBicycleUrl(e.target.value)} maxLength={300} style={{ width: '100%', ...smallInputStyle }} />
+                      </div>
+                      <button onClick={() => clearPrize('/api/admin/bicycle', [
+                        () => { setBicycleTeam(''); setBicyclePlayer(''); setBicycleUrl(''); lastBicycle.current = { team: '', player: '', url: '' }; },
+                      ])} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
+                        style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
+                        Clear
+                      </button>
+                    </div>
                   </div>
 
-                </>
+                </div>
               );
             })()}
 

@@ -40,7 +40,36 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
     return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{empty}</p>;
   }
 
-  const playerMode = prize.slug === 'longest_shot' || prize.slug === 'bicycle';
+  // Thunderbastard: value_label encoded as "Player Name|35" for yards
+  if (prize.slug === 'longest_shot') {
+    const raw = prize.value_label ?? '';
+    const [playerName, yards] = raw.includes('|') ? raw.split('|') : [raw || prize.current_team, null];
+    return (
+      <div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <Flag team={prize.current_team} height="1.2rem" />
+            <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+              {playerName}
+            </span>
+          </div>
+          {prize.video_url && (
+            <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video" className="flex-shrink-0"
+              style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
+              {videoIcon}
+            </a>
+          )}
+        </div>
+        {yards && (
+          <p className="text-sm font-bold mt-1" style={{ color: 'var(--text-muted)' }}>
+            {yards} yds
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  const playerMode = prize.slug === 'bicycle';
 
   return (
     <div className="flex items-center justify-between gap-2">
