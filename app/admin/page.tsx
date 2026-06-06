@@ -668,7 +668,7 @@ export default function AdminPage() {
                   {allTeams.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               );
-              const cardStyle: React.CSSProperties = { background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem' };
+              const cardStyle: React.CSSProperties = { background: '#ffffff', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem' };
               const labelStyle: React.CSSProperties = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' };
               return (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
