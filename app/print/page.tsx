@@ -1,9 +1,11 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { getParticipantsWithTokens, getCompanyByCode } from '@/lib/db';
 import { getFlag, getFlagUrl } from '@/lib/flags';
 import { GROUPS_2026 } from '@/lib/groups';
 import PrintTickets from '@/components/PrintTickets';
 import PrintButton from '@/components/PrintButton';
+import { validateManageSession, MANAGE_COOKIE } from '@/lib/sessions';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,6 +62,10 @@ export default async function PrintPage({ searchParams }: { searchParams: Promis
 
   const company = await getCompanyByCode(code);
   if (!company) redirect('/admin');
+
+  const cookieStore = await cookies();
+  const sessionCompanyId = await validateManageSession(cookieStore.get(MANAGE_COOKIE)?.value);
+  if (sessionCompanyId !== company.id) redirect(`/manage?code=${company.code}`);
 
   const participants = await getParticipantsWithTokens(company.id);
   const tokenMap = new Map(participants.map(p => [p.team_name, p.claim_token]));

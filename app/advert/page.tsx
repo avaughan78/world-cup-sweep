@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { getCompanyByCode } from '@/lib/db';
 import QRCode from 'react-qr-code';
 import PrintButton from '@/components/PrintButton';
+import { validateManageSession, MANAGE_COOKIE } from '@/lib/sessions';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,6 +66,10 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
 
   const company = await getCompanyByCode(code);
   if (!company) redirect('/manage');
+
+  const cookieStore = await cookies();
+  const sessionCompanyId = await validateManageSession(cookieStore.get(MANAGE_COOKIE)?.value);
+  if (sessionCompanyId !== company.id) redirect(`/manage?code=${company.code}`);
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL
     ?? (process.env.RAILWAY_PUBLIC_DOMAIN ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}` : 'http://localhost:3000');
