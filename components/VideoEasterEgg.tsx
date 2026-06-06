@@ -70,7 +70,6 @@ export default function VideoEasterEgg({
         onTouchStart={startTimer}
         onTouchEnd={cancelTimer}
         onTouchCancel={cancelTimer}
-        title={label}
         style={{ position: 'relative', display: 'inline-block', fontSize, lineHeight: 1, flexShrink: 0, cursor: 'default', WebkitUserSelect: 'none', userSelect: 'none' }}
       >
         {icon}
