@@ -14,8 +14,8 @@ const csp = [
   "font-src 'self'",
   // Local video files (.mp4) for prize easter eggs
   "media-src 'self'",
-  // Google Drive iframe for the trophy easter egg
-  "frame-src https://drive.google.com",
+  // Google Drive iframe for the trophy easter egg; YouTube/Vimeo for prize video modal
+  "frame-src https://drive.google.com https://www.youtube.com https://player.vimeo.com",
   // All API calls are same-origin
   "connect-src 'self'",
   // Disallow <object>, <embed>, <applet>
