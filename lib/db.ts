@@ -225,7 +225,7 @@ export async function getParticipantByToken(token: string): Promise<(Participant
 export async function claimTeam(token: string, participantName: string) {
   await sql`
     UPDATE participants SET participant_name = ${participantName}, synced_at = NOW()
-    WHERE claim_token = ${token}
+    WHERE claim_token = ${token} AND participant_name IS NULL
   `;
 }
 

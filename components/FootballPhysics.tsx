@@ -14,8 +14,9 @@ const TRAIL  = 5;        // number of pointer samples to average for throw veloc
 export default function FootballPhysics() {
   const elRef    = useRef<HTMLDivElement>(null);
   const s        = useRef({ x: -SIZE, y: -SIZE, vx: 0, vy: 0, rot: 0, raf: 0 });
-  const dragging = useRef(false);
-  const trail    = useRef<{ x: number; y: number; t: number }[]>([]);
+  const dragging   = useRef(false);
+  const trail      = useRef<{ x: number; y: number; t: number }[]>([]);
+  const dragStart  = useRef({ x: 0, y: 0, t: 0 });
 
   const startLoop = useCallback(() => {
     cancelAnimationFrame(s.current.raf);
@@ -125,6 +126,7 @@ export default function FootballPhysics() {
     const c = s.current;
     c.x = e.clientX - HALF;
     c.y = e.clientY - HALF;
+    dragStart.current = { x: e.clientX, y: e.clientY, t: e.timeStamp };
     trail.current.push({ x: e.clientX, y: e.clientY, t: e.timeStamp });
 
     el.style.transform = `translate(${c.x}px, ${c.y}px) rotate(${c.rot}deg)`;
@@ -154,35 +156,36 @@ export default function FootballPhysics() {
 
     const c = s.current;
     const t = trail.current;
+    const elapsed  = e.timeStamp - dragStart.current.t;
+    const dragDist = Math.hypot(e.clientX - dragStart.current.x, e.clientY - dragStart.current.y);
+    const isTap    = elapsed < 220 && dragDist < 18;
 
-    if (t.length >= 2) {
+    if (!isTap && t.length >= 2) {
+      // Throw: velocity from pointer trail
       const oldest = t[0];
       const newest = t[t.length - 1];
       const dt = (newest.t - oldest.t) || 1;
-
       let vx = ((newest.x - oldest.x) / dt) * 16;
       let vy = ((newest.y - oldest.y) / dt) * 16;
-
-      // If it was basically a tap (tiny movement), treat as a kick away from centre
-      if (Math.hypot(vx, vy) < 2) {
-        const el = elRef.current;
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          const dx = rect.left + HALF - e.clientX;
-          const dy = rect.top  + HALF - e.clientY;
-          const dist = Math.hypot(dx, dy) || 1;
-          const speed = 16 + Math.random() * 10;
-          vx = (dx / dist) * speed;
-          vy = (dy / dist) * speed - speed * 0.55;
-        }
-      }
-
-      // Clamp
       const mag = Math.hypot(vx, vy);
       if (mag > MAX_V) { vx = vx / mag * MAX_V; vy = vy / mag * MAX_V; }
-
       c.vx = vx;
       c.vy = vy;
+    } else {
+      // Click/tap: flick away from the touch point
+      const el = elRef.current;
+      if (el) {
+        const rect  = el.getBoundingClientRect();
+        const dx    = rect.left + HALF - e.clientX;
+        const dy    = rect.top  + HALF - e.clientY;
+        const dist  = Math.hypot(dx, dy) || 1;
+        const speed = 16 + Math.random() * 10;
+        c.vx = (dx / dist) * speed;
+        c.vy = (dy / dist) * speed - speed * 0.55;
+      } else {
+        c.vx = (Math.random() < 0.5 ? 1 : -1) * (12 + Math.random() * 8);
+        c.vy = -(10 + Math.random() * 6);
+      }
     }
 
     startLoop();
