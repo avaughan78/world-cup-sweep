@@ -15,7 +15,7 @@ export async function sendPasswordResetEmail({
   companyCode: string;
   resetUrl: string;
 }) {
-  await resend.emails.send({
+  const { error } = await resend.emails.send({
     from: FROM,
     to,
     subject: `Reset your WC26 Sweep password — ${companyCode}`,
@@ -70,4 +70,5 @@ export async function sendPasswordResetEmail({
 </body>
 </html>`,
   });
+  if (error) throw new Error(error.message);
 }
