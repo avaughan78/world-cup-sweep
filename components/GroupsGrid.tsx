@@ -158,7 +158,7 @@ export default function GroupsGrid({
                             <span
                               key={prize.slug}
                               title={prize.name}
-                              style={{ fontSize: '1.1rem', lineHeight: 1 }}
+                              style={{ fontSize: '1.1rem', lineHeight: 1, transform: 'scale(1.4)', display: 'inline-block' }}
                             >
                               {prize.icon}
                             </span>
