@@ -4,14 +4,9 @@ import { useState } from 'react';
 
 const STEPS = [
   {
-    icon: '🖨️',
-    title: 'Print the tickets',
-    body: 'The organiser logs in to their admin page, sets the ticket price, and prints the ticket sheet. QR codes are set up automatically.',
-  },
-  {
     icon: '🎩',
     title: 'Draw from a hat',
-    body: 'Tickets are folded and then drawn from the hat. The organiser collects the entry fee.',
+    body: 'Tickets are folded and drawn from the hat. The organiser collects the entry fee.',
   },
   {
     icon: '📱',

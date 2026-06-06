@@ -158,13 +158,19 @@ export async function getParticipantsWithTokens(companyId: number): Promise<(Par
   return rows as (Participant & { claim_token: string | null })[];
 }
 
-export async function generateClaimTokens(companyId: number) {
-  // Single UPDATE — gen_random_uuid() produces a distinct UUID per row (was 48 sequential updates)
-  await sql`
-    UPDATE participants
-    SET claim_token = gen_random_uuid()::text
-    WHERE company_id = ${companyId} AND claim_token IS NULL
-  `;
+export async function generateClaimTokens(companyId: number, { force = false } = {}) {
+  if (force) {
+    // Regenerate ALL tokens — invalidates any previously printed QR codes
+    await sql`
+      UPDATE participants SET claim_token = gen_random_uuid()::text WHERE company_id = ${companyId}
+    `;
+  } else {
+    // Only fill in missing tokens — safe for initial generation
+    await sql`
+      UPDATE participants SET claim_token = gen_random_uuid()::text
+      WHERE company_id = ${companyId} AND claim_token IS NULL
+    `;
+  }
   const all = await sql`
     SELECT COUNT(*) as n FROM participants WHERE company_id = ${companyId} AND claim_token IS NOT NULL
   `;

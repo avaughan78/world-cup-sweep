@@ -17,11 +17,6 @@ const HOST_FLAGS = [
 
 const STEPS = [
   {
-    icon: '🖨️',
-    title: 'Print the tickets',
-    body: 'The organiser prints a QR-coded ticket for each of the 48 nations and cuts them up.',
-  },
-  {
     icon: '🎩',
     title: 'Draw from the hat',
     body: 'Everyone picks a folded ticket at random. That\'s your nation for the entire tournament.',
@@ -36,6 +31,15 @@ const STEPS = [
     title: 'Follow live',
     body: 'Standings, cards, top scorers, and category leaders are all tracked in real time on this page.',
   },
+];
+
+const PRIZE_CATEGORIES = [
+  { icon: '🏆', name: 'The Winner',              desc: 'Team that goes furthest' },
+  { icon: '👟', name: 'The Golden Boot',          desc: 'Top scorer\'s team' },
+  { icon: '✈️', name: 'Early Bath',               desc: 'First team out' },
+  { icon: '🪣', name: 'Derby County',             desc: 'Most goals conceded' },
+  { icon: '🟨', name: 'Most Cards',               desc: 'Yellow & red card leaders' },
+  { icon: '🚀', name: 'The Thunderbastard',       desc: 'Longest-range goal' },
 ];
 
 export default async function AdvertPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
@@ -214,12 +218,34 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             </div>
           </div>
 
+          {/* ── PRIZE CATEGORIES ─────────────────────────────────── */}
+          <div style={{ background: '#1a1816', padding: '5mm 12mm' }}>
+            <p className="oswald" style={{ margin: '0 0 3.5mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+              Prize categories
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2mm 4mm' }}>
+              {PRIZE_CATEGORIES.map(p => (
+                <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '2.5mm' }}>
+                  <span style={{ fontSize: '13pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
+                  <div>
+                    <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 700, color: '#fff', letterSpacing: '0.02em', lineHeight: 1.1 }}>
+                      {p.name}
+                    </p>
+                    <p style={{ margin: 0, fontSize: '7.5pt', color: 'rgba(255,255,255,0.45)', fontFamily: 'system-ui, sans-serif', lineHeight: 1.3 }}>
+                      {p.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* ── HOW IT WORKS ─────────────────────────────────────── */}
-          <div style={{ background: '#fff', padding: '6mm 12mm' }}>
-            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '9pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#4D10C8' }}>
+          <div style={{ background: '#fff', padding: '5mm 12mm' }}>
+            <p className="oswald" style={{ margin: '0 0 3.5mm', fontSize: '9pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#4D10C8' }}>
               How it works
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3mm' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '3mm' }}>
               {STEPS.map(step => (
                 <div key={step.title} style={{
                   background: '#f5f4ee',
@@ -230,12 +256,12 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                   gap: '3mm',
                   alignItems: 'flex-start',
                 }}>
-                  <span style={{ fontSize: '14pt', flexShrink: 0, lineHeight: 1, marginTop: '0.5mm' }}>{step.icon}</span>
+                  <span style={{ fontSize: '13pt', flexShrink: 0, lineHeight: 1, marginTop: '0.5mm' }}>{step.icon}</span>
                   <div>
-                    <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '10pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '9.5pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                       {step.title}
                     </p>
-                    <p style={{ margin: 0, fontSize: '9pt', color: '#6b6760', lineHeight: 1.45, fontFamily: 'system-ui, sans-serif' }}>
+                    <p style={{ margin: 0, fontSize: '8pt', color: '#6b6760', lineHeight: 1.4, fontFamily: 'system-ui, sans-serif' }}>
                       {step.body}
                     </p>
                   </div>

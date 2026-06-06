@@ -174,6 +174,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   }
 
   async function handleGenerateTokens() {
+    if (!confirm('Regenerate QR codes? This will invalidate any tickets that have already been printed — you\'ll need to reprint before the draw.')) return;
     setLoading(true);
     try {
       const res = await fetch('/api/company/manage/generate-tokens', {
