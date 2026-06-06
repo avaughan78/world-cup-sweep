@@ -17,7 +17,7 @@ export default function PrizeVideoModal({
 }) {
   const [open, setOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const { type, embedSrc } = parseVideoUrl(videoUrl);
+  const { type, embedSrc } = parseVideoUrl(videoUrl, { muted: true });
 
   function close() {
     setOpen(false);
@@ -83,6 +83,7 @@ export default function PrizeVideoModal({
                   ref={videoRef}
                   src={embedSrc}
                   autoPlay
+                  muted
                   controls
                   playsInline
                   style={{ width: '100%', height: '100%', display: 'block' }}
