@@ -10,11 +10,13 @@ export type PlayerPhotoResult = {
   idTeam: string | null;
 };
 
-// TheSportsDB sometimes matches a lower-league namesake instead of the international.
-// Entries here skip TheSportsDB entirely and go straight to Wikipedia for the photo.
-// Club is set to the correct value.
-const PLAYER_OVERRIDE: Record<string, { club: string }> = {
+// Per-player overrides. All fields optional:
+//   club:      force a specific club name (skips TheSportsDB club detection)
+//   wikiTitle: use this Wikipedia article title instead of the player's name
+//              (handles accented names, disambiguation, name mismatches)
+const PLAYER_OVERRIDE: Record<string, { club?: string; wikiTitle?: string }> = {
   'Reece James': { club: 'Chelsea' },
+  'Che Adams':   { wikiTitle: 'Ché Adams' },
 };
 
 export async function fetchPlayerPhoto(name: string): Promise<PlayerPhotoResult> {
@@ -46,8 +48,9 @@ export async function fetchPlayerPhoto(name: string): Promise<PlayerPhotoResult>
 
   // ── Wikipedia fallback ────────────────────────────────────────────────────
   try {
-    const t1 = encodeURIComponent(name);
-    const t2 = encodeURIComponent(`${name} (footballer)`);
+    const wikiName = override?.wikiTitle ?? name;
+    const t1 = encodeURIComponent(wikiName);
+    const t2 = encodeURIComponent(`${wikiName} (footballer)`);
     const url =
       `https://en.wikipedia.org/w/api.php?action=query` +
       `&titles=${t1}|${t2}` +
