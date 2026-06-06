@@ -112,7 +112,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           className="advert-sheet"
           style={{
             width: '210mm',
-            minHeight: '297mm',
+            height: '297mm',
             margin: '1.5rem auto',
             background: '#fff',
             display: 'flex',
@@ -124,7 +124,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           {/* ── HERO ─────────────────────────────────────────────── */}
           <div style={{
             position: 'relative',
-            height: '58mm',
+            height: '50mm',
             flexShrink: 0,
             backgroundImage: 'url(/wc2026-header-bg.png)',
             backgroundSize: 'cover',
@@ -136,7 +136,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
               background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)',
             }} />
 
-            <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '6mm 12mm', display: 'flex', gap: '4mm' }}>
+            <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '5mm 12mm', display: 'flex', gap: '4mm' }}>
 
               {/* Left: tournament info */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -173,7 +173,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
               {/* Right: trophy + sweep name */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', gap: '2mm', flexShrink: 0 }}>
                 <img src="/world-cup-trophy.png" alt="World Cup trophy" style={{
-                  height: '35mm', width: 'auto', opacity: 0.88,
+                  height: '28mm', width: 'auto', opacity: 0.88,
                   filter: 'brightness(1.1) drop-shadow(0 2px 8px rgba(0,0,0,0.5))',
                 }} />
                 <p className="bungee" style={{ margin: 0, fontSize: '12pt', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, textAlign: 'right', textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}>
@@ -184,34 +184,34 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── PRIZE CENTREPIECE ────────────────────────────────── */}
-          <div style={{ background: '#fff', padding: '5mm 12mm 6mm', flexShrink: 0 }}>
-            <p className="bungee" style={{ margin: '0 0 0.5mm', fontSize: '18pt', color: '#1a1a17', lineHeight: 1, letterSpacing: '0.01em' }}>
+          <div style={{ background: '#fff', padding: '4mm 12mm', flexShrink: 0 }}>
+            <p className="bungee" style={{ margin: '0 0 0.5mm', fontSize: '16pt', color: '#1a1a17', lineHeight: 1, letterSpacing: '0.01em' }}>
               7 ways to win. 48 nations.
             </p>
-            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '11.5pt', fontWeight: 400, color: '#6b6760', letterSpacing: '0.03em' }}>
+            <p className="oswald" style={{ margin: '0 0 3mm', fontSize: '10.5pt', fontWeight: 400, color: '#6b6760', letterSpacing: '0.03em' }}>
               Draw any nation — <em>every team has a prize to play for.</em>
             </p>
 
             {/* Prize grid: 2 columns */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5mm' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2mm' }}>
               {PRIZES.map((p) => {
                 const amt = pot != null ? formatAmt(pot * p.share) : null;
                 return (
                   <div key={p.name} style={{
                     background: '#f5f4ee',
                     border: '1px solid #e5e2d8',
-                    borderRadius: '2.5mm',
-                    padding: '3mm 3.5mm',
+                    borderRadius: '2mm',
+                    padding: '2mm 3mm',
                     display: 'flex',
-                    gap: '2.5mm',
+                    gap: '2mm',
                     alignItems: 'center',
                   }}>
-                    <span style={{ fontSize: '14pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
+                    <span style={{ fontSize: '12pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.03em', lineHeight: 1.1 }}>
+                      <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.03em', lineHeight: 1.1 }}>
                         {p.name}
                       </p>
-                      <p style={{ margin: '0.5mm 0 0', fontSize: '7pt', color: '#8a8678', lineHeight: 1.3, fontFamily: 'system-ui, sans-serif' }}>
+                      <p style={{ margin: '0.3mm 0 0', fontSize: '6.5pt', color: '#8a8678', lineHeight: 1.2, fontFamily: 'system-ui, sans-serif' }}>
                         {p.tagline}
                       </p>
                     </div>
@@ -222,7 +222,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                         padding: '1mm 2mm',
                         flexShrink: 0,
                       }}>
-                        <p className="bungee" style={{ margin: 0, fontSize: '9.5pt', color: '#fff', lineHeight: 1, letterSpacing: '0.02em' }}>
+                        <p className="bungee" style={{ margin: 0, fontSize: '8.5pt', color: '#fff', lineHeight: 1, letterSpacing: '0.02em' }}>
                           {amt}
                         </p>
                       </div>
@@ -233,11 +233,11 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             </div>
 
             {/* Mystery prizes note */}
-            <div style={{ marginTop: '3mm', textAlign: 'center' }}>
-              <p className="oswald" style={{ margin: '0 0 2mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#8a8678' }}>
+            <div style={{ marginTop: '2mm', textAlign: 'center' }}>
+              <p className="oswald" style={{ margin: '0 0 1.5mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#8a8678' }}>
                 Plus mystery prizes — arranged by the organiser
               </p>
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '4mm', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '3mm', flexWrap: 'wrap' }}>
                 {MYSTERY_PRIZES.map(m => (
                   <div key={m.name} style={{
                     display: 'flex', alignItems: 'center', gap: '1.5mm',
@@ -246,10 +246,10 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                     borderRadius: '2mm',
                     padding: '1.5mm 3mm',
                   }}>
-                    <span style={{ fontSize: '10pt', lineHeight: 1 }}>{m.icon}</span>
+                    <span style={{ fontSize: '9pt', lineHeight: 1 }}>{m.icon}</span>
                     <div>
-                      <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, color: '#3a3830', lineHeight: 1 }}>{m.name}</p>
-                      <p style={{ margin: 0, fontSize: '6.5pt', color: '#8a8678', fontFamily: 'system-ui, sans-serif', lineHeight: 1.2 }}>{m.tagline}</p>
+                      <p className="oswald" style={{ margin: 0, fontSize: '8pt', fontWeight: 700, color: '#3a3830', lineHeight: 1 }}>{m.name}</p>
+                      <p style={{ margin: 0, fontSize: '6pt', color: '#8a8678', fontFamily: 'system-ui, sans-serif', lineHeight: 1.2 }}>{m.tagline}</p>
                     </div>
                   </div>
                 ))}
@@ -258,27 +258,27 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── HOW IT WORKS ─────────────────────────────────────── */}
-          <div style={{ background: '#f5f4ee', padding: '4.5mm 12mm', flexShrink: 0 }}>
-            <p className="oswald" style={{ margin: '0 0 3mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#4D10C8' }}>
+          <div style={{ background: '#f5f4ee', padding: '3.5mm 12mm', flexShrink: 0 }}>
+            <p className="oswald" style={{ margin: '0 0 2.5mm', fontSize: '8pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#4D10C8' }}>
               How it works
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2.5mm' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2mm' }}>
               {STEPS.map(step => (
                 <div key={step.title} style={{
                   background: '#fff',
-                  borderRadius: '2.5mm',
-                  padding: '3.5mm',
+                  borderRadius: '2mm',
+                  padding: '3mm',
                   border: '1px solid #e5e2d8',
                   display: 'flex',
-                  gap: '2.5mm',
+                  gap: '2mm',
                   alignItems: 'flex-start',
                 }}>
-                  <span style={{ fontSize: '12pt', flexShrink: 0, lineHeight: 1, marginTop: '0.5mm' }}>{step.icon}</span>
+                  <span style={{ fontSize: '11pt', flexShrink: 0, lineHeight: 1, marginTop: '0.5mm' }}>{step.icon}</span>
                   <div>
-                    <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '9pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    <p className="oswald" style={{ margin: '0 0 0.5mm', fontSize: '8.5pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                       {step.title}
                     </p>
-                    <p style={{ margin: 0, fontSize: '7.5pt', color: '#6b6760', lineHeight: 1.4, fontFamily: 'system-ui, sans-serif' }}>
+                    <p style={{ margin: 0, fontSize: '7pt', color: '#6b6760', lineHeight: 1.35, fontFamily: 'system-ui, sans-serif' }}>
                       {step.body}
                     </p>
                   </div>
@@ -288,7 +288,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── JOIN ─────────────────────────────────────────────── */}
-          <div style={{ flex: 1, background: '#fff', padding: '4.5mm 12mm 5mm', display: 'flex', flexDirection: 'column', gap: '3.5mm' }}>
+          <div style={{ flex: 1, background: '#fff', padding: '3.5mm 12mm 4mm', display: 'flex', flexDirection: 'column', gap: '3mm' }}>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4mm' }}>
               <div>
@@ -324,7 +324,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             </div>
 
             {/* Code + QR */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#4D10C8', borderRadius: '4mm', padding: '4.5mm 6mm' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#4D10C8', borderRadius: '4mm', padding: '3.5mm 6mm' }}>
               <div style={{ flex: 1 }}>
                 <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8pt', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
                   Visit {displayUrl} and enter code
@@ -346,7 +346,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           {/* ── FOOTER ───────────────────────────────────────────── */}
           <div style={{
             background: '#4D10C8',
-            padding: '3.5mm 12mm',
+            padding: '3mm 12mm',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
