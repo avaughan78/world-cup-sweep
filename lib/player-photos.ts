@@ -45,7 +45,6 @@ export async function fetchPlayerPhoto(name: string): Promise<PlayerPhotoResult>
   }
 
   // ── Wikipedia fallback ────────────────────────────────────────────────────
-  // Try "{name}" and "{name} (footballer)" in one request
   try {
     const t1 = encodeURIComponent(name);
     const t2 = encodeURIComponent(`${name} (footballer)`);
