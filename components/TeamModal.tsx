@@ -138,7 +138,7 @@ export default function TeamModal({ team, participant, onClose }: {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ background: 'rgba(8,8,6,0.8)', backdropFilter: 'blur(8px)' }}
+      style={{ background: 'rgba(8,8,6,0.8)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)' }}
       onClick={onClose}
     >
       <div

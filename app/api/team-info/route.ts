@@ -64,7 +64,7 @@ async function wikiData(title: string): Promise<{ image: string | null; extract:
   try {
     const url =
       `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}` +
-      `&prop=pageimages|extracts&format=json&exintro=true&pithumbsize=1400&origin=*`;
+      `&prop=pageimages|extracts&format=json&exintro=true&pithumbsize=800&origin=*`;
     const res = await fetchWithTimeout(url, { cache: 'no-store' });
     if (!res.ok) return { image: null, extract: null };
     const data = await res.json();
