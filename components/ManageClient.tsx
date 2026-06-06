@@ -99,14 +99,19 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   }
 
   useEffect(() => {
-    // Try to restore session via HttpOnly cookie
+    // Try to restore session via HttpOnly cookie — validate the session belongs to this company
     fetch('/api/company/manage/participants', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     }).then(async r => {
       if (r.ok) {
-        const data = await r.json() as { participants?: Array<{ team_name: string; participant_name: string | null }> };
+        const data = await r.json() as { companyId?: number; participants?: Array<{ team_name: string; participant_name: string | null }> };
+        if (data.companyId !== initialCompany.id) {
+          // Session belongs to a different company — require fresh login
+          setChecking(false);
+          return;
+        }
         const map: Record<string, string> = {};
         for (const p of data.participants ?? []) map[p.team_name] = p.participant_name ?? '';
         setNames(map);
@@ -191,11 +196,13 @@ export default function ManageClient({ company: initialCompany }: { company: Com
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ticket_price: isNaN(price) ? null : price }),
       });
-      const data = await res.json() as { ok: boolean };
-      if (data.ok) {
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (res.ok && data.ok) {
         setCompany(prev => ({ ...prev, ticket_price: isNaN(price) ? null : price }));
         setPriceSaved(true);
         setTimeout(() => setPriceSaved(false), 2000);
+      } else {
+        setStatus({ ok: false, message: data.error ?? `Failed to save price (${res.status}) — try logging out and back in` });
       }
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
@@ -394,29 +401,24 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </button>
               </div>
 
-              {/* Step 2 — enabled when price is set */}
-              {(() => {
-                const priceSet = company.ticket_price != null;
-                return (
-                  <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)', opacity: priceSet ? 1 : 0.45, pointerEvents: priceSet ? 'auto' : 'none' }}>
-                    <div className="flex items-center gap-2.5">
-                      <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                        style={{ background: priceSet ? '#4D10C8' : 'var(--text-muted)', color: '#fff', lineHeight: 1 }}>2</span>
-                      <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
-                    </div>
-                    <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                      QR codes are generated automatically — just print, cut, fold, and draw from the hat.
-                    </p>
-                    <a href={`/print?code=${company.code}`} target="_blank"
-                      className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
-                      style={{ background: '#D40100', color: '#fff', display: 'block' }}>
-                      Print tickets ↗
-                    </a>
-                  </div>
-                );
-              })()}
+              {/* Step 2 — always enabled (QR codes auto-generated) */}
+              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>2</span>
+                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
+                </div>
+                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                  QR codes are generated automatically — just print, cut, fold, and draw from the hat.
+                </p>
+                <a href={`/print?code=${company.code}`} target="_blank"
+                  className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
+                  style={{ background: '#D40100', color: '#fff', display: 'block' }}>
+                  Print tickets ↗
+                </a>
+              </div>
 
-              {/* Step 3 — enabled when price is set */}
+              {/* Step 3 — enabled when price is set (advert shows prize pot) */}
               {(() => {
                 const priceSet = company.ticket_price != null;
                 return (
@@ -454,11 +456,6 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                     style={{ background: copied ? 'var(--green)' : '#4D10C8', color: '#fff' }}>
                     {copied ? 'Copied! ✓' : 'Copy link'}
                   </button>
-                  <a href={`/?code=${company.code}`} target="_blank"
-                    className="font-bold px-4 py-2 rounded-lg text-sm text-center w-full"
-                    style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', display: 'block' }}>
-                    View ↗
-                  </a>
                 </div>
               </div>
 
