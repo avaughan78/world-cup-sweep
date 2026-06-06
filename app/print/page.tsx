@@ -90,7 +90,7 @@ export default async function PrintPage({ searchParams }: { searchParams: Promis
           </h1>
           {!hasTokens && (
             <p className="text-sm mt-0.5" style={{ color: '#ef4444' }}>
-              No QR codes generated yet — go to your <a href={`/manage?code=${company.code}`} style={{ color: '#ef4444', textDecoration: 'underline' }}>organiser manage page</a> and click Generate QR Codes.
+              No QR codes found — go to your <a href={`/manage?code=${company.code}`} style={{ color: '#ef4444', textDecoration: 'underline' }}>organiser manage page</a> and click Regenerate in Settings.
             </p>
           )}
         </div>
