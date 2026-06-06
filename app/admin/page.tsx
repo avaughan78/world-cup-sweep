@@ -393,7 +393,8 @@ export default function AdminPage() {
     setLoading(false);
   }
 
-  async function clearPrize(endpoint: string, resetFns: Array<() => void>) {
+  async function clearPrize(endpoint: string, resetFns: Array<() => void>, label: string) {
+    if (!confirm(`Clear ${label}? This cannot be undone.`)) return;
     setLoading(true);
     try {
       const res = await fetch(endpoint, {
@@ -692,7 +693,7 @@ export default function AdminPage() {
                       </div>
                       <button onClick={() => clearPrize('/api/admin/shot', [
                         () => { setShotTeam(''); setShotPlayer(''); setShotYards(''); setShotUrl(''); lastShot.current = { team: '', player: '', url: '' }; },
-                      ])} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
+                      ], 'Thunderbastard data')} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
                         style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
                         Clear
                       </button>
@@ -712,7 +713,7 @@ export default function AdminPage() {
                       </div>
                       <button onClick={() => clearPrize('/api/admin/owngoal', [
                         () => { setOwnGoalTeam(''); setOwnGoalUrl(''); lastOwnGoal.current = { team: '', url: '' }; },
-                      ])} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
+                      ], 'OG data')} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
                         style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
                         Clear
                       </button>
@@ -735,7 +736,7 @@ export default function AdminPage() {
                       </div>
                       <button onClick={() => clearPrize('/api/admin/bicycle', [
                         () => { setBicycleTeam(''); setBicyclePlayer(''); setBicycleUrl(''); lastBicycle.current = { team: '', player: '', url: '' }; },
-                      ])} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
+                      ], 'Bicycle data')} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
                         style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
                         Clear
                       </button>
