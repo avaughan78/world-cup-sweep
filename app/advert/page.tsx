@@ -1,13 +1,9 @@
 import { redirect } from 'next/navigation';
 import { getCompanyByCode } from '@/lib/db';
-import { GROUPS_2026 } from '@/lib/groups';
-import { getFlagUrl } from '@/lib/flags';
 import QRCode from 'react-qr-code';
 import PrintButton from '@/components/PrintButton';
 
 export const dynamic = 'force-dynamic';
-
-const ALL_TEAMS = Object.values(GROUPS_2026).flat();
 
 const HOST_FLAGS = [
   { code: 'us', label: 'USA' },
@@ -19,7 +15,7 @@ const STEPS = [
   {
     icon: '🎩',
     title: 'Draw from the hat',
-    body: 'Everyone picks a folded ticket at random. That\'s your nation for the entire tournament.',
+    body: 'Everyone picks a folded ticket at random. That\'s your nation for the whole tournament.',
   },
   {
     icon: '📱',
@@ -29,19 +25,36 @@ const STEPS = [
   {
     icon: '📊',
     title: 'Follow live',
-    body: 'Standings, cards, top scorers, and category leaders are all tracked in real time on this page.',
+    body: 'Standings, cards, top scorers, and prize leaders tracked in real time on the sweep page.',
   },
 ];
 
-const PRIZE_CATEGORIES = [
-  { icon: '🏆', name: 'The Winner' },
-  { icon: '🥈', name: 'Runner-Up' },
-  { icon: '👟', name: 'The Golden Boot' },
-  { icon: '✈️', name: 'Early Bath' },
-  { icon: '🪣', name: 'Derby County' },
-  { icon: '🟨', name: 'Most Cards' },
-  { icon: '🚀', name: 'The Thunderbastard' },
+interface PrizeDef {
+  icon: string;
+  name: string;
+  tagline: string;
+  share: number;
+  mystery?: boolean;
+}
+
+const PRIZES: PrizeDef[] = [
+  { icon: '🏆', name: 'Tournament Winner',  tagline: 'Goes all the way to lift the trophy',        share: 0.50 },
+  { icon: '🥈', name: 'Runner-Up',          tagline: 'Finalist — so close, yet so far',            share: 0.25 },
+  { icon: '👟', name: 'The Golden Boot',    tagline: "Nation of the tournament's top scorer",      share: 0.05 },
+  { icon: '✈️', name: 'Early Bath',         tagline: 'First nation knocked out — gone but rich',   share: 0.05 },
+  { icon: '🪣', name: 'Derby County',       tagline: 'Most goals conceded — a leaky defence pays', share: 0.05 },
+  { icon: '🟨', name: 'Most Cards',         tagline: 'Filthiest team — yellow & red cards count',  share: 0.05 },
+  { icon: '🚀', name: 'The Thunderbastard', tagline: 'Longest range goal of the whole tournament', share: 0.05 },
 ];
+
+const MYSTERY_PRIZES: PrizeDef[] = [
+  { icon: '😬', name: 'OG',          tagline: 'Most spectacular own goal',        share: 0, mystery: true },
+  { icon: '🤸', name: 'The Bicycle', tagline: 'Best overhead kick of the tournament', share: 0, mystery: true },
+];
+
+function formatAmt(n: number): string {
+  return n % 1 === 0 ? `£${n}` : `£${n.toFixed(2)}`;
+}
 
 export default async function AdvertPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
   const params = await searchParams;
@@ -61,6 +74,8 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
   const fee = company.ticket_price != null
     ? `£${company.ticket_price % 1 === 0 ? company.ticket_price : company.ticket_price.toFixed(2)}`
     : null;
+
+  const pot = company.ticket_price != null ? company.ticket_price * 48 : null;
 
   return (
     <>
@@ -106,23 +121,22 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           }}
         >
 
-          {/* ── HERO — same background image as the main site header ── */}
+          {/* ── HERO ─────────────────────────────────────────────── */}
           <div style={{
             position: 'relative',
-            height: '65mm',
+            height: '58mm',
             flexShrink: 0,
             backgroundImage: 'url(/wc2026-header-bg.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             overflow: 'hidden',
           }}>
-            {/* Subtle gradient only at the bottom to lift text — matches main site style */}
             <div style={{
               position: 'absolute', inset: 0,
               background: 'linear-gradient(to bottom, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.55) 100%)',
             }} />
 
-            <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '7mm 12mm', display: 'flex', gap: '4mm' }}>
+            <div style={{ position: 'relative', zIndex: 1, height: '100%', padding: '6mm 12mm', display: 'flex', gap: '4mm' }}>
 
               {/* Left: tournament info */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -133,22 +147,22 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                   <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '10.5pt', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffcc00' }}>
                     Kicks off
                   </p>
-                  <p className="bungee" style={{ margin: 0, fontSize: '30pt', lineHeight: 0.95, color: '#fff', letterSpacing: '0.01em', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
+                  <p className="bungee" style={{ margin: 0, fontSize: '28pt', lineHeight: 0.95, color: '#fff', letterSpacing: '0.01em', textShadow: '0 2px 12px rgba(0,0,0,0.5)' }}>
                     11 June
                   </p>
-                  <p className="bungee" style={{ margin: '1.5mm 0 0', fontSize: '17pt', lineHeight: 1, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.01em' }}>
+                  <p className="bungee" style={{ margin: '1.5mm 0 0', fontSize: '16pt', lineHeight: 1, color: 'rgba(255,255,255,0.55)', letterSpacing: '0.01em' }}>
                     2026
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: '3mm', alignItems: 'center' }}>
-                  {HOST_FLAGS.map(({ code, label }) => (
-                    <div key={code} style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
+                  {HOST_FLAGS.map(({ code: fc, label }) => (
+                    <div key={fc} style={{ display: 'flex', alignItems: 'center', gap: '1.5mm' }}>
                       <img
-                        src={`https://flagcdn.com/w40/${code}.png`}
+                        src={`https://flagcdn.com/w40/${fc}.png`}
                         alt={label}
-                        style={{ height: '13px', width: 'auto', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
+                        style={{ height: '12px', width: 'auto', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.4)' }}
                       />
-                      <span className="oswald" style={{ fontSize: '8.5pt', fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                      <span className="oswald" style={{ fontSize: '8pt', fontWeight: 600, color: 'rgba(255,255,255,0.75)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
                         {label}
                       </span>
                     </div>
@@ -159,109 +173,112 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
               {/* Right: trophy + sweep name */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', gap: '2mm', flexShrink: 0 }}>
                 <img src="/world-cup-trophy.png" alt="World Cup trophy" style={{
-                  height: '38mm', width: 'auto', opacity: 0.88,
+                  height: '35mm', width: 'auto', opacity: 0.88,
                   filter: 'brightness(1.1) drop-shadow(0 2px 8px rgba(0,0,0,0.5))',
                 }} />
-                <p className="bungee" style={{ margin: 0, fontSize: '13pt', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, textAlign: 'right', textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}>
+                <p className="bungee" style={{ margin: 0, fontSize: '12pt', color: '#fff', letterSpacing: '0.04em', lineHeight: 1, textAlign: 'right', textShadow: '0 1px 6px rgba(0,0,0,0.5)' }}>
                   WC26 Sweep
                 </p>
               </div>
-
             </div>
           </div>
 
-          {/* ── HOOK BAR + PRIZES ────────────────────────────────── */}
-          <div style={{ background: '#D40100', padding: '5mm 12mm 6mm' }}>
-            <p className="bungee" style={{ margin: '0 0 1mm', fontSize: '19pt', color: '#fff', lineHeight: 1, letterSpacing: '0.01em' }}>
-              48 nations. One World Cup.
+          {/* ── PRIZE CENTREPIECE ────────────────────────────────── */}
+          <div style={{ background: '#D40100', padding: '5mm 12mm 6mm', flexShrink: 0 }}>
+            <p className="bungee" style={{ margin: '0 0 0.5mm', fontSize: '18pt', color: '#fff', lineHeight: 1, letterSpacing: '0.01em' }}>
+              7 ways to win. 48 nations.
             </p>
-            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '12.5pt', fontWeight: 400, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.03em' }}>
-              Which team will <em>you</em> draw?
+            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '11.5pt', fontWeight: 400, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.03em' }}>
+              Draw any nation — <em>every team has a prize to play for.</em>
             </p>
-            <div style={{ borderTop: '1px solid rgba(255,255,255,0.25)', paddingTop: '4mm' }}>
-              <p className="oswald" style={{ margin: '0 0 2.5mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>
-                Prize categories
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2mm' }}>
-                {PRIZE_CATEGORIES.map(p => (
+
+            {/* Prize grid: 2 columns */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5mm' }}>
+              {PRIZES.map((p) => {
+                const amt = pot != null ? formatAmt(pot * p.share) : null;
+                return (
                   <div key={p.name} style={{
-                    display: 'flex', alignItems: 'center', gap: '2mm',
-                    background: 'rgba(255,255,255,0.15)',
-                    border: '1px solid rgba(255,255,255,0.22)',
+                    background: 'rgba(0,0,0,0.28)',
+                    border: '1px solid rgba(255,255,255,0.18)',
+                    borderRadius: '2.5mm',
+                    padding: '3mm 3.5mm',
+                    display: 'flex',
+                    gap: '2.5mm',
+                    alignItems: 'center',
+                  }}>
+                    <span style={{ fontSize: '14pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 700, color: '#fff', letterSpacing: '0.03em', lineHeight: 1.1 }}>
+                        {p.name}
+                      </p>
+                      <p style={{ margin: '0.5mm 0 0', fontSize: '7pt', color: 'rgba(255,255,255,0.65)', lineHeight: 1.3, fontFamily: 'system-ui, sans-serif' }}>
+                        {p.tagline}
+                      </p>
+                    </div>
+                    {amt && (
+                      <div style={{
+                        background: '#ffcc00',
+                        borderRadius: '1.5mm',
+                        padding: '1mm 2mm',
+                        flexShrink: 0,
+                      }}>
+                        <p className="bungee" style={{ margin: 0, fontSize: '9.5pt', color: '#1a1a17', lineHeight: 1, letterSpacing: '0.02em' }}>
+                          {amt}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Mystery prizes note */}
+            <div style={{ marginTop: '3mm', textAlign: 'center' }}>
+              <p className="oswald" style={{ margin: '0 0 2mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
+                Plus mystery prizes — arranged by the organiser
+              </p>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '4mm', flexWrap: 'wrap' }}>
+                {MYSTERY_PRIZES.map(m => (
+                  <div key={m.name} style={{
+                    display: 'flex', alignItems: 'center', gap: '1.5mm',
+                    background: 'rgba(0,0,0,0.2)',
+                    border: '1px solid rgba(255,255,255,0.15)',
                     borderRadius: '2mm',
                     padding: '1.5mm 3mm',
                   }}>
-                    <span style={{ fontSize: '10pt', lineHeight: 1 }}>{p.icon}</span>
-                    <span className="oswald" style={{ fontSize: '9pt', fontWeight: 700, color: '#fff', letterSpacing: '0.02em', lineHeight: 1 }}>
-                      {p.name}
-                    </span>
+                    <span style={{ fontSize: '10pt', lineHeight: 1 }}>{m.icon}</span>
+                    <div>
+                      <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>{m.name}</p>
+                      <p style={{ margin: 0, fontSize: '6.5pt', color: 'rgba(255,255,255,0.4)', fontFamily: 'system-ui, sans-serif', lineHeight: 1.2 }}>{m.tagline}</p>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* ── ALL 48 TEAMS ─────────────────────────────────────── */}
-          <div style={{ background: '#f5f4ee', padding: '4mm 12mm' }}>
-            <p className="oswald" style={{ margin: '0 0 3mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#8a8678' }}>
-              The 48 nations
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '1.5mm 3mm' }}>
-              {ALL_TEAMS.map(team => {
-                const url = getFlagUrl(team);
-                return (
-                  <div key={team} style={{ display: 'flex', alignItems: 'center', gap: '2mm', minWidth: 0 }}>
-                    <div style={{ width: '22px', height: '15px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {url ? (
-                        <img
-                          src={url}
-                          alt={team}
-                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', borderRadius: '1px', boxShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
-                        />
-                      ) : (
-                        <span style={{ fontSize: '10pt', lineHeight: 1 }}>🏳️</span>
-                      )}
-                    </div>
-                    <span style={{
-                      fontFamily: 'system-ui, sans-serif',
-                      fontSize: '7.5pt',
-                      color: '#3a3830',
-                      lineHeight: 1.25,
-                      overflow: 'hidden',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}>
-                      {team}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
           {/* ── HOW IT WORKS ─────────────────────────────────────── */}
-          <div style={{ background: '#fff', padding: '5mm 12mm' }}>
-            <p className="oswald" style={{ margin: '0 0 3.5mm', fontSize: '9pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#4D10C8' }}>
+          <div style={{ background: '#f5f4ee', padding: '4.5mm 12mm', flexShrink: 0 }}>
+            <p className="oswald" style={{ margin: '0 0 3mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: '#4D10C8' }}>
               How it works
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '3mm' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2.5mm' }}>
               {STEPS.map(step => (
                 <div key={step.title} style={{
-                  background: '#f5f4ee',
-                  borderRadius: '3mm',
-                  padding: '4mm',
+                  background: '#fff',
+                  borderRadius: '2.5mm',
+                  padding: '3.5mm',
                   border: '1px solid #e5e2d8',
                   display: 'flex',
-                  gap: '3mm',
+                  gap: '2.5mm',
                   alignItems: 'flex-start',
                 }}>
-                  <span style={{ fontSize: '13pt', flexShrink: 0, lineHeight: 1, marginTop: '0.5mm' }}>{step.icon}</span>
+                  <span style={{ fontSize: '12pt', flexShrink: 0, lineHeight: 1, marginTop: '0.5mm' }}>{step.icon}</span>
                   <div>
-                    <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '9.5pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+                    <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '9pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                       {step.title}
                     </p>
-                    <p style={{ margin: 0, fontSize: '8pt', color: '#6b6760', lineHeight: 1.4, fontFamily: 'system-ui, sans-serif' }}>
+                    <p style={{ margin: 0, fontSize: '7.5pt', color: '#6b6760', lineHeight: 1.4, fontFamily: 'system-ui, sans-serif' }}>
                       {step.body}
                     </p>
                   </div>
@@ -271,14 +288,14 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── JOIN ─────────────────────────────────────────────── */}
-          <div style={{ flex: 1, background: '#fff', padding: '5mm 12mm 6mm', display: 'flex', flexDirection: 'column', gap: '4mm' }}>
+          <div style={{ flex: 1, background: '#fff', padding: '4.5mm 12mm 5mm', display: 'flex', flexDirection: 'column', gap: '3.5mm' }}>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4mm' }}>
               <div>
-                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a8678' }}>
+                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a8678' }}>
                   Sweep organised by
                 </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '18pt', color: '#4D10C8', lineHeight: 1 }}>
+                <p className="bungee" style={{ margin: 0, fontSize: '17pt', color: '#4D10C8', lineHeight: 1 }}>
                   {company.name}
                 </p>
               </div>
@@ -287,35 +304,40 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                   background: '#edf7f0',
                   border: '1.5px solid #3b7a52',
                   borderRadius: '3mm',
-                  padding: '3mm 5mm',
+                  padding: '2.5mm 5mm',
                   textAlign: 'center',
                   flexShrink: 0,
                 }}>
-                  <p className="oswald" style={{ margin: '0 0 0.5mm', fontSize: '8pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3b7a52' }}>
-                    Entry
+                  <p className="oswald" style={{ margin: '0 0 0.5mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3b7a52' }}>
+                    Entry fee
                   </p>
                   <p className="bungee" style={{ margin: 0, fontSize: '14pt', color: '#1a1a17', lineHeight: 1 }}>
                     {fee}
                   </p>
+                  {pot != null && (
+                    <p style={{ margin: '0.5mm 0 0', fontSize: '7pt', color: '#3b7a52', fontFamily: 'system-ui, sans-serif' }}>
+                      {formatAmt(pot)} total pot
+                    </p>
+                  )}
                 </div>
               )}
             </div>
 
             {/* Code + QR */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#4D10C8', borderRadius: '4mm', padding: '5mm 6mm' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#4D10C8', borderRadius: '4mm', padding: '4.5mm 6mm' }}>
               <div style={{ flex: 1 }}>
-                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
+                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8pt', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
                   Visit {displayUrl} and enter code
                 </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '26pt', color: '#fff', letterSpacing: '0.15em', lineHeight: 1 }}>
+                <p className="bungee" style={{ margin: 0, fontSize: '25pt', color: '#fff', letterSpacing: '0.15em', lineHeight: 1 }}>
                   {company.code}
                 </p>
-                <p className="oswald" style={{ margin: '2mm 0 0', fontSize: '9.5pt', color: 'rgba(255,255,255,0.7)', fontWeight: 400, lineHeight: 1.4 }}>
-                  When all names are drawn and entered onto the site you can follow the competition stats on this page:
+                <p className="oswald" style={{ margin: '2mm 0 0', fontSize: '9pt', color: 'rgba(255,255,255,0.7)', fontWeight: 400, lineHeight: 1.4 }}>
+                  Claim your team after the draw, then follow live stats for the whole tournament.
                 </p>
               </div>
               <div style={{ flexShrink: 0, background: '#fff', borderRadius: '2.5mm', padding: '3mm' }}>
-                <QRCode value={joinUrl} size={68} />
+                <QRCode value={joinUrl} size={64} />
               </div>
             </div>
 
@@ -324,16 +346,16 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           {/* ── FOOTER ───────────────────────────────────────────── */}
           <div style={{
             background: '#4D10C8',
-            padding: '4mm 12mm',
+            padding: '3.5mm 12mm',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             flexShrink: 0,
           }}>
-            <p className="oswald" style={{ margin: 0, fontSize: '9pt', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
+            <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
               48 teams · 104 matches · 3 host nations
             </p>
-            <p className="bungee" style={{ margin: 0, fontSize: '9.5pt', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.06em' }}>
+            <p className="bungee" style={{ margin: 0, fontSize: '9pt', color: 'rgba(255,255,255,0.6)', letterSpacing: '0.06em' }}>
               11 Jun – 19 Jul 2026
             </p>
           </div>

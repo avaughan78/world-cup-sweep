@@ -8,8 +8,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Too many sweeps created from this address — try again later' }, { status: 429 });
   }
 
-  const { name, code, admin_password } = await req.json() as {
-    name?: string; code?: string; admin_password?: string;
+  const { name, code, admin_password, admin_email } = await req.json() as {
+    name?: string; code?: string; admin_password?: string; admin_email?: string | null;
   };
 
   const trimmedName = name?.trim();
@@ -26,7 +26,8 @@ export async function POST(req: NextRequest) {
   if (existing) return NextResponse.json({ error: 'That code is already taken — try another' }, { status: 409 });
 
   const ip = getIp(req);
-  const company = await createCompany(trimmedCode, trimmedName);
+  const trimmedEmail = admin_email?.trim() || null;
+  const company = await createCompany(trimmedCode, trimmedName, trimmedEmail);
   await setCompanyAdminPassword(company.id, trimmedPw);
   await generateClaimTokens(company.id);
   await writeAudit('sweep_created', { actor: trimmedCode, companyId: company.id, details: { name: trimmedName }, ip });

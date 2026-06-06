@@ -14,6 +14,7 @@ export default function SetupPage() {
   const [companyName, setCompanyName] = useState('');
   const [code, setCode] = useState('');
   const [codeTouched, setCodeTouched] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
   const [adminPw, setAdminPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [error, setError] = useState('');
@@ -33,7 +34,7 @@ export default function SetupPage() {
       const res = await fetch('/api/company/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: companyName, code, admin_password: adminPw }),
+        body: JSON.stringify({ name: companyName, code, admin_password: adminPw, admin_email: adminEmail.trim() || null }),
       });
       const data = await res.json() as { ok?: boolean; error?: string; company?: { code: string } };
       if (data.ok && data.company) {
@@ -108,6 +109,19 @@ export default function SetupPage() {
               onChange={e => { setCode(e.target.value.toUpperCase()); setCodeTouched(true); }}
               maxLength={10}
               style={{ ...inputStyle, letterSpacing: '0.1em', fontWeight: 700 }}
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-widest mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Email <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— optional, for password recovery</span>
+            </label>
+            <input
+              type="email"
+              placeholder="you@example.com"
+              value={adminEmail}
+              onChange={e => setAdminEmail(e.target.value)}
+              style={inputStyle}
             />
           </div>
 

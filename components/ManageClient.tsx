@@ -25,6 +25,8 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [priceSaved, setPriceSaved] = useState(false);
   const [companyName, setCompanyName] = useState(initialCompany.name);
   const [nameSaved, setNameSaved] = useState(false);
+  const [adminEmail, setAdminEmail] = useState(initialCompany.admin_email ?? '');
+  const [emailSaved, setEmailSaved] = useState(false);
   const [newPw, setNewPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
   const [pwSaved, setPwSaved] = useState(false);
@@ -209,7 +211,8 @@ export default function ManageClient({ company: initialCompany }: { company: Com
     setLoading(false);
   }
 
-  function handleLogout() {
+  async function handleLogout() {
+    await fetch('/api/company/manage/logout', { method: 'POST' });
     window.location.href = `/?code=${company.code}`;
   }
 
@@ -258,6 +261,26 @@ export default function ManageClient({ company: initialCompany }: { company: Com
     setLoading(false);
   }
 
+
+  async function handleSaveEmail() {
+    const email = adminEmail.trim();
+    if (email === (company.admin_email ?? '')) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/company/manage/details', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ admin_email: email || null }),
+      });
+      const data = await res.json() as { ok: boolean };
+      if (data.ok) {
+        setCompany(prev => ({ ...prev, admin_email: email || null }));
+        setEmailSaved(true);
+        setTimeout(() => setEmailSaved(false), 2000);
+      }
+    } catch (e) { setStatus({ ok: false, message: String(e) }); }
+    setLoading(false);
+  }
 
   async function handleCopyLink() {
     await navigator.clipboard.writeText(`${window.location.origin}/?code=${company.code}`);
@@ -318,9 +341,10 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             >
               {authLoading ? 'Checking…' : 'Access Admin →'}
             </button>
-            <p className="text-xs mt-4 text-center">
+            <div className="flex items-center justify-between text-xs mt-4">
               <a href={`/?code=${company.code}`} style={{ color: 'var(--text-muted)' }}>← Back to draw</a>
-            </p>
+              <a href={`/manage/reset?code=${company.code}`} style={{ color: 'var(--text-muted)' }}>Forgot password?</a>
+            </div>
           </div>
         </div>
       </main>
@@ -479,6 +503,27 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 style={{ background: nameSaved ? '#f0fdf4' : 'var(--green)', color: nameSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
                 {nameSaved ? 'Saved ✓' : 'Save'}
               </button>
+            </div>
+
+            {/* Recovery email */}
+            <div className="flex flex-wrap gap-2 items-end mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Recovery email <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>— for password resets</span></p>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                value={adminEmail}
+                onChange={e => setAdminEmail(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleSaveEmail()}
+                style={{ flex: '1 1 200px', minWidth: 0, ...smallInputStyle }}
+              />
+              <button onClick={handleSaveEmail} disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                style={{ background: emailSaved ? '#f0fdf4' : 'var(--green)', color: emailSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
+                {emailSaved ? 'Saved ✓' : 'Save'}
+              </button>
+              <p className="w-full text-xs mt-0.5" style={{ color: 'var(--text-muted)', opacity: 0.7 }}>
+                Optional. Only used if you ever need to reset your password via email.
+              </p>
             </div>
 
             {/* Change password */}

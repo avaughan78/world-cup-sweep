@@ -11,6 +11,7 @@ export interface Company {
   code: string;
   name: string;
   ticket_price: number | null;
+  admin_email: string | null;
 }
 
 export interface Participant {
@@ -60,12 +61,12 @@ export interface GroupStanding {
 // ── Companies ────────────────────────────────────────────────────────────────
 
 export async function listCompanies(): Promise<Company[]> {
-  const rows = await sql`SELECT id, code, name, ticket_price FROM companies ORDER BY name`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email FROM companies ORDER BY name`;
   return rows as Company[];
 }
 
 export async function getCompanyByCode(code: string): Promise<Company | null> {
-  const rows = await sql`SELECT id, code, name, ticket_price FROM companies WHERE UPPER(code) = UPPER(${code})`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email FROM companies WHERE UPPER(code) = UPPER(${code})`;
   return (rows[0] as Company) ?? null;
 }
 
@@ -101,12 +102,14 @@ export async function authenticateCompanyAdmin(code: string, password: string): 
   }
 
   if (!valid) return { ok: false, reason: 'wrong_password' };
-  return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price } };
+  return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price, admin_email: row.admin_email ?? null } };
 }
 
-export async function createCompany(code: string, name: string): Promise<Company> {
+export async function createCompany(code: string, name: string, email?: string | null): Promise<Company> {
   const rows = await sql`
-    INSERT INTO companies (code, name) VALUES (UPPER(${code}), ${name}) RETURNING id, code, name
+    INSERT INTO companies (code, name, admin_email)
+    VALUES (UPPER(${code}), ${name}, ${email ?? null})
+    RETURNING id, code, name, ticket_price, admin_email
   `;
   const company = rows[0] as Company;
   // Seed all 48 teams in one query via unnest (was 48 sequential round-trips)
@@ -121,17 +124,50 @@ export async function createCompany(code: string, name: string): Promise<Company
 
 export async function updateCompany(id: number, fields: { name?: string; code?: string }): Promise<Company> {
   if (fields.name !== undefined && fields.code !== undefined) {
-    const rows = await sql`UPDATE companies SET name = ${fields.name}, code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price`;
+    const rows = await sql`UPDATE companies SET name = ${fields.name}, code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price, admin_email`;
     return rows[0] as Company;
   } else if (fields.name !== undefined) {
-    const rows = await sql`UPDATE companies SET name = ${fields.name} WHERE id = ${id} RETURNING id, code, name, ticket_price`;
+    const rows = await sql`UPDATE companies SET name = ${fields.name} WHERE id = ${id} RETURNING id, code, name, ticket_price, admin_email`;
     return rows[0] as Company;
   } else if (fields.code !== undefined) {
-    const rows = await sql`UPDATE companies SET code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price`;
+    const rows = await sql`UPDATE companies SET code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price, admin_email`;
     return rows[0] as Company;
   }
-  const rows = await sql`SELECT id, code, name, ticket_price FROM companies WHERE id = ${id}`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email FROM companies WHERE id = ${id}`;
   return rows[0] as Company;
+}
+
+export async function setCompanyAdminEmail(id: number, email: string | null): Promise<void> {
+  await sql`UPDATE companies SET admin_email = ${email} WHERE id = ${id}`;
+}
+
+// ── Password resets ───────────────────────────────────────────────────────────
+
+export async function createPasswordReset(companyId: number): Promise<string> {
+  // Clean up old tokens for this company first
+  await sql`DELETE FROM password_resets WHERE company_id = ${companyId}`;
+  const token = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+  await sql`
+    INSERT INTO password_resets (token, company_id, expires_at)
+    VALUES (${token}, ${companyId}, ${expiresAt.toISOString()})
+  `;
+  return token;
+}
+
+export async function validatePasswordReset(token: string): Promise<{ companyId: number; code: string } | null> {
+  const rows = await sql`
+    SELECT pr.company_id, c.code
+    FROM password_resets pr
+    JOIN companies c ON c.id = pr.company_id
+    WHERE pr.token = ${token} AND pr.expires_at > NOW()
+  `;
+  if (!rows[0]) return null;
+  return { companyId: rows[0].company_id as number, code: rows[0].code as string };
+}
+
+export async function consumePasswordReset(token: string): Promise<void> {
+  await sql`DELETE FROM password_resets WHERE token = ${token}`;
 }
 
 export async function deleteCompany(id: number): Promise<void> {
