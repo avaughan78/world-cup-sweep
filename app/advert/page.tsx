@@ -34,12 +34,13 @@ const STEPS = [
 ];
 
 const PRIZE_CATEGORIES = [
-  { icon: '🏆', name: 'The Winner',              desc: 'Team that goes furthest' },
-  { icon: '👟', name: 'The Golden Boot',          desc: 'Top scorer\'s team' },
-  { icon: '✈️', name: 'Early Bath',               desc: 'First team out' },
-  { icon: '🪣', name: 'Derby County',             desc: 'Most goals conceded' },
-  { icon: '🟨', name: 'Most Cards',               desc: 'Yellow & red card leaders' },
-  { icon: '🚀', name: 'The Thunderbastard',       desc: 'Longest-range goal' },
+  { icon: '🏆', name: 'The Winner' },
+  { icon: '🥈', name: 'Runner-Up' },
+  { icon: '👟', name: 'The Golden Boot' },
+  { icon: '✈️', name: 'Early Bath' },
+  { icon: '🪣', name: 'Derby County' },
+  { icon: '🟨', name: 'Most Cards' },
+  { icon: '🚀', name: 'The Thunderbastard' },
 ];
 
 export default async function AdvertPage({ searchParams }: { searchParams: Promise<{ code?: string }> }) {
@@ -169,14 +170,35 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             </div>
           </div>
 
-          {/* ── HOOK BAR ─────────────────────────────────────────── */}
-          <div style={{ background: '#D40100', padding: '5mm 12mm' }}>
+          {/* ── HOOK BAR + PRIZES ────────────────────────────────── */}
+          <div style={{ background: '#D40100', padding: '5mm 12mm 6mm' }}>
             <p className="bungee" style={{ margin: '0 0 1mm', fontSize: '19pt', color: '#fff', lineHeight: 1, letterSpacing: '0.01em' }}>
               48 nations. One World Cup.
             </p>
-            <p className="oswald" style={{ margin: 0, fontSize: '12.5pt', fontWeight: 400, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.03em' }}>
+            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '12.5pt', fontWeight: 400, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.03em' }}>
               Which team will <em>you</em> draw?
             </p>
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.25)', paddingTop: '4mm' }}>
+              <p className="oswald" style={{ margin: '0 0 2.5mm', fontSize: '7pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)' }}>
+                Prize categories
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2mm' }}>
+                {PRIZE_CATEGORIES.map(p => (
+                  <div key={p.name} style={{
+                    display: 'flex', alignItems: 'center', gap: '2mm',
+                    background: 'rgba(255,255,255,0.15)',
+                    border: '1px solid rgba(255,255,255,0.22)',
+                    borderRadius: '2mm',
+                    padding: '1.5mm 3mm',
+                  }}>
+                    <span style={{ fontSize: '10pt', lineHeight: 1 }}>{p.icon}</span>
+                    <span className="oswald" style={{ fontSize: '9pt', fontWeight: 700, color: '#fff', letterSpacing: '0.02em', lineHeight: 1 }}>
+                      {p.name}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* ── ALL 48 TEAMS ─────────────────────────────────────── */}
@@ -215,28 +237,6 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                   </div>
                 );
               })}
-            </div>
-          </div>
-
-          {/* ── PRIZE CATEGORIES ─────────────────────────────────── */}
-          <div style={{ background: '#1a1816', padding: '5mm 12mm' }}>
-            <p className="oswald" style={{ margin: '0 0 3.5mm', fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
-              Prize categories
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2mm 4mm' }}>
-              {PRIZE_CATEGORIES.map(p => (
-                <div key={p.name} style={{ display: 'flex', alignItems: 'center', gap: '2.5mm' }}>
-                  <span style={{ fontSize: '13pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
-                  <div>
-                    <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 700, color: '#fff', letterSpacing: '0.02em', lineHeight: 1.1 }}>
-                      {p.name}
-                    </p>
-                    <p style={{ margin: 0, fontSize: '7.5pt', color: 'rgba(255,255,255,0.45)', fontFamily: 'system-ui, sans-serif', lineHeight: 1.3 }}>
-                      {p.desc}
-                    </p>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
 
