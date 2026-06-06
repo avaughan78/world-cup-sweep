@@ -120,11 +120,11 @@ export default function TrophyEasterEgg() {
             </button>
 
             {/* Header */}
-            <div className="px-6 pt-6 pb-4">
-              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#f59e0b' }}>
+            <div className="px-4 pt-3 pb-3">
+              <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: '#f59e0b' }}>
                 🐐 Easter Egg
               </p>
-              <p className="text-xl font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
+              <p className="text-base font-black tracking-tight" style={{ color: 'var(--text-primary)' }}>
                 100 World Cup Goals
               </p>
             </div>

@@ -54,7 +54,7 @@ export default function PrizeVideoModal({
           >
             {/* Header */}
             <div
-              className="px-6 pt-5 pb-5 flex items-center gap-4"
+              className="px-4 pt-3 pb-3 flex items-center gap-3"
               style={{ background: 'linear-gradient(135deg, #4D10C8 0%, #D40100 100%)' }}
             >
               <button
@@ -65,12 +65,12 @@ export default function PrizeVideoModal({
               >
                 ✕
               </button>
-              <Flag team={team} height="2.5rem" />
+              <Flag team={team} height="2rem" />
               <div>
                 <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: 'rgba(255,255,255,0.65)' }}>
                   {prizeName}
                 </p>
-                <h2 className="text-2xl font-black tracking-tight leading-tight" style={{ color: '#fff' }}>
+                <h2 className="text-lg font-black tracking-tight leading-tight" style={{ color: '#fff' }}>
                   {name}
                 </h2>
               </div>
