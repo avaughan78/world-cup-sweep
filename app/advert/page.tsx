@@ -184,11 +184,11 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── PRIZE CENTREPIECE ────────────────────────────────── */}
-          <div style={{ background: '#D40100', padding: '5mm 12mm 6mm', flexShrink: 0 }}>
-            <p className="bungee" style={{ margin: '0 0 0.5mm', fontSize: '18pt', color: '#fff', lineHeight: 1, letterSpacing: '0.01em' }}>
+          <div style={{ background: '#fff', padding: '5mm 12mm 6mm', flexShrink: 0 }}>
+            <p className="bungee" style={{ margin: '0 0 0.5mm', fontSize: '18pt', color: '#1a1a17', lineHeight: 1, letterSpacing: '0.01em' }}>
               7 ways to win. 48 nations.
             </p>
-            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '11.5pt', fontWeight: 400, color: 'rgba(255,255,255,0.85)', letterSpacing: '0.03em' }}>
+            <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '11.5pt', fontWeight: 400, color: '#6b6760', letterSpacing: '0.03em' }}>
               Draw any nation — <em>every team has a prize to play for.</em>
             </p>
 
@@ -198,8 +198,8 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                 const amt = pot != null ? formatAmt(pot * p.share) : null;
                 return (
                   <div key={p.name} style={{
-                    background: 'rgba(0,0,0,0.28)',
-                    border: '1px solid rgba(255,255,255,0.18)',
+                    background: '#f5f4ee',
+                    border: '1px solid #e5e2d8',
                     borderRadius: '2.5mm',
                     padding: '3mm 3.5mm',
                     display: 'flex',
@@ -208,21 +208,21 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                   }}>
                     <span style={{ fontSize: '14pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 700, color: '#fff', letterSpacing: '0.03em', lineHeight: 1.1 }}>
+                      <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.03em', lineHeight: 1.1 }}>
                         {p.name}
                       </p>
-                      <p style={{ margin: '0.5mm 0 0', fontSize: '7pt', color: 'rgba(255,255,255,0.65)', lineHeight: 1.3, fontFamily: 'system-ui, sans-serif' }}>
+                      <p style={{ margin: '0.5mm 0 0', fontSize: '7pt', color: '#8a8678', lineHeight: 1.3, fontFamily: 'system-ui, sans-serif' }}>
                         {p.tagline}
                       </p>
                     </div>
                     {amt && (
                       <div style={{
-                        background: '#ffcc00',
+                        background: '#4D10C8',
                         borderRadius: '1.5mm',
                         padding: '1mm 2mm',
                         flexShrink: 0,
                       }}>
-                        <p className="bungee" style={{ margin: 0, fontSize: '9.5pt', color: '#1a1a17', lineHeight: 1, letterSpacing: '0.02em' }}>
+                        <p className="bungee" style={{ margin: 0, fontSize: '9.5pt', color: '#fff', lineHeight: 1, letterSpacing: '0.02em' }}>
                           {amt}
                         </p>
                       </div>
@@ -234,22 +234,22 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
 
             {/* Mystery prizes note */}
             <div style={{ marginTop: '3mm', textAlign: 'center' }}>
-              <p className="oswald" style={{ margin: '0 0 2mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
+              <p className="oswald" style={{ margin: '0 0 2mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#8a8678' }}>
                 Plus mystery prizes — arranged by the organiser
               </p>
               <div style={{ display: 'flex', justifyContent: 'center', gap: '4mm', flexWrap: 'wrap' }}>
                 {MYSTERY_PRIZES.map(m => (
                   <div key={m.name} style={{
                     display: 'flex', alignItems: 'center', gap: '1.5mm',
-                    background: 'rgba(0,0,0,0.2)',
-                    border: '1px solid rgba(255,255,255,0.15)',
+                    background: '#f5f4ee',
+                    border: '1px solid #e5e2d8',
                     borderRadius: '2mm',
                     padding: '1.5mm 3mm',
                   }}>
                     <span style={{ fontSize: '10pt', lineHeight: 1 }}>{m.icon}</span>
                     <div>
-                      <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, color: 'rgba(255,255,255,0.7)', lineHeight: 1 }}>{m.name}</p>
-                      <p style={{ margin: 0, fontSize: '6.5pt', color: 'rgba(255,255,255,0.4)', fontFamily: 'system-ui, sans-serif', lineHeight: 1.2 }}>{m.tagline}</p>
+                      <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, color: '#3a3830', lineHeight: 1 }}>{m.name}</p>
+                      <p style={{ margin: 0, fontSize: '6.5pt', color: '#8a8678', fontFamily: 'system-ui, sans-serif', lineHeight: 1.2 }}>{m.tagline}</p>
                     </div>
                   </div>
                 ))}
