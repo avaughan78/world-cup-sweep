@@ -133,11 +133,11 @@ export default function TrophyEasterEgg() {
 
             {/* Video */}
             {(() => {
-              const { type, embedSrc } = parseVideoUrl(VIDEO_URL);
+              const { type, embedSrc } = parseVideoUrl(VIDEO_URL, { muted: true });
               return (
                 <div style={{ background: '#000', aspectRatio: '16/9', width: '100%' }}>
                   {type === 'direct' ? (
-                    <video src={embedSrc} autoPlay controls playsInline style={{ width: '100%', height: '100%', display: 'block' }} />
+                    <video src={embedSrc} autoPlay muted controls playsInline style={{ width: '100%', height: '100%', display: 'block' }} />
                   ) : (
                     <iframe
                       src={embedSrc}
