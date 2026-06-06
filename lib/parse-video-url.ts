@@ -8,7 +8,7 @@ export function parseVideoUrl(url: string, opts?: { muted?: boolean }): ParsedVi
     const tMatch = url.match(/[?&]t=(\d+)/);
     const start = tMatch ? `&start=${tMatch[1]}` : '';
     const muteParam = muted ? '&mute=1' : '';
-    return { type: 'youtube', embedSrc: `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0${start}${muteParam}` };
+    return { type: 'youtube', embedSrc: `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0&playsinline=1${start}${muteParam}` };
   }
 
   const vimeo = url.match(/vimeo\.com\/(\d+)/);
