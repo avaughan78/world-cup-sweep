@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, setCompanyAdminPassword, updateCompany } from '@/lib/db';
+import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, setCompanyAdminPassword, updateCompany, generateClaimTokens } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import { writeAudit } from '@/lib/audit';
 import { getIp } from '@/lib/rate-limit';
@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
   if (!code?.trim() || !name?.trim()) return NextResponse.json({ error: 'code and name required' }, { status: 400 });
   try {
     const company = await createCompany(code.trim(), name.trim());
+    await generateClaimTokens(company.id);
     await writeAudit('company_created', { actor: 'admin', companyId: company.id, details: { code: company.code, name: company.name }, ip: getIp(req) });
     return NextResponse.json({ ok: true, company });
   } catch (err) {

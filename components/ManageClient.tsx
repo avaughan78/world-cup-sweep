@@ -367,7 +367,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Setup steps</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
-              {/* Step 1 */}
+              {/* Step 1 — always enabled */}
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
@@ -394,83 +394,75 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 </button>
               </div>
 
-              {/* Step 2 */}
-              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                <div className="flex items-center gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>2</span>
-                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Generate QR codes</h3>
-                </div>
-                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                  Create a unique claim link for each of the 48 nations. Do this once, before printing.
-                </p>
-                <button onClick={handleGenerateTokens} disabled={loading}
-                  className="font-bold px-4 py-2 rounded-lg text-sm transition-opacity mt-1"
-                  style={{ background: '#4D10C8', color: '#fff', opacity: loading ? 0.5 : 1 }}>
-                  {loading ? 'Working…' : 'Generate →'}
-                </button>
-              </div>
+              {/* Step 2 — enabled when price is set */}
+              {(() => {
+                const priceSet = company.ticket_price != null;
+                return (
+                  <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)', opacity: priceSet ? 1 : 0.45, pointerEvents: priceSet ? 'auto' : 'none' }}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                        style={{ background: priceSet ? '#4D10C8' : 'var(--text-muted)', color: '#fff', lineHeight: 1 }}>2</span>
+                      <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                      Print and cut up the QR-coded tickets ready to fold and draw from a hat.
+                    </p>
+                    <a href={`/print?code=${company.code}`} target="_blank"
+                      className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
+                      style={{ background: '#D40100', color: '#fff', display: 'block' }}>
+                      Print tickets ↗
+                    </a>
+                  </div>
+                );
+              })()}
 
-              {/* Step 3 */}
-              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                <div className="flex items-center gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>3</span>
-                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print tickets</h3>
-                </div>
-                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                  Print and cut up the QR-coded tickets ready to fold and draw from a hat.
-                </p>
-                <a href={`/print?code=${company.code}`} target="_blank"
-                  className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
-                  style={{ background: '#D40100', color: '#fff', display: 'block' }}>
-                  Print tickets ↗
-                </a>
-              </div>
+              {/* Step 3 — enabled when price is set */}
+              {(() => {
+                const priceSet = company.ticket_price != null;
+                return (
+                  <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)', opacity: priceSet ? 1 : 0.45, pointerEvents: priceSet ? 'auto' : 'none' }}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                        style={{ background: priceSet ? '#4D10C8' : 'var(--text-muted)', color: '#fff', lineHeight: 1 }}>3</span>
+                      <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print advert</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                      An A4 poster with the sweep details and a QR code so latecomers can find the page.
+                    </p>
+                    <a href={`/advert?code=${company.code}`} target="_blank"
+                      className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
+                      style={{ background: '#D40100', color: '#fff', display: 'block' }}>
+                      Print advert ↗
+                    </a>
+                  </div>
+                );
+              })()}
 
-              {/* Step 4 */}
+              {/* Step 4 — always enabled */}
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center gap-2.5">
                   <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
                     style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>4</span>
-                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Print advert</h3>
+                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Share the sweep</h3>
                 </div>
                 <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                  An A4 poster with the sweep details and a QR code so latecomers can find the page.
+                  Send everyone the link so they can follow live standings and results.
                 </p>
-                <a href={`/advert?code=${company.code}`} target="_blank"
-                  className="font-bold px-4 py-2 rounded-lg text-sm text-center mt-1"
-                  style={{ background: '#D40100', color: '#fff', display: 'block' }}>
-                  Print advert ↗
-                </a>
+                <div className="flex gap-2 mt-1">
+                  <button onClick={handleCopyLink}
+                    className="font-bold px-4 py-2 rounded-lg text-sm transition-colors flex-1"
+                    style={{ background: copied ? 'var(--green)' : '#4D10C8', color: '#fff' }}>
+                    {copied ? 'Copied! ✓' : 'Copy link'}
+                  </button>
+                  <a href={`/?code=${company.code}`} target="_blank"
+                    className="font-bold px-4 py-2 rounded-lg text-sm text-center flex-shrink-0"
+                    style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
+                    View ↗
+                  </a>
+                </div>
               </div>
 
             </div>
-
-            {/* Share the sweep */}
-            <div className="rounded-xl p-4 flex flex-col sm:flex-row sm:items-center gap-3" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-              <div className="flex items-center gap-2.5 flex-shrink-0">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                  style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>5</span>
-                <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Share the sweep</h3>
-              </div>
-              <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                Send everyone the link so they can follow live standings and results.
-              </p>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={handleCopyLink}
-                  className="font-bold px-4 py-2 rounded-lg text-sm transition-colors"
-                  style={{ background: copied ? 'var(--green)' : '#4D10C8', color: '#fff' }}>
-                  {copied ? 'Copied! ✓' : 'Copy link'}
-                </button>
-                <a href={`/?code=${company.code}`} target="_blank"
-                  className="font-bold px-4 py-2 rounded-lg text-sm text-center"
-                  style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>
-                  View ↗
-                </a>
-              </div>
-            </div>
-
           </div>
 
           {/* Settings */}
@@ -518,9 +510,27 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               {pwError && <p className="w-full text-xs mt-1" style={{ color: '#ef4444' }}>{pwError}</p>}
             </div>
 
+            {/* Regenerate QR codes */}
+            <div className="flex flex-wrap gap-2 items-center mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold uppercase tracking-widest mb-0.5" style={{ color: 'var(--text-muted)' }}>Regenerate QR codes</p>
+                <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                  Only needed if tickets were lost or you want to invalidate existing claim links.
+                </p>
+              </div>
+              <button onClick={handleGenerateTokens} disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg flex-shrink-0"
+                style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
+                {loading ? 'Working…' : 'Regenerate'}
+              </button>
+            </div>
+
             {/* Mystery prize visibility */}
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Mystery prizes</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Mystery prizes</p>
+              <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                These are separate from the main cash pot — it&apos;s up to you to arrange and fund them. Toggle off any you don&apos;t want to use.
+              </p>
               <div className="flex flex-col gap-0" style={{ border: '1px solid var(--border)', borderRadius: '0.5rem', overflow: 'hidden' }}>
                 {(['most_own_goals', 'bicycle'] as const).map((slug, i) => {
                   const label = slug === 'most_own_goals' ? '😬 Oooops' : '🤸 The Bicycle';

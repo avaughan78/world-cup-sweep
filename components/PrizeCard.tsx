@@ -146,7 +146,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           {prize.slug === 'longest_shot'
             ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc={process.env.NEXT_PUBLIC_VIDEO_THUNDERBASTARD || '/van-bronckhorst.mp4'} fontSize="1.5rem" />
             : prize.slug === 'most_cards'
-            ? <VideoEasterEgg icon="🟨" label="The Zidane Award" modalTitle="Filthy Play" videoSrc={process.env.NEXT_PUBLIC_VIDEO_ZIDANE || '/zidane.mp4'} fontSize="1.5rem" />
+            ? <VideoEasterEgg icon="🟨" label="The Josip Šimunić Award" modalTitle="Filthy Play" videoSrc={process.env.NEXT_PUBLIC_VIDEO_ZIDANE || '/zidane.mp4'} fontSize="1.5rem" />
             : (
               <span
                 className="text-2xl leading-none"
