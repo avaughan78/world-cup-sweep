@@ -174,13 +174,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                 return <PrizeCard key={prize.slug} prize={prize} prizeAmount={amount} />;
               })}
             </div>
-            {/* Mystery prizes — centred below */}
-            <div className="flex flex-col sm:flex-row justify-center gap-3">
+            {/* Mystery prizes — same grid as above, centred with spacers */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="hidden sm:block" />
               {prizes.filter(p => p.mystery && !p.hidden).map(prize => (
-                <div key={prize.slug} className="sm:w-72 flex flex-col">
-                  <PrizeCard prize={prize} prizeAmount={null} />
-                </div>
+                <PrizeCard key={prize.slug} prize={prize} prizeAmount={null} />
               ))}
+              <div className="hidden sm:block" />
+              <div className="hidden sm:block" />
             </div>
           </section>
 

@@ -3,6 +3,16 @@
 import { useState, useRef } from 'react';
 import Flag from './Flag';
 
+function parseVideoUrl(url: string): { type: 'youtube' | 'vimeo' | 'direct'; embedSrc: string } {
+  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (yt) return { type: 'youtube', embedSrc: `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0` };
+
+  const vimeo = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeo) return { type: 'vimeo', embedSrc: `https://player.vimeo.com/video/${vimeo[1]}?autoplay=1` };
+
+  return { type: 'direct', embedSrc: url };
+}
+
 export default function PrizeVideoModal({
   name,
   team,
@@ -16,6 +26,7 @@ export default function PrizeVideoModal({
 }) {
   const [open, setOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const { type, embedSrc } = parseVideoUrl(videoUrl);
 
   function close() {
     setOpen(false);
@@ -29,7 +40,7 @@ export default function PrizeVideoModal({
     <>
       <span
         onClick={() => setOpen(true)}
-        style={{ cursor: 'pointer', borderBottom: '1px dotted currentColor' }}
+        style={{ cursor: 'pointer', textDecoration: 'underline', textDecorationStyle: 'dotted', textUnderlineOffset: '3px' }}
         title="Watch the moment"
       >
         {name}
@@ -47,9 +58,6 @@ export default function PrizeVideoModal({
               background: 'var(--card)',
               border: '1px solid var(--border)',
               boxShadow: '0 40px 100px rgba(0,0,0,0.55)',
-              maxHeight: '92vh',
-              overflowY: 'auto',
-              scrollbarWidth: 'none',
             }}
             onClick={e => e.stopPropagation()}
           >
@@ -78,15 +86,24 @@ export default function PrizeVideoModal({
             </div>
 
             {/* Video */}
-            <div style={{ background: '#000' }}>
-              <video
-                ref={videoRef}
-                src={videoUrl}
-                autoPlay
-                controls
-                playsInline
-                style={{ width: '100%', display: 'block', maxHeight: '62vh' }}
-              />
+            <div style={{ background: '#000', aspectRatio: '16/9', width: '100%' }}>
+              {type === 'direct' ? (
+                <video
+                  ref={videoRef}
+                  src={embedSrc}
+                  autoPlay
+                  controls
+                  playsInline
+                  style={{ width: '100%', height: '100%', display: 'block' }}
+                />
+              ) : (
+                <iframe
+                  src={embedSrc}
+                  allow="autoplay; fullscreen; picture-in-picture"
+                  allowFullScreen
+                  style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                />
+              )}
             </div>
           </div>
         </div>
