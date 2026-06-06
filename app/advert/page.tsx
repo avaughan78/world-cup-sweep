@@ -144,7 +144,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
               {/* Left: tournament info */}
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <p className="oswald" style={{ margin: 0, fontSize: '9pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.8)' }}>
-                  FIFA World Cup · USA · Canada · Mexico
+                  FIFA World Cup · {company.name}
                 </p>
                 <div>
                   <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '10.5pt', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#ffcc00' }}>
@@ -186,17 +186,27 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             </div>
           </div>
 
-          {/* ── PRIZE CENTREPIECE ────────────────────────────────── */}
-          <div style={{ background: '#fff', padding: '5mm 12mm 5mm', flexShrink: 0 }}>
-            <p className="bungee" style={{ margin: '0 0 0.5mm', fontSize: '18pt', color: '#1a1a17', lineHeight: 1, letterSpacing: '0.01em' }}>
-              7 ways to win. 48 nations.
-            </p>
+          {/* ── PRIZE CENTREPIECE — flex:1 so cards expand into freed space ── */}
+          <div style={{ flex: 1, background: '#fff', padding: '5mm 12mm', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Heading row with price right-aligned */}
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: '0.5mm' }}>
+              <p className="bungee" style={{ margin: 0, fontSize: '18pt', color: '#1a1a17', lineHeight: 1, letterSpacing: '0.01em' }}>
+                7 ways to win. 48 nations.
+              </p>
+              {fee && (
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '1.5mm', flexShrink: 0 }}>
+                  <p className="bungee" style={{ margin: 0, fontSize: '16pt', color: '#4D10C8', lineHeight: 1 }}>{fee}</p>
+                  <p className="oswald" style={{ margin: 0, fontSize: '9pt', color: '#8a8678', fontWeight: 600, letterSpacing: '0.05em' }}>per entry</p>
+                </div>
+              )}
+            </div>
             <p className="oswald" style={{ margin: '0 0 4mm', fontSize: '11.5pt', fontWeight: 400, color: '#6b6760', letterSpacing: '0.03em' }}>
               Draw any nation — <em>every team has a prize to play for.</em>
             </p>
 
-            {/* Prize grid: 2 columns */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5mm' }}>
+            {/* Prize grid: 2 columns — stretches to fill available height */}
+            <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2.5mm', alignContent: 'stretch' }}>
               {PRIZES.map((p) => {
                 const amt = pot != null ? formatAmt(pot * p.share) : null;
                 return (
@@ -204,17 +214,17 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                     background: '#f5f4ee',
                     border: '1px solid #e5e2d8',
                     borderRadius: '2.5mm',
-                    padding: '3mm 3.5mm',
+                    padding: '3.5mm 4mm',
                     display: 'flex',
-                    gap: '2.5mm',
+                    gap: '3mm',
                     alignItems: 'center',
                   }}>
-                    <span style={{ fontSize: '14pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
+                    <span style={{ fontSize: '15pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p className="oswald" style={{ margin: 0, fontSize: '9.5pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.03em', lineHeight: 1.1 }}>
+                      <p className="oswald" style={{ margin: 0, fontSize: '10pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.03em', lineHeight: 1.1 }}>
                         {p.name}
                       </p>
-                      <p style={{ margin: '0.5mm 0 0', fontSize: '7pt', color: '#8a8678', lineHeight: 1.3, fontFamily: 'system-ui, sans-serif' }}>
+                      <p style={{ margin: '0.8mm 0 0', fontSize: '7.5pt', color: '#8a8678', lineHeight: 1.35, fontFamily: 'system-ui, sans-serif' }}>
                         {p.tagline}
                       </p>
                     </div>
@@ -222,10 +232,10 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                       <div style={{
                         background: '#4D10C8',
                         borderRadius: '1.5mm',
-                        padding: '1mm 2mm',
+                        padding: '1.5mm 2.5mm',
                         flexShrink: 0,
                       }}>
-                        <p className="bungee" style={{ margin: 0, fontSize: '9.5pt', color: '#fff', lineHeight: 1, letterSpacing: '0.02em' }}>
+                        <p className="bungee" style={{ margin: 0, fontSize: '10pt', color: '#fff', lineHeight: 1, letterSpacing: '0.02em' }}>
                           {amt}
                         </p>
                       </div>
@@ -291,42 +301,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── JOIN ─────────────────────────────────────────────── */}
-          <div style={{ flex: 1, background: '#fff', padding: '5mm 12mm 14mm', display: 'flex', flexDirection: 'column', gap: '4mm' }}>
-
-            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4mm' }}>
-              <div>
-                <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8pt', fontWeight: 700, letterSpacing: '0.2em', textTransform: 'uppercase', color: '#8a8678' }}>
-                  Sweep organised by
-                </p>
-                <p className="bungee" style={{ margin: 0, fontSize: '17pt', color: '#4D10C8', lineHeight: 1 }}>
-                  {company.name}
-                </p>
-              </div>
-              {fee && (
-                <div style={{
-                  background: '#edf7f0',
-                  border: '1.5px solid #3b7a52',
-                  borderRadius: '3mm',
-                  padding: '2.5mm 5mm',
-                  textAlign: 'center',
-                  flexShrink: 0,
-                }}>
-                  <p className="oswald" style={{ margin: '0 0 0.5mm', fontSize: '7.5pt', fontWeight: 700, letterSpacing: '0.15em', textTransform: 'uppercase', color: '#3b7a52' }}>
-                    Entry fee
-                  </p>
-                  <p className="bungee" style={{ margin: 0, fontSize: '14pt', color: '#1a1a17', lineHeight: 1 }}>
-                    {fee}
-                  </p>
-                  {pot != null && (
-                    <p style={{ margin: '0.5mm 0 0', fontSize: '7pt', color: '#3b7a52', fontFamily: 'system-ui, sans-serif' }}>
-                      {formatAmt(pot)} total pot
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Code + QR */}
+          <div style={{ flexShrink: 0, background: '#fff', padding: '4mm 12mm 14mm' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '5mm', background: '#4D10C8', borderRadius: '4mm', padding: '5mm 6mm' }}>
               <div style={{ flex: 1 }}>
                 <p className="oswald" style={{ margin: '0 0 1mm', fontSize: '8pt', fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.45)' }}>
@@ -343,7 +318,6 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                 <QRCode value={joinUrl} size={64} />
               </div>
             </div>
-
           </div>
 
           {/* ── FOOTER ─ absolutely pinned to the bottom of the sheet ── */}
