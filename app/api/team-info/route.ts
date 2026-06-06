@@ -157,7 +157,7 @@ export async function GET(req: NextRequest) {
   async function fetchTeamBadge(idTeam: string): Promise<string | null> {
     try {
       const res = await fetchWithTimeout(
-        `https://www.thesportsdb.com/api/v1/json/3/lookupteam.php?id=${encodeURIComponent(idTeam)}`,
+        `https://www.thesportsdb.com/api/v1/json/123/lookupteam.php?id=${encodeURIComponent(idTeam)}`,
         {},
         3000
       );

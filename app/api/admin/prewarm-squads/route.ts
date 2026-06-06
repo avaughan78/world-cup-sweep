@@ -16,7 +16,7 @@ function fetchWithTimeout(url: string, opts: RequestInit = {}, ms = 8000): Promi
 async function fetchTeamBadge(idTeam: string): Promise<string | null> {
   try {
     const res = await fetchWithTimeout(
-      `https://www.thesportsdb.com/api/v1/json/3/lookupteam.php?id=${encodeURIComponent(idTeam)}`,
+      `https://www.thesportsdb.com/api/v1/json/123/lookupteam.php?id=${encodeURIComponent(idTeam)}`,
       {},
       5000
     );

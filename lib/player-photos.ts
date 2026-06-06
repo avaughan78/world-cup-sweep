@@ -24,7 +24,7 @@ export async function fetchPlayerPhoto(name: string): Promise<PlayerPhotoResult>
   if (!override) {
     try {
       const res = await fetchWithTimeout(
-        `https://www.thesportsdb.com/api/v1/json/3/searchplayers.php?p=${encodeURIComponent(name)}`,
+        `https://www.thesportsdb.com/api/v1/json/123/searchplayers.php?p=${encodeURIComponent(name)}`,
         {},
         4000
       );
