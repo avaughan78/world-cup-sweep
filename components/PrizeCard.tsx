@@ -45,25 +45,24 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
     const raw = prize.value_label ?? '';
     const [playerName, yards] = raw.includes('|') ? raw.split('|') : [raw || prize.current_team, null];
     return (
-      <div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1 min-w-0 flex-1">
-            <Flag team={prize.current_team} height="0.9rem" />
-            <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
-              {playerName}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0 flex-1">
+          <Flag team={prize.current_team} height="1.1rem" />
+          <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+            {playerName}
+          </span>
+          {yards && (
+            <span className="text-xs font-bold flex-shrink-0 px-1.5 py-0.5 rounded-md"
+              style={{ color: 'var(--text-muted)', background: 'var(--bg)', border: '1px solid var(--border)' }}>
+              {yards} yds
             </span>
-          </div>
-          {prize.video_url && (
-            <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video" className="flex-shrink-0"
-              style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
-              {videoIcon}
-            </a>
           )}
         </div>
-        {yards && (
-          <p className="text-sm font-bold mt-1 text-center" style={{ color: 'var(--text-muted)' }}>
-            {yards} yds
-          </p>
+        {prize.video_url && (
+          <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video" className="flex-shrink-0"
+            style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
+            {videoIcon}
+          </a>
         )}
       </div>
     );
@@ -74,8 +73,8 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   return (
     <div className="flex items-center justify-between gap-2">
       <div className="flex items-center gap-1.5 min-w-0 flex-1">
-        <Flag team={prize.current_team} height="1.3rem" />
-        <span className="font-semibold text-base truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+        <Flag team={prize.current_team} height="1.1rem" />
+        <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
           {playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team}
         </span>
       </div>
@@ -146,7 +145,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
         <hr className="my-3 relative" style={{ borderColor: 'var(--border)' }} />
 
-        <div className="relative min-h-8">
+        <div className="relative min-h-[2rem]">
           <LeaderSection prize={prize} empty="Awaiting some magic..." />
         </div>
         <ParticipantStrip name={prize.current_participant} />
@@ -184,7 +183,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
 
       <hr className="my-3" style={{ borderColor: 'var(--border)' }} />
 
-      <div className="min-h-8">
+      <div className="min-h-[2rem]">
         <LeaderSection prize={prize} empty={prize.slug === 'longest_shot' ? 'Awaiting some magic...' : 'No leader yet'} />
       </div>
       <ParticipantStrip name={prize.current_participant} />
