@@ -1,8 +1,12 @@
-import { Resend } from 'resend';
+import Mailjet from 'node-mailjet';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const mj = new Mailjet({
+  apiKey: process.env.MAILJET_API_KEY!,
+  apiSecret: process.env.MAILJET_SECRET!,
+});
 
-const FROM = process.env.EMAIL_FROM ?? 'WC26 Sweep <noreply@wcsweep.dev>';
+const FROM_EMAIL = process.env.EMAIL_FROM_ADDRESS ?? 'noreply@wcsweep.dev';
+const FROM_NAME  = process.env.EMAIL_FROM_NAME    ?? 'WC26 Sweep';
 
 export async function sendPasswordResetEmail({
   to,
@@ -15,11 +19,13 @@ export async function sendPasswordResetEmail({
   companyCode: string;
   resetUrl: string;
 }) {
-  const { error } = await resend.emails.send({
-    from: FROM,
-    to,
-    subject: `Reset your WC26 Sweep password — ${companyCode}`,
-    html: `
+  const result = await mj.post('send', { version: 'v3.1' }).request({
+    Messages: [
+      {
+        From: { Email: FROM_EMAIL, Name: FROM_NAME },
+        To:   [{ Email: to }],
+        Subject: `Reset your WC26 Sweep password — ${companyCode}`,
+        HTMLPart: `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -27,14 +33,12 @@ export async function sendPasswordResetEmail({
   <div style="max-width:500px;margin:0 auto;">
 
     <!-- Header -->
-    <div style="background:linear-gradient(135deg,#4D10C8 0%,#8B1A1A 60%,#D40100 100%);border-radius:16px 16px 0 0;padding:32px 36px 28px;position:relative;overflow:hidden;">
-      <div style="position:relative;z-index:1;">
-        <p style="margin:0 0 6px;font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.55);">
-          FIFA World Cup · USA · Canada · Mexico · 2026
-        </p>
-        <p style="margin:0;font-size:32px;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.01em;">WC26 Sweep</p>
-        <p style="margin:6px 0 0;font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);">Organiser Admin · ${companyCode}</p>
-      </div>
+    <div style="background:linear-gradient(135deg,#4D10C8 0%,#8B1A1A 60%,#D40100 100%);border-radius:16px 16px 0 0;padding:32px 36px 28px;">
+      <p style="margin:0 0 6px;font-size:10px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.55);">
+        FIFA World Cup · USA · Canada · Mexico · 2026
+      </p>
+      <p style="margin:0;font-size:32px;font-weight:900;color:#fff;line-height:1;letter-spacing:-0.01em;">WC26 Sweep</p>
+      <p style="margin:6px 0 0;font-size:13px;font-weight:600;color:rgba(255,255,255,0.6);">Organiser Admin · ${companyCode}</p>
     </div>
 
     <!-- Body -->
@@ -69,6 +73,12 @@ export async function sendPasswordResetEmail({
   </div>
 </body>
 </html>`,
+      },
+    ],
   });
-  if (error) throw new Error(error.message);
+
+  const status = (result.response as { status: number }).status;
+  if (status < 200 || status >= 300) {
+    throw new Error(`Mailjet send failed with status ${status}`);
+  }
 }
