@@ -130,27 +130,16 @@ export default function GroupsGrid({
                         {row.position}
                       </span>
 
-                      {/* Flag + name + participant + badges */}
-                      <div className="flex-1 min-w-0 flex items-center gap-1.5 mr-1">
+                      {/* Flag + name + participant */}
+                      <div className="flex-1 min-w-0 flex items-center gap-1.5">
                         <Flag team={team} height="0.95rem" width="1.4rem" />
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-1 min-w-0">
-                            <span
-                              className="team-name font-semibold truncate"
-                              style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}
-                            >
-                              {team}
-                            </span>
-                            {wonPrizes.map(prize => (
-                              <span
-                                key={prize.slug}
-                                title={prize.name}
-                                style={{ fontSize: '1.1rem', lineHeight: 1, flexShrink: 0 }}
-                              >
-                                {prize.icon}
-                              </span>
-                            ))}
-                          </div>
+                          <span
+                            className="team-name font-semibold truncate block"
+                            style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}
+                          >
+                            {team}
+                          </span>
                           {participant && (
                             <div
                               className="participant-name truncate"
@@ -161,6 +150,21 @@ export default function GroupsGrid({
                           )}
                         </div>
                       </div>
+
+                      {/* Prize icons — vertically centred across full row height, right-aligned before stats */}
+                      {wonPrizes.length > 0 && (
+                        <div className="flex items-center gap-0.5 flex-shrink-0 px-1.5">
+                          {wonPrizes.map(prize => (
+                            <span
+                              key={prize.slug}
+                              title={prize.name}
+                              style={{ fontSize: '1.1rem', lineHeight: 1 }}
+                            >
+                              {prize.icon}
+                            </span>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Stats */}
                       <div className="flex items-center flex-shrink-0" style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
