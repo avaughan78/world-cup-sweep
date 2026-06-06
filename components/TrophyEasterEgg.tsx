@@ -2,10 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { parseVideoUrl } from '@/lib/parse-video-url';
 
 const COUNTDOWN_START = 3;
 
+const VIDEO_URL = process.env.NEXT_PUBLIC_TROPHY_VIDEO_URL ?? '';
+
 export default function TrophyEasterEgg() {
+  if (!VIDEO_URL) return (
+    <Image src="/world-cup-trophy.png" alt="FIFA World Cup Trophy" width={56} height={72} style={{ objectFit: 'contain', flexShrink: 0 }} />
+  );
   const [showModal, setShowModal] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -126,14 +132,23 @@ export default function TrophyEasterEgg() {
             <hr style={{ borderColor: 'var(--border)' }} />
 
             {/* Video */}
-            <div style={{ position: 'relative', paddingBottom: '56.25%', background: '#000' }}>
-              <iframe
-                src="https://drive.google.com/file/d/1_QXaiu8Uac8g2S_c8FxALsp96zxVbPF8/preview?autoplay=1"
-                allow="autoplay; encrypted-media; fullscreen"
-                allowFullScreen
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }}
-              />
-            </div>
+            {(() => {
+              const { type, embedSrc } = parseVideoUrl(VIDEO_URL);
+              return (
+                <div style={{ background: '#000', aspectRatio: '16/9', width: '100%' }}>
+                  {type === 'direct' ? (
+                    <video src={embedSrc} autoPlay controls playsInline style={{ width: '100%', height: '100%', display: 'block' }} />
+                  ) : (
+                    <iframe
+                      src={embedSrc}
+                      allow="autoplay; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+                    />
+                  )}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}

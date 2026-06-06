@@ -2,16 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Flag from './Flag';
-
-function parseVideoUrl(url: string): { type: 'youtube' | 'vimeo' | 'direct'; embedSrc: string } {
-  const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
-  if (yt) return { type: 'youtube', embedSrc: `https://www.youtube.com/embed/${yt[1]}?autoplay=1&rel=0` };
-
-  const vimeo = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeo) return { type: 'vimeo', embedSrc: `https://player.vimeo.com/video/${vimeo[1]}?autoplay=1` };
-
-  return { type: 'direct', embedSrc: url };
-}
+import { parseVideoUrl } from '@/lib/parse-video-url';
 
 export default function PrizeVideoModal({
   name,
