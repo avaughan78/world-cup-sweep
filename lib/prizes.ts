@@ -71,7 +71,7 @@ export async function computePrizes(
       current_team: topCardsTotal > 0 ? topCards!.team_name : null,
       current_participant: topCardsTotal > 0 ? participant(topCards!.team_name) : null,
       value_label: topCardsTotal > 0
-        ? `${topCards!.yellow_cards + topCards!.red_cards} cards`
+        ? `${topCards!.yellow_cards}Y · ${topCards!.red_cards}R`
         : null,
       is_manual: false,
     },

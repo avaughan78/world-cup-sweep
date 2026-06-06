@@ -171,6 +171,7 @@ export async function consumePasswordReset(token: string): Promise<void> {
 }
 
 export async function deleteCompany(id: number): Promise<void> {
+  await sql`DELETE FROM password_resets WHERE company_id = ${id}`;
   await sql`DELETE FROM prize_overrides WHERE company_id = ${id}`;
   await sql`DELETE FROM participants WHERE company_id = ${id}`;
   await sql`DELETE FROM companies WHERE id = ${id}`;

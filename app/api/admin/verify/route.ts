@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { createAdminSession, ADMIN_COOKIE, COOKIE_OPTS } from '@/lib/sessions';
 import { checkRateLimit, getIp } from '@/lib/rate-limit';
 import { writeAudit } from '@/lib/audit';
@@ -10,7 +11,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { password } = await req.json() as { password?: string };
-  if (!password || password !== process.env.ADMIN_PASSWORD) {
+  const adminPass = process.env.ADMIN_PASSWORD ?? '';
+  const passOk = !!password && password.length === adminPass.length &&
+    crypto.timingSafeEqual(Buffer.from(password), Buffer.from(adminPass));
+  if (!passOk) {
     await writeAudit('admin_login_fail', { actor: 'admin', ip });
     return NextResponse.json({ error: 'Wrong password' }, { status: 401 });
   }

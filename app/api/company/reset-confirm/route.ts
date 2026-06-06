@@ -20,8 +20,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: false, error: 'This link has expired or already been used' }, { status: 400 });
   }
 
-  await setCompanyAdminPassword(reset.companyId, password.trim());
   await consumePasswordReset(token.trim());
+  await setCompanyAdminPassword(reset.companyId, password.trim());
 
   return NextResponse.json({ ok: true, code: reset.code });
 }
