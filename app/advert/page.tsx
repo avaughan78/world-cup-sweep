@@ -118,6 +118,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
+            position: 'relative',
           }}
         >
 
@@ -288,7 +289,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
           </div>
 
           {/* ── JOIN ─────────────────────────────────────────────── */}
-          <div style={{ flex: 1, background: '#fff', padding: '3.5mm 12mm 4mm', display: 'flex', flexDirection: 'column', gap: '3mm' }}>
+          <div style={{ flex: 1, background: '#fff', padding: '3.5mm 12mm 14mm', display: 'flex', flexDirection: 'column', gap: '3mm' }}>
 
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '4mm' }}>
               <div>
@@ -343,14 +344,17 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
 
           </div>
 
-          {/* ── FOOTER ───────────────────────────────────────────── */}
+          {/* ── FOOTER ─ absolutely pinned to the bottom of the sheet ── */}
           <div style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
             background: '#4D10C8',
             padding: '3mm 12mm',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            flexShrink: 0,
           }}>
             <p className="oswald" style={{ margin: 0, fontSize: '8.5pt', fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.4)' }}>
               48 teams · 104 matches · 3 host nations
