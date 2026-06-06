@@ -4,6 +4,7 @@ import TicketBadge from './TicketBadge';
 import VideoEasterEgg from './VideoEasterEgg';
 import SimunicModal from './SimunicModal';
 import DerbyModal from './DerbyModal';
+import PrizeVideoModal from './PrizeVideoModal';
 
 const MYSTERY_QS = [
   { top:  '4%', left: '38%', size: '1.3rem', opacity: 0.05, rotate:  '10deg' },
@@ -21,13 +22,6 @@ const MYSTERY_QS = [
   { top: '93%', left: '38%', size: '1.0rem', opacity: 0.05, rotate:  '-9deg' },
 ];
 
-const videoIcon = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-    <rect x="2" y="2" width="20" height="20" rx="4"/>
-    <path d="M10 8.5l6 3.5-6 3.5V8.5z" fill="white"/>
-  </svg>
-);
-
 const headerStrip: React.CSSProperties = {
   backgroundImage: 'url(/wc2026-header-bg.png)',
   backgroundSize: 'cover',
@@ -44,51 +38,40 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   if (prize.slug === 'longest_shot') {
     const raw = prize.value_label ?? '';
     const [playerName, yards] = raw.includes('|') ? raw.split('|') : [raw || prize.current_team, null];
+    const nameEl = prize.video_url
+      ? <PrizeVideoModal name={playerName} team={prize.current_team} videoUrl={prize.video_url} prizeName={prize.name} />
+      : <span className="font-semibold">{playerName}</span>;
     return (
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 min-w-0 flex-1">
-          <Flag team={prize.current_team} height="1.1rem" />
-          <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
-            {playerName}
+      <div className="flex items-center gap-1.5 min-w-0">
+        <Flag team={prize.current_team} height="1.1rem" />
+        <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+          {nameEl}
+        </span>
+        {yards && (
+          <span className="text-xs font-bold flex-shrink-0 px-1.5 py-0.5 rounded-md"
+            style={{ color: 'var(--text-muted)', background: 'var(--bg)', border: '1px solid var(--border)' }}>
+            {yards} yds
           </span>
-          {yards && (
-            <span className="text-xs font-bold flex-shrink-0 px-1.5 py-0.5 rounded-md"
-              style={{ color: 'var(--text-muted)', background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              {yards} yds
-            </span>
-          )}
-        </div>
-        {prize.video_url && (
-          <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video" className="flex-shrink-0"
-            style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
-            {videoIcon}
-          </a>
         )}
       </div>
     );
   }
 
   const playerMode = prize.slug === 'bicycle';
+  const displayName = playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team;
+  const nameEl = prize.video_url
+    ? <PrizeVideoModal name={displayName} team={prize.current_team} videoUrl={prize.video_url} prizeName={prize.name} />
+    : <span>{displayName}</span>;
 
   return (
-    <div className="flex items-center justify-between gap-2">
-      <div className="flex items-center gap-1.5 min-w-0 flex-1">
-        <Flag team={prize.current_team} height="1.1rem" />
-        <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
-          {playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team}
-        </span>
-      </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        {!playerMode && prize.value_label && (
-          <span className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</span>
-        )}
-        {prize.video_url && (
-          <a href={prize.video_url} target="_blank" rel="noopener noreferrer" title="Watch video"
-            style={{ display: 'flex', alignItems: 'center', color: 'var(--text-primary)' }}>
-            {videoIcon}
-          </a>
-        )}
-      </div>
+    <div className="flex items-center gap-1.5 min-w-0">
+      <Flag team={prize.current_team} height="1.1rem" />
+      <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+        {nameEl}
+      </span>
+      {!playerMode && !prize.video_url && prize.value_label && (
+        <span className="text-sm flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</span>
+      )}
     </div>
   );
 }
