@@ -1,16 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
 
 function ResetForm() {
   const searchParams = useSearchParams();
   const [code, setCode] = useState(searchParams.get('code')?.toUpperCase() ?? '');
+  const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
+  const lookupRef = useRef('');
+
+  useEffect(() => {
+    const trimmed = code.trim();
+    if (trimmed.length < 3 || trimmed === lookupRef.current) return;
+    lookupRef.current = trimmed;
+    fetch('/api/company/validate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: trimmed }),
+    })
+      .then(r => r.json() as Promise<{ ok: boolean; company?: { name: string } }>)
+      .then(data => { if (data.ok && data.company) setCompanyName(data.company.name); else setCompanyName(''); })
+      .catch(() => {});
+  }, [code]);
 
   const inputStyle: React.CSSProperties = {
     width: '100%', background: 'var(--bg)', border: '1px solid var(--border)',
@@ -49,13 +65,13 @@ function ResetForm() {
           backgroundSize: 'cover', backgroundRepeat: 'no-repeat', backgroundPosition: 'center',
         }}>
           <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            FIFA World Cup · 2026
+            FIFA World Cup · 2026{companyName ? ` · ${companyName}` : ''}
           </p>
           <h1 className="album-title text-5xl font-black tracking-tight mt-1" style={{ color: '#fff', lineHeight: 1 }}>
             WC26 Sweep
           </h1>
           <p className="text-sm mt-2 font-semibold" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            Reset password
+            {companyName ? `${companyName} — reset password` : 'Reset password'}
           </p>
         </div>
 
