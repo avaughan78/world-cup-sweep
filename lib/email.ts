@@ -36,8 +36,8 @@ export async function sendPasswordResetEmail({
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="light">
 </head>
-<body style="margin:0;padding:0;background:#0d0c0a;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#0d0c0a;padding:32px 16px;">
+<body style="margin:0;padding:0;background:#f0ede8;font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="background:#f0ede8;padding:32px 16px;">
     <tr><td align="center">
       <table width="500" cellpadding="0" cellspacing="0" role="presentation" style="max-width:500px;width:100%;">
 
@@ -73,20 +73,20 @@ export async function sendPasswordResetEmail({
         </td></tr>
 
         <!-- ── BODY ── -->
-        <tr><td style="background:#1a1816;border-radius:0 0 16px 16px;padding:36px 36px 40px;">
+        <tr><td style="background:#ffffff;border-radius:0 0 16px 16px;padding:36px 36px 40px;">
 
           <!-- Eyebrow -->
           <p style="margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:#4D10C8;">
             Password reset
           </p>
 
-          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;color:#f5f4ee;letter-spacing:-0.01em;line-height:1.2;">
-            Set a new password for<br><span style="color:#a78bfa;">${companyName}</span>
+          <h1 style="margin:0 0 16px;font-size:24px;font-weight:800;color:#1a1a17;letter-spacing:-0.01em;line-height:1.2;">
+            Set a new password for<br><span style="color:#4D10C8;">${companyName}</span>
           </h1>
 
-          <p style="margin:0 0 28px;font-size:15px;color:#8a8678;line-height:1.6;">
+          <p style="margin:0 0 28px;font-size:15px;color:#6b6760;line-height:1.6;">
             Click the button below to choose a new admin password.
-            This link is valid for <strong style="color:#f5f4ee;">1 hour</strong> and can only be used once.
+            This link is valid for <strong style="color:#1a1a17;">1 hour</strong> and can only be used once.
           </p>
 
           <!-- CTA button -->
@@ -103,11 +103,11 @@ export async function sendPasswordResetEmail({
 
           <!-- Divider -->
           <table width="100%" cellpadding="0" cellspacing="0" role="presentation" style="margin-top:36px;">
-            <tr><td style="border-top:1px solid #2a2820;padding-top:24px;">
-              <p style="margin:0 0 10px;font-size:12px;color:#4a4840;line-height:1.5;">
+            <tr><td style="border-top:1px solid #e5e2d8;padding-top:24px;">
+              <p style="margin:0 0 10px;font-size:12px;color:#8a8678;line-height:1.5;">
                 If you didn&rsquo;t request this reset, you can safely ignore this email &mdash; your password won&rsquo;t change.
               </p>
-              <p style="margin:0;font-size:11px;color:#2e2c28;word-break:break-all;">
+              <p style="margin:0;font-size:11px;color:#b0ab9f;word-break:break-all;">
                 ${resetUrl}
               </p>
             </td></tr>
@@ -117,10 +117,10 @@ export async function sendPasswordResetEmail({
 
         <!-- ── FOOTER ── -->
         <tr><td style="padding:20px 36px 8px;text-align:center;">
-          <p style="margin:0 0 4px;font-size:11px;color:#3a3830;letter-spacing:0.04em;">
+          <p style="margin:0 0 4px;font-size:11px;color:#8a8678;letter-spacing:0.04em;">
             48 teams &middot; 104 matches &middot; 11 Jun &ndash; 19 Jul 2026
           </p>
-          <p style="margin:0;font-size:10px;color:#2a2820;">
+          <p style="margin:0;font-size:10px;color:#a0998f;">
             <a href="${BASE_URL}" style="color:#4D10C8;text-decoration:none;">${BASE_URL.replace(/^https?:\/\//, '')}</a>
           </p>
         </td></tr>
