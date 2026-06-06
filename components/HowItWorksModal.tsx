@@ -114,6 +114,17 @@ export default function HowItWorksModal({ claimed = 0, total = 0, ticketPrice }:
               </p>
             </div>
 
+            {/* Mystery prizes notice */}
+            <>
+              <hr style={{ borderColor: 'var(--border)' }} />
+              <div className="px-6 py-4 flex gap-3 items-start">
+                <span className="text-lg flex-shrink-0">🎁</span>
+                <p className="text-sm" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                  The <strong style={{ color: 'var(--text-primary)' }}>mystery prizes</strong> are set by the organiser and are separate from the main cash pot — they&apos;re optional fun extras, not funded by the entry fees.
+                </p>
+              </div>
+            </>
+
             {/* Names hidden notice */}
             {!allClaimed && total > 0 && (
               <>
