@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Bungee, Oswald } from "next/font/google";
 import "./globals.css";
-import FootballPhysics from "@/components/FootballPhysics";
+import FootballPhysicsGate from "@/components/FootballPhysicsGate";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,7 +41,7 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} ${bungee.variable} ${oswald.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <FootballPhysics />
+        <FootballPhysicsGate />
         {children}
       </body>
     </html>
