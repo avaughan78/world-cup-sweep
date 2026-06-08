@@ -6,7 +6,7 @@ import { writeAudit } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
   const ip = getIp(req);
-  if (!checkRateLimit(`manage-login:${ip}`, 5, 15 * 60 * 1000)) {
+  if (!checkRateLimit(`manage-login:${ip}`, 10, 15 * 60 * 1000)) {
     return NextResponse.json({ ok: false, error: 'Too many attempts — try again later' }, { status: 429 });
   }
 
