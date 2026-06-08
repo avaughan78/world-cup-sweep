@@ -1,3 +1,6 @@
+// Mexico vs South Africa, 11 Jun 2026 20:00 BST (19:00 UTC)
+export const TOURNAMENT_START = new Date('2026-06-11T19:00:00Z');
+
 // 2026 FIFA World Cup groups — team names match the normalised spreadsheet values
 export const GROUPS_2026: Record<string, string[]> = {
   A: ['Mexico', 'South Africa', 'South Korea', 'Czechia'],

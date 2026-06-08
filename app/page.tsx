@@ -13,6 +13,7 @@ import PoweredByLink from '@/components/PoweredByLink';
 import HomeExitLink from '@/components/HomeExitLink';
 import { headers } from 'next/headers';
 import { writeAudit } from '@/lib/audit';
+import { TOURNAMENT_START } from '@/lib/groups';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,9 +45,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
 
-  // Only reveal names once every slot is filled
   const claimed = participants.filter(p => p.participant_name?.trim()).length;
-  const revealed = claimed === participants.length && participants.length > 0;
+  const tournamentStarted = Date.now() >= TOURNAMENT_START.getTime();
+  const revealed = tournamentStarted || (claimed === participants.length && participants.length > 0);
   const displayMap = revealed
     ? participantMap
     : new Map(participants.map(p => [p.team_name, null]));
