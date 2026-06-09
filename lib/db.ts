@@ -17,6 +17,7 @@ export interface Company {
 export interface Participant {
   team_name: string;
   participant_name: string | null;
+  paid: boolean;
 }
 
 export interface TeamStats {
@@ -181,7 +182,7 @@ export async function deleteCompany(id: number): Promise<void> {
 
 export async function getParticipants(companyId: number): Promise<Participant[]> {
   const rows = await sql`
-    SELECT team_name, participant_name FROM participants
+    SELECT team_name, participant_name, paid FROM participants
     WHERE company_id = ${companyId} ORDER BY team_name
   `;
   return rows as Participant[];
@@ -233,6 +234,13 @@ export async function claimTeam(token: string, participantName: string) {
 export async function adminSetParticipant(companyId: number, teamName: string, participantName: string | null) {
   await sql`
     UPDATE participants SET participant_name = ${participantName}, synced_at = NOW()
+    WHERE company_id = ${companyId} AND team_name = ${teamName}
+  `;
+}
+
+export async function setParticipantPaid(companyId: number, teamName: string, paid: boolean) {
+  await sql`
+    UPDATE participants SET paid = ${paid}
     WHERE company_id = ${companyId} AND team_name = ${teamName}
   `;
 }

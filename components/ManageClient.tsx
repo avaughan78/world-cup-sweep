@@ -20,6 +20,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [saved, setSaved] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState<Set<string>>(new Set());
   const [justSaved, setJustSaved] = useState<Set<string>>(new Set());
+  const [paid, setPaid] = useState<Record<string, boolean>>({});
 
   const [ticketPrice, setTicketPrice] = useState(initialCompany.ticket_price != null ? String(initialCompany.ticket_price) : '');
   const [priceSaved, setPriceSaved] = useState(false);
@@ -42,11 +43,16 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
-    const data = await res.json() as { participants?: Array<{ team_name: string; participant_name: string | null }> };
-    const map: Record<string, string> = {};
-    for (const p of data.participants ?? []) map[p.team_name] = p.participant_name ?? '';
-    setNames(map);
-    setSaved(map);
+    const data = await res.json() as { participants?: Array<{ team_name: string; participant_name: string | null; paid: boolean }> };
+    const nameMap: Record<string, string> = {};
+    const paidMap: Record<string, boolean> = {};
+    for (const p of data.participants ?? []) {
+      nameMap[p.team_name] = p.participant_name ?? '';
+      paidMap[p.team_name] = p.paid;
+    }
+    setNames(nameMap);
+    setSaved(nameMap);
+    setPaid(paidMap);
   }
 
   async function loadPrizeOverrides() {
@@ -108,16 +114,21 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       body: JSON.stringify({}),
     }).then(async r => {
       if (r.ok) {
-        const data = await r.json() as { companyId?: number; participants?: Array<{ team_name: string; participant_name: string | null }> };
+        const data = await r.json() as { companyId?: number; participants?: Array<{ team_name: string; participant_name: string | null; paid: boolean }> };
         if (data.companyId !== initialCompany.id) {
           // Session belongs to a different company — require fresh login
           setChecking(false);
           return;
         }
-        const map: Record<string, string> = {};
-        for (const p of data.participants ?? []) map[p.team_name] = p.participant_name ?? '';
-        setNames(map);
-        setSaved(map);
+        const nameMap: Record<string, string> = {};
+        const paidMap: Record<string, boolean> = {};
+        for (const p of data.participants ?? []) {
+          nameMap[p.team_name] = p.participant_name ?? '';
+          paidMap[p.team_name] = p.paid;
+        }
+        setNames(nameMap);
+        setSaved(nameMap);
+        setPaid(paidMap);
         await loadPrizeOverrides();
         setAuthenticated(true);
       }
@@ -156,6 +167,20 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       setAuthError('Could not connect');
     }
     setAuthLoading(false);
+  }
+
+  async function togglePaid(team: string) {
+    const newValue = !paid[team];
+    setPaid(prev => ({ ...prev, [team]: newValue }));
+    try {
+      await fetch('/api/company/manage/paid', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_name: team, paid: newValue }),
+      });
+    } catch {
+      setPaid(prev => ({ ...prev, [team]: !newValue }));
+    }
   }
 
   async function saveName(team: string) {
@@ -628,7 +653,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
           <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Participants</h2>
             <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
-              Edit names directly — changes save automatically on blur.
+              Edit names directly — changes save on blur. Tick the checkbox once someone has paid.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(GROUPS_2026).map(([letter, teams]) => (
@@ -667,6 +692,13 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                           <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--green)' }}>✓</span>
                         )}
                       </div>
+                      <input
+                        type="checkbox"
+                        checked={paid[team] ?? false}
+                        onChange={() => togglePaid(team)}
+                        title={paid[team] ? 'Paid' : 'Not paid'}
+                        style={{ width: '1rem', height: '1rem', flexShrink: 0, cursor: 'pointer', accentColor: 'var(--green)' }}
+                      />
                     </div>
                   ))}
                 </div>
