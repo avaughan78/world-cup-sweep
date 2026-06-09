@@ -5,13 +5,20 @@ import type { Company } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import TombolaGlobe from './TombolaGlobe';
 
-type Phase = 'accept' | 'drawing' | 'done';
+type Phase = 'fee' | 'accept' | 'drawing' | 'done';
+
+function feeLabel(price: number | null | undefined): string | null {
+  if (price == null) return null;
+  return `£${price % 1 === 0 ? price : price.toFixed(2)}`;
+}
 
 export default function TombolaContent({ company, onClose }: {
   company: Company;
   onClose?: () => void;
 }) {
-  const [phase, setPhase]             = useState<Phase>('accept');
+  const fee = feeLabel(company.ticket_price);
+
+  const [phase, setPhase]             = useState<Phase>(fee ? 'fee' : 'accept');
   const [spinning, setSpinning]       = useState(false);
   const [name, setName]               = useState('');
   const [drawnTeam, setDrawnTeam]     = useState<string | null>(null);
@@ -26,10 +33,6 @@ export default function TombolaContent({ company, onClose }: {
       if (s) setLocalClaims(JSON.parse(s) as string[]);
     } catch { /* ignore */ }
   }, [storageKey]);
-
-  const fee = company.ticket_price != null
-    ? `£${company.ticket_price % 1 === 0 ? company.ticket_price : company.ticket_price.toFixed(2)}`
-    : null;
 
   async function handleDraw() {
     const trimmed = name.trim();
@@ -102,16 +105,20 @@ export default function TombolaContent({ company, onClose }: {
     </a>
   );
 
-  // ── Done state ───────────────────────────────────────────────────────────────
+  const header = (
+    <div className="px-6 pt-6 pb-5" style={{ backgroundImage: 'url(/wc2026-header-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
+      <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
+        FIFA World Cup · 2026 · {company.name}
+      </p>
+      <h1 className="font-black text-4xl mt-1 tracking-tight" style={{ color: '#fff', lineHeight: 1 }}>Lucky Dip</h1>
+    </div>
+  );
+
+  // ── Done state ────────────────────────────────────────────────────────────────
   if (phase === 'done' && drawnTeam) {
     return (
       <div className="w-full rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
-        <div className="px-6 pt-6 pb-5" style={{ backgroundImage: 'url(/wc2026-header-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
-            FIFA World Cup · 2026 · {company.name}
-          </p>
-          <h1 className="font-black text-4xl mt-1 tracking-tight" style={{ color: '#fff', lineHeight: 1 }}>Lucky Dip</h1>
-        </div>
+        {header}
         <div className="px-6 py-6 text-center" style={{ background: 'var(--card)' }}>
           <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>You drew…</p>
           <span style={{ fontSize: '5rem', lineHeight: 1, display: 'block' }}>{getFlag(drawnTeam)}</span>
@@ -121,7 +128,7 @@ export default function TombolaContent({ company, onClose }: {
           </p>
           {localClaims.length < 2 && (
             <button
-              onClick={() => { setPhase('accept'); setDrawnTeam(null); setSpinning(false); setError(''); }}
+              onClick={() => { setPhase(fee ? 'fee' : 'accept'); setDrawnTeam(null); setSpinning(false); setError(''); }}
               className="w-full font-bold py-3 rounded-xl mb-3 text-sm"
               style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer' }}
             >
@@ -134,17 +141,34 @@ export default function TombolaContent({ company, onClose }: {
     );
   }
 
+  // ── Fee acceptance state ──────────────────────────────────────────────────────
+  if (phase === 'fee' && fee) {
+    return (
+      <div className="w-full rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
+        {header}
+        <div className="px-6 py-6 space-y-4" style={{ background: 'var(--card)' }}>
+          <div className="rounded-xl px-4 py-4 text-center" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Entry fee</p>
+            <span className="font-black text-4xl" style={{ color: 'var(--text-primary)' }}>{fee}</span>
+            <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Pay the organiser directly</p>
+          </div>
+          <button
+            onClick={() => setPhase('accept')}
+            style={{ width: '100%', background: '#4D10C8', color: '#fff', fontWeight: 700, fontSize: '1rem', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer' }}
+          >
+            Accept {fee} fee &amp; continue →
+          </button>
+          {backLink}
+        </div>
+      </div>
+    );
+  }
+
   // ── Accept / Drawing state ────────────────────────────────────────────────────
   return (
     <div className="w-full rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
 
-      {/* Branded header */}
-      <div className="px-6 pt-6 pb-5" style={{ backgroundImage: 'url(/wc2026-header-bg.png)', backgroundSize: 'cover', backgroundPosition: 'center' }}>
-        <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
-          FIFA World Cup · 2026 · {company.name}
-        </p>
-        <h1 className="font-black text-4xl mt-1 tracking-tight" style={{ color: '#fff', lineHeight: 1 }}>Lucky Dip</h1>
-      </div>
+      {header}
 
       {/* Globe animation */}
       <div style={{ background: '#080518', paddingTop: '0.5rem', paddingBottom: '0.5rem', overflow: 'hidden' }}>
@@ -153,14 +177,6 @@ export default function TombolaContent({ company, onClose }: {
 
       {/* Form */}
       <div className="px-6 py-5 space-y-3" style={{ background: 'var(--card)' }}>
-        {fee && (
-          <div className="rounded-xl px-4 py-2.5 text-center" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-            <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Entry fee </span>
-            <span className="font-black text-2xl ml-2" style={{ color: 'var(--text-primary)' }}>{fee}</span>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Pay the organiser directly</p>
-          </div>
-        )}
-
         {localClaims.length > 0 && (
           <div className="rounded-lg px-3 py-2 text-sm" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
             Already drawn: <strong style={{ color: 'var(--text-primary)' }}>{localClaims.join(', ')}</strong>
@@ -180,7 +196,7 @@ export default function TombolaContent({ company, onClose }: {
             {error && <p className="text-sm text-center" style={{ color: '#ef4444' }}>{error}</p>}
             <button onClick={handleDraw}
               style={{ width: '100%', background: '#4D10C8', color: '#fff', fontWeight: 700, fontSize: '1rem', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer' }}>
-              {fee ? `Accept ${fee} fee & Draw →` : 'Draw my team →'}
+              Draw my team →
             </button>
           </>
         ) : phase === 'drawing' ? (

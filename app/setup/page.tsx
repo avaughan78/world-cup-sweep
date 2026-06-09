@@ -17,6 +17,7 @@ export default function SetupPage() {
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPw, setAdminPw] = useState('');
   const [confirmPw, setConfirmPw] = useState('');
+  const [tombolaEnabled, setTombolaEnabled] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -34,7 +35,7 @@ export default function SetupPage() {
       const res = await fetch('/api/company/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: companyName, code, admin_password: adminPw, admin_email: adminEmail.trim() || null }),
+        body: JSON.stringify({ name: companyName, code, admin_password: adminPw, admin_email: adminEmail.trim() || null, tombola_enabled: tombolaEnabled }),
       });
       const data = await res.json() as { ok?: boolean; error?: string; company?: { code: string } };
       if (data.ok && data.company) {
@@ -147,6 +148,31 @@ export default function SetupPage() {
               placeholder="Repeat password"
               inputStyle={inputStyle}
             />
+          </div>
+
+          {/* Remote Lucky Dip toggle */}
+          <div
+            className="rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', cursor: 'pointer' }}
+            onClick={() => setTombolaEnabled(v => !v)}
+          >
+            <div>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Remote Lucky Dip</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Let participants draw their own team via a link</p>
+            </div>
+            <div style={{
+              width: 44, height: 24, borderRadius: 12, flexShrink: 0,
+              background: tombolaEnabled ? '#4D10C8' : 'var(--border)',
+              position: 'relative', transition: 'background 0.18s',
+            }}>
+              <div style={{
+                position: 'absolute', top: 3, left: tombolaEnabled ? 23 : 3,
+                width: 18, height: 18, borderRadius: '50%',
+                background: '#fff',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
+                transition: 'left 0.18s',
+              }} />
+            </div>
           </div>
 
           {error && <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>}

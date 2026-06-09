@@ -107,10 +107,10 @@ export async function authenticateCompanyAdmin(code: string, password: string): 
   return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price, admin_email: row.admin_email ?? null, tombola_enabled: row.tombola_enabled ?? false } };
 }
 
-export async function createCompany(code: string, name: string, email?: string | null): Promise<Company> {
+export async function createCompany(code: string, name: string, email?: string | null, tombolaEnabled = false): Promise<Company> {
   const rows = await sql`
-    INSERT INTO companies (code, name, admin_email)
-    VALUES (UPPER(${code}), ${name}, ${email ?? null})
+    INSERT INTO companies (code, name, admin_email, tombola_enabled)
+    VALUES (UPPER(${code}), ${name}, ${email ?? null}, ${tombolaEnabled})
     RETURNING id, code, name, ticket_price, admin_email, tombola_enabled
   `;
   const company = rows[0] as Company;
