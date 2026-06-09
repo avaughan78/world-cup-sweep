@@ -33,6 +33,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [pwSaved, setPwSaved] = useState(false);
   const [pwError, setPwError] = useState('');
   const [hiddenPrizes, setHiddenPrizes] = useState<Set<string>>(new Set());
+  const [tombolaEnabled, setTombolaEnabled] = useState(initialCompany.tombola_enabled ?? false);
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -67,6 +68,20 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       if (o.team_name === '__hidden__') hidden.add(o.category);
     }
     setHiddenPrizes(hidden);
+  }
+
+  async function handleToggleTombola(enabled: boolean) {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/company/manage/tombola', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled }),
+      });
+      const data = await res.json() as { ok: boolean };
+      if (data.ok) setTombolaEnabled(enabled);
+    } catch { /* silent */ }
+    setLoading(false);
   }
 
   async function handleTogglePrize(slug: string, hide: boolean) {
@@ -591,6 +606,43 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                 style={{ background: 'var(--bg)', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}>
                 {loading ? 'Working…' : 'Regenerate'}
               </button>
+            </div>
+
+            {/* Lucky dip / tombola */}
+            <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Lucky dip</p>
+              <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+                Lets remote participants visit <strong>/draw?code={company.code}</strong> to be randomly assigned an unclaimed team. Max 2 teams per person. You collect the entry fee yourself.
+              </p>
+              <div className="flex items-center justify-between gap-3 px-3 py-2.5"
+                style={{ border: '1px solid var(--border)', borderRadius: '0.5rem' }}>
+                <span className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>Allow online lucky dip</span>
+                <button
+                  role="switch"
+                  aria-checked={tombolaEnabled}
+                  onClick={() => handleToggleTombola(!tombolaEnabled)}
+                  disabled={loading}
+                  className="flex items-center gap-2 flex-shrink-0"
+                  style={{ background: 'none', border: 'none', cursor: loading ? 'not-allowed' : 'pointer', padding: 0, opacity: loading ? 0.5 : 1 }}
+                >
+                  <span className="text-xs font-semibold" style={{ color: tombolaEnabled ? '#166534' : 'var(--text-muted)', minWidth: '3.5rem', textAlign: 'right' }}>
+                    {tombolaEnabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center',
+                    width: '2.5rem', height: '1.375rem', borderRadius: '9999px', padding: '0.125rem',
+                    background: tombolaEnabled ? 'var(--green)' : 'var(--border)',
+                    transition: 'background 0.2s', flexShrink: 0,
+                  }}>
+                    <span style={{
+                      width: '1.125rem', height: '1.125rem', borderRadius: '9999px', background: '#fff',
+                      transform: tombolaEnabled ? 'translateX(1.125rem)' : 'translateX(0)',
+                      transition: 'transform 0.2s', display: 'block',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                    }} />
+                  </span>
+                </button>
+              </div>
             </div>
 
             {/* Mystery prize visibility */}

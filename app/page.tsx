@@ -192,11 +192,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
             >
               <span className="text-lg flex-shrink-0">🔒</span>
-              <p className="text-sm" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              <p className="text-sm flex-1" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
                 Names are revealed when everyone has claimed their team, or at kick-off on{' '}
                 <strong style={{ color: 'var(--text-primary)' }}>11 Jun, 20:00 BST</strong> — whichever comes first.{' '}
                 <strong style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length}</strong> claimed so far.
               </p>
+              {company.tombola_enabled && (
+                <a
+                  href={`/draw?code=${company.code}`}
+                  className="flex-shrink-0 font-bold px-4 py-2 rounded-xl text-sm"
+                  style={{ background: '#4D10C8', color: '#fff', whiteSpace: 'nowrap', textDecoration: 'none' }}
+                >
+                  🎩 Draw a team
+                </a>
+              )}
             </div>
           )}
 

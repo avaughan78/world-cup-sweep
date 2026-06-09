@@ -10,6 +10,7 @@ export type AuditEvent =
   | 'company_updated'
   | 'company_deleted'
   | 'participant_claimed'
+  | 'tombola_draw'
   | 'tokens_generated'
   | 'company_reset'
   | 'tournament_reset';

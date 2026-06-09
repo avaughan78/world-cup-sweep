@@ -12,6 +12,7 @@ export interface Company {
   name: string;
   ticket_price: number | null;
   admin_email: string | null;
+  tombola_enabled: boolean;
 }
 
 export interface Participant {
@@ -62,12 +63,12 @@ export interface GroupStanding {
 // ── Companies ────────────────────────────────────────────────────────────────
 
 export async function listCompanies(): Promise<Company[]> {
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_email FROM companies ORDER BY name`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled FROM companies ORDER BY name`;
   return rows as Company[];
 }
 
 export async function getCompanyByCode(code: string): Promise<Company | null> {
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_email FROM companies WHERE UPPER(code) = UPPER(${code})`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled FROM companies WHERE UPPER(code) = UPPER(${code})`;
   return (rows[0] as Company) ?? null;
 }
 
@@ -84,7 +85,7 @@ export async function authenticateCompanyAdmin(code: string, password: string): 
   | { ok: true; company: Company }
   | { ok: false; reason: 'not_found' | 'not_configured' | 'wrong_password' }
 > {
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_password FROM companies WHERE UPPER(code) = UPPER(${code})`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled, admin_password FROM companies WHERE UPPER(code) = UPPER(${code})`;
   if (!rows[0]) return { ok: false, reason: 'not_found' };
   const row = rows[0] as Company & { admin_password: string | null };
   if (!row.admin_password) return { ok: false, reason: 'not_configured' };
@@ -103,14 +104,14 @@ export async function authenticateCompanyAdmin(code: string, password: string): 
   }
 
   if (!valid) return { ok: false, reason: 'wrong_password' };
-  return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price, admin_email: row.admin_email ?? null } };
+  return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price, admin_email: row.admin_email ?? null, tombola_enabled: row.tombola_enabled ?? false } };
 }
 
 export async function createCompany(code: string, name: string, email?: string | null): Promise<Company> {
   const rows = await sql`
     INSERT INTO companies (code, name, admin_email)
     VALUES (UPPER(${code}), ${name}, ${email ?? null})
-    RETURNING id, code, name, ticket_price, admin_email
+    RETURNING id, code, name, ticket_price, admin_email, tombola_enabled
   `;
   const company = rows[0] as Company;
   // Seed all 48 teams in one query via unnest (was 48 sequential round-trips)
@@ -134,7 +135,7 @@ export async function updateCompany(id: number, fields: { name?: string; code?: 
     const rows = await sql`UPDATE companies SET code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price, admin_email`;
     return rows[0] as Company;
   }
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_email FROM companies WHERE id = ${id}`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled FROM companies WHERE id = ${id}`;
   return rows[0] as Company;
 }
 
@@ -229,6 +230,33 @@ export async function claimTeam(token: string, participantName: string) {
     UPDATE participants SET participant_name = ${participantName}, synced_at = NOW()
     WHERE claim_token = ${token} AND (participant_name IS NULL OR participant_name = '')
   `;
+}
+
+export async function setCompanyTombolaEnabled(id: number, enabled: boolean): Promise<void> {
+  await sql`UPDATE companies SET tombola_enabled = ${enabled} WHERE id = ${id}`;
+}
+
+export async function drawTombolaTeam(
+  companyId: number,
+  participantName: string,
+): Promise<{ ok: true; claim_token: string; team_name: string } | { ok: false; reason: 'name_limit' | 'none_available' }> {
+  const existing = await sql`
+    SELECT COUNT(*) AS n FROM participants
+    WHERE company_id = ${companyId}
+      AND LOWER(TRIM(participant_name)) = LOWER(TRIM(${participantName}))
+  `;
+  if (Number((existing[0] as { n: string }).n) >= 2) return { ok: false, reason: 'name_limit' };
+
+  const rows = await sql`
+    SELECT team_name, claim_token FROM participants
+    WHERE company_id = ${companyId}
+      AND (participant_name IS NULL OR participant_name = '')
+      AND claim_token IS NOT NULL
+    ORDER BY RANDOM()
+    LIMIT 1
+  `;
+  if (!rows[0]) return { ok: false, reason: 'none_available' };
+  return { ok: true, ...(rows[0] as { claim_token: string; team_name: string }) };
 }
 
 export async function adminSetParticipant(companyId: number, teamName: string, participantName: string | null) {
