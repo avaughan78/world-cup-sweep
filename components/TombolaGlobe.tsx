@@ -184,13 +184,30 @@ function buildConfetti(colors: string[], seed: number): Confetti[] {
 }
 
 // ─── Ball in drum ──────────────────────────────────────────────────────────────
-function Ball() {
+function Ball({ seamAngle, dimAlpha }: { seamAngle: number; dimAlpha: number }) {
   return (
     <div style={{
       width: BALL_R * 2, height: BALL_R * 2, borderRadius: '50%', flexShrink: 0,
       background: `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.90) 0%, ${BALL_COLOR} 48%, rgba(0,0,0,0.18) 100%)`,
       boxShadow: '0 3px 10px rgba(0,0,0,0.40)',
-    }} />
+      position: 'relative', overflow: 'hidden',
+    }}>
+      {/* Seam line */}
+      <div style={{
+        position: 'absolute', left: '8%', right: '8%',
+        top: '50%', height: 1.5, marginTop: -0.75,
+        background: 'rgba(150,136,112,0.42)',
+        transform: `rotate(${seamAngle}deg)`, transformOrigin: 'center',
+      }} />
+      {/* Depth shadow for back-facing balls */}
+      {dimAlpha > 0.02 && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: `rgba(8,4,24,${dimAlpha.toFixed(3)})`,
+          pointerEvents: 'none',
+        }} />
+      )}
+    </div>
   );
 }
 
@@ -215,6 +232,15 @@ function DroppingBall({ x, y, unfold, reveal, team }: {
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
       overflow: 'hidden',
     }}>
+      {/* Seam — fades out as content is revealed */}
+      <div style={{
+        position: 'absolute', left: '8%', right: '8%',
+        top: '50%', height: Math.max(1, Math.round(ballR * 0.025)), marginTop: -Math.round(ballR * 0.013),
+        background: 'rgba(150,136,112,0.38)',
+        transform: 'rotate(15deg)', transformOrigin: 'center',
+        opacity: Math.max(0, 1 - reveal * 1.8),
+        pointerEvents: 'none',
+      }} />
       {showContent && (
         <div style={{ opacity: reveal, textAlign: 'center', padding: `0 ${Math.round(ballR * 0.1)}px` }}>
           <div style={{ fontSize: Math.round(ballR * 0.82), lineHeight: 1 }}>{getFlag(team!)}</div>
@@ -408,18 +434,26 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           if (d > INNER) {
             const nx = sp.x / d, ny = sp.y / d;
             sp.x = nx * INNER; sp.y = ny * INNER;
+
+            // Door gap: as the door opens, the bottom of the drum is no longer solid.
+            // ny > 0 = ball facing downward (positive Y = down in our coords).
+            // gapEffect ramps to 1 when door is fully open and ball squarely faces the opening.
+            const gapEffect = s.doorOpen * Math.max(0, ny) * Math.max(0, ny);
+            const effectiveRestit = RESTIT * (1 - gapEffect * 0.92);
+
             const wvx = -ω * sp.y, wvy = ω * sp.x;
             const vn = sp.vx * nx + sp.vy * ny;
             if (vn > 0) {
-              sp.vx -= (1 + RESTIT) * vn * nx;
-              sp.vy -= (1 + RESTIT) * vn * ny;
+              sp.vx -= (1 + effectiveRestit) * vn * nx;
+              sp.vy -= (1 + effectiveRestit) * vn * ny;
             }
-            const vn2 = sp.vx * nx + sp.vy * ny;
-            const spTx = sp.vx - vn2 * nx, spTy = sp.vy - vn2 * ny;
+            const vn2   = sp.vx * nx + sp.vy * ny;
+            const spTx  = sp.vx - vn2 * nx, spTy = sp.vy - vn2 * ny;
             const wnorm = wvx * nx + wvy * ny;
-            const wTx = wvx - wnorm * nx, wTy = wvy - wnorm * ny;
-            sp.vx += Math.min(1, WFRICT * dt * 60) * (wTx - spTx);
-            sp.vy += Math.min(1, WFRICT * dt * 60) * (wTy - spTy);
+            const wTx   = wvx - wnorm * nx, wTy = wvy - wnorm * ny;
+            const frictionScale = 1 - gapEffect * 0.75;
+            sp.vx += Math.min(1, WFRICT * dt * 60) * (wTx - spTx) * frictionScale;
+            sp.vy += Math.min(1, WFRICT * dt * 60) * (wTy - spTy) * frictionScale;
           }
 
           // Baffle physics: radial-spoke model — sweeps the full drum diameter so it
@@ -449,19 +483,28 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           }
         }
 
-        // Soft repulsion — keeps balls separated (each has radius BALL_R)
-        const REPEL_R = BALL_R * 2 + 2, REPEL_F = 180;
+        // Elastic ball-ball collisions: hard separation + velocity impulse exchange.
+        // This replaces the old soft-repulsion force, giving crisp billiard-like bouncing.
+        const BALL_RESTIT = 0.72;
+        const MIN_DIST    = BALL_R * 2;
         for (let i = 0; i < s.slipPhys.length - 1; i++) {
           for (let j = i + 1; j < s.slipPhys.length; j++) {
             const a = s.slipPhys[i], b = s.slipPhys[j];
             const dx = a.x - b.x, dy = a.y - b.y;
             const dist2 = dx * dx + dy * dy;
-            if (dist2 < REPEL_R * REPEL_R && dist2 > 0.01) {
-              const dist = Math.sqrt(dist2);
-              const f = REPEL_F * (1 - dist / REPEL_R) * dt;
-              const nx = dx / dist, ny = dy / dist;
-              a.vx += nx * f; a.vy += ny * f;
-              b.vx -= nx * f; b.vy -= ny * f;
+            if (dist2 >= MIN_DIST * MIN_DIST || dist2 < 0.001) continue;
+            const dist = Math.sqrt(dist2);
+            const nx = dx / dist, ny = dy / dist;
+            // Push overlapping balls apart (equal share)
+            const overlap = (MIN_DIST - dist) * 0.5;
+            a.x += nx * overlap; a.y += ny * overlap;
+            b.x -= nx * overlap; b.y -= ny * overlap;
+            // Impulse along contact normal (equal-mass, partially inelastic)
+            const vRel = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
+            if (vRel < 0) { // only when approaching
+              const J = (1 + BALL_RESTIT) * 0.5 * vRel;
+              a.vx -= J * nx; a.vy -= J * ny;
+              b.vx += J * nx; b.vy += J * ny;
             }
           }
         }
@@ -476,15 +519,29 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Ball count array — position & velocity live in as.current.slipPhys
-  const slips = useMemo(
-    () => Array.from({ length: nBalls }),
+  // Per-ball visual constants (position & velocity live in as.current.slipPhys)
+  const slips = useMemo(() => {
+    const r = rng(42);
+    return Array.from({ length: nBalls }, () => ({
+      zPhase:    r() * Math.PI * 2,          // phase offset for depth oscillation
+      seamAngle: Math.round(r() * 160 - 80), // seam rotation -80..+80°
+    }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  []);
+  }, []);
 
   // ── Render ────────────────────────────────────────────────────────────────────
   const s    = as.current;
   const rad  = (s.drumRot * Math.PI) / 180;
+
+  // Pseudo-3D depth: oscillate each ball's z using drum angle + per-ball phase.
+  // Sort back-to-front so front balls render on top.
+  const ballsWithDepth = slips.map((sd, i) => {
+    const sp = s.slipPhys[i];
+    const posAng = sp ? Math.atan2(sp.x, sp.y) : 0;
+    const z = (Math.sin(rad * 0.65 + posAng + sd.zPhase) + 1) / 2; // 0=back 1=front
+    return { i, sp, z, sd };
+  }).sort((a, b) => a.z - b.z);
+
   const pivX = CX + POST_OFF + Math.round(R * 0.06);
   const gy   = -ARM_LEN * Math.cos(rad);
   const gDepth = 1 + 0.18 * Math.sin(rad);
@@ -557,16 +614,17 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.14) 0%, rgba(135,95,215,0.07) 42%, rgba(38,10,102,0.26) 100%)',
         boxShadow: 'inset 0 -20px 44px rgba(38,10,102,0.40), inset 0 12px 36px rgba(255,255,255,0.07)',
       }}>
-        {slips.map((_, i) => {
-          const sp = s.slipPhys[i];
+        {ballsWithDepth.map(({ i, sp, z, sd }) => {
           if (!sp) return null;
+          const scale    = 0.86 + z * 0.28;           // 0.86 (back) → 1.14 (front)
+          const dimAlpha = Math.max(0, (0.5 - z) * 0.80); // darken back-facing balls
           return (
             <div key={i} style={{
               position: 'absolute', left: '50%', top: '50%',
-              transform: `translate(calc(-50% + ${sp.x}px), calc(-50% + ${sp.y}px))`,
+              transform: `translate(calc(-50% + ${sp.x}px), calc(-50% + ${sp.y}px)) scale(${scale.toFixed(3)})`,
               willChange: 'transform',
             }}>
-              <Ball />
+              <Ball seamAngle={sd.seamAngle} dimAlpha={dimAlpha} />
             </div>
           );
         })}
