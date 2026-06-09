@@ -172,7 +172,7 @@ export default function TombolaContent({ company, onClose }: {
             onClick={() => setPhase('accept')}
             style={{ width: '100%', background: '#4D10C8', color: '#fff', fontWeight: 700, fontSize: '1rem', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer' }}
           >
-            Accept {fee} fee &amp; continue →
+            Accept {fee}{' '}fee &amp; continue →
           </button>
           {backLink}
         </div>
