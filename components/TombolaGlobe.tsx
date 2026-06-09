@@ -1,19 +1,22 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo, useReducer } from 'react';
+import { useEffect, useRef, useMemo, useReducer } from 'react';
 import { getFlag } from '@/lib/flags';
 
 // ─── Layout constants ──────────────────────────────────────────────────────────
-const R        = 108;          // globe radius
+const R        = 108;
 const D        = R * 2;
-const CX       = 150;          // globe centre x
-const CY       = 138;          // globe centre y
-const POST_OFF = Math.round(R * 1.2);   // post x-offset from CX
-const ARM_LEN  = Math.round(R * 0.36);  // crank arm length
+const CX       = 150;
+const CY       = 138;
+const POST_OFF = Math.round(R * 1.2);
+const ARM_LEN  = Math.round(R * 0.36);
 const N_RINGS  = 8;
-const N_SLIPS  = 10;
-const TRAY_Y   = CY + R + 88;  // where the dropped slip lands
-const TOTAL_H  = TRAY_Y + 50;  // component total height
+const N_SLIPS  = 11;
+const TRAY_Y   = CY + R + 88;
+const TOTAL_H  = TRAY_Y + 50;
+
+// 300 deg/s → 5 full rotations in 6 s; MIN_MS in TombolaContent is set to match
+const SPIN_DEG_S = 300;
 
 // ─── Colours ───────────────────────────────────────────────────────────────────
 const BRASS_HI  = '#FFFFFF';
@@ -21,19 +24,156 @@ const BRASS_MID = '#EDE7D8';
 const BRASS_DK  = '#BCB3A0';
 const CREAM     = '#F1ECDD';
 const CREAM_DK  = '#E2D8BF';
-const LIME      = '#C2EE2E';
-const RED       = '#ED1C2E';
 const PURPLE    = '#5A18E0';
 const PURPLE_DK = '#260A66';
+const RED       = '#ED1C2E';
+const LIME      = '#C2EE2E';
+
+// ─── Flag colours for confetti ─────────────────────────────────────────────────
+const TEAM_COLORS: Record<string, string[]> = {
+  Argentina:   ['#74ACDF', '#FFFFFF', '#F6B40E'],
+  Brazil:      ['#009C3B', '#FEDF00', '#002776'],
+  Colombia:    ['#FCD116', '#003087', '#CE1126'],
+  Ecuador:     ['#FFD100', '#003087', '#EF3340'],
+  Uruguay:     ['#5BA4CF', '#FFFFFF'],
+  Venezuela:   ['#CF142B', '#FFD700', '#003087'],
+  Chile:       ['#D52B1E', '#FFFFFF', '#003087'],
+  Paraguay:    ['#D52B1E', '#FFFFFF', '#0038A8'],
+  Peru:        ['#D91023', '#FFFFFF'],
+  Bolivia:     ['#D52B1E', '#F4E400', '#007A3D'],
+  USA:         ['#B22234', '#FFFFFF', '#3C3B6E'],
+  Canada:      ['#FF0000', '#FFFFFF'],
+  Mexico:      ['#006847', '#FFFFFF', '#CE1126'],
+  Panama:      ['#DA121A', '#FFFFFF', '#1B2D8E'],
+  Honduras:    ['#0073CF', '#FFFFFF'],
+  'Costa Rica':['#002B7F', '#CE1126', '#FFFFFF'],
+  Jamaica:     ['#000000', '#FED100', '#007749'],
+  'El Salvador':['#0F47AF', '#FFFFFF'],
+  Guatemala:   ['#4997D0', '#FFFFFF'],
+  'Trinidad and Tobago':['#CE1126', '#FFFFFF', '#000000'],
+  'Curaçao':   ['#002B7F', '#F9E814'],
+  France:      ['#0E4DA4', '#FFFFFF', '#E1213B'],
+  England:     ['#CE1124', '#FFFFFF'],
+  Germany:     ['#000000', '#DD0000', '#FFCE00'],
+  Spain:       ['#AA151B', '#F1BF00'],
+  Portugal:    ['#006600', '#FF0000', '#FFFFFF'],
+  Netherlands: ['#AE1C28', '#FFFFFF', '#21468B'],
+  Belgium:     ['#000000', '#FDDA24', '#EF3340'],
+  Croatia:     ['#FF0000', '#FFFFFF', '#003DA5'],
+  Italy:       ['#009246', '#FFFFFF', '#CE2B37'],
+  Austria:     ['#ED2939', '#FFFFFF'],
+  Switzerland: ['#FF0000', '#FFFFFF'],
+  Scotland:    ['#003DA5', '#FFFFFF'],
+  Wales:       ['#C8102E', '#00664B'],
+  Denmark:     ['#C60C30', '#FFFFFF'],
+  Sweden:      ['#006AA7', '#FECC02'],
+  Norway:      ['#EF2B2D', '#FFFFFF', '#003087'],
+  Czechia:     ['#D7141A', '#FFFFFF', '#11457E'],
+  Slovakia:    ['#FFFFFF', '#0B4EA2', '#EE1C25'],
+  Poland:      ['#FFFFFF', '#DC143C'],
+  Hungary:     ['#CE2939', '#FFFFFF', '#477050'],
+  Serbia:      ['#C6363C', '#0C4076', '#FFFFFF'],
+  Turkey:      ['#E30A17', '#FFFFFF'],
+  Ukraine:     ['#005BBB', '#FFD500'],
+  Romania:     ['#002B7F', '#FCD116', '#CE1126'],
+  Slovenia:    ['#003DA5', '#FFFFFF', '#DD0000'],
+  Albania:     ['#E41E20', '#000000'],
+  Greece:      ['#0D5EAF', '#FFFFFF'],
+  Kosovo:      ['#244AA5', '#FFD700'],
+  'Bosnia and Herzegovina':['#002395', '#FFCA00'],
+  'North Macedonia':['#CE2028', '#FFE000'],
+  Georgia:     ['#FF0000', '#FFFFFF'],
+  Finland:     ['#FFFFFF', '#003580'],
+  Israel:      ['#FFFFFF', '#0038B8'],
+  Morocco:     ['#C1272D', '#006233', '#FFFFFF'],
+  Nigeria:     ['#008751', '#FFFFFF'],
+  Egypt:       ['#CE1126', '#FFFFFF', '#000000'],
+  Senegal:     ['#00853F', '#FDEF42', '#E31B23'],
+  Cameroon:    ['#007A5E', '#CE1126', '#FCD116'],
+  'Ivory Coast':['#F77F00', '#FFFFFF', '#009A44'],
+  'South Africa':['#007A4D', '#FFB81C', '#DE3831', '#FFFFFF'],
+  Ghana:       ['#006B3F', '#FCD116', '#EF3340', '#000000'],
+  Algeria:     ['#006233', '#FFFFFF', '#D21034'],
+  Tunisia:     ['#E70013', '#FFFFFF'],
+  'DR Congo':  ['#007FFF', '#EF3340', '#EFBE25'],
+  'Cape Verde':['#003893', '#CF2027', '#F7D116'],
+  Japan:       ['#BC002D', '#FFFFFF'],
+  'South Korea':['#CD2E3A', '#FFFFFF', '#003478'],
+  'Saudi Arabia':['#006C35', '#FFFFFF'],
+  Iran:        ['#239F40', '#FFFFFF', '#DA0000'],
+  Australia:   ['#012169', '#E8112D', '#FFFFFF'],
+  Qatar:       ['#8D1B3D', '#FFFFFF'],
+  China:       ['#DE2910', '#FFDE00'],
+  Indonesia:   ['#CE1126', '#FFFFFF'],
+  Iraq:        ['#CE1126', '#FFFFFF', '#000000'],
+  Jordan:      ['#007A3D', '#FFFFFF', '#CE1126'],
+  Uzbekistan:  ['#1EB53A', '#FFFFFF', '#CE1126'],
+  'New Zealand':['#00247D', '#CC142B', '#FFFFFF'],
+};
+
+function teamColors(team: string): string[] {
+  return TEAM_COLORS[team] ?? [RED, LIME, '#FFFFFF', PURPLE];
+}
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 const clamp        = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 const easeInQuad   = (t: number) => t * t;
 
+// ─── Slip rigid-body state ─────────────────────────────────────────────────────
+interface SlipPhys { x: number; y: number; vx: number; vy: number }
+
+function initSlipPhys(): SlipPhys[] {
+  const r = rng73();
+  const INNER = R * 0.88;
+  return Array.from({ length: N_SLIPS }, () => ({
+    x:  (r() - 0.5) * INNER * 0.8,
+    y:  INNER * (0.50 + r() * 0.34),
+    vx: (r() - 0.5) * 18,
+    vy: (r() - 0.5) * 18,
+  }));
+}
+
+// separate rng so useMemo(rng(42)) results are unaffected
+function rng73() {
+  let s = 73 % 2147483647 || 1;
+  return () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+}
+
 function rng(seed: number) {
   let s = ((seed % 2147483647) + 2147483647) % 2147483647 || 1;
   return () => { s = (s * 16807) % 2147483647; return s / 2147483647; };
+}
+
+// ─── Confetti ──────────────────────────────────────────────────────────────────
+interface Confetti {
+  vx: number; vy: number;
+  w: number; h: number;
+  color: string;
+  rot0: number; rotSpd: number;
+  sway: number; swayPh: number;
+  delay: number;
+}
+
+function buildConfetti(colors: string[], seed: number): Confetti[] {
+  const r = rng(seed);
+  return Array.from({ length: 72 }, () => {
+    // fan: primarily upward, ±65° spread
+    const ang = -Math.PI / 2 + (r() - 0.5) * Math.PI * 1.3;
+    const speed = 110 + r() * 190;
+    return {
+      vx:     Math.cos(ang) * speed + (r() - 0.5) * 60,
+      vy:     Math.sin(ang) * speed,
+      w:      5 + Math.round(r() * 8),
+      h:      8 + Math.round(r() * 14),
+      color:  colors[Math.floor(r() * colors.length)],
+      rot0:   r() * 360,
+      rotSpd: (r() - 0.5) * 720,
+      sway:   0.4 + r() * 1.2,
+      swayPh: r() * 6.28,
+      delay:  r() * 0.20,
+    };
+  });
 }
 
 // ─── FoldedSlip ────────────────────────────────────────────────────────────────
@@ -76,11 +216,9 @@ function DroppingSlip({ x, y, rot, unfold, reveal, team }: {
       overflow: 'hidden',
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 3,
     }}>
-      {/* fold crease lines that fade out */}
       <div style={{ position: 'absolute', left: '33%', top: 0, bottom: 0, width: 1, background: 'rgba(90,24,224,0.16)', opacity: 1 - unfold }} />
       <div style={{ position: 'absolute', left: '67%', top: 0, bottom: 0, width: 1, background: 'rgba(90,24,224,0.16)', opacity: 1 - unfold }} />
       <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, background: 'rgba(90,24,224,0.10)', opacity: 1 - reveal }} />
-
       {reveal > 0.08 && team && (
         <div style={{ opacity: reveal, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: `0 ${Math.round(w * 0.07)}px` }}>
           <span style={{ fontSize, lineHeight: 1 }}>{getFlag(team)}</span>
@@ -95,24 +233,17 @@ function DroppingSlip({ x, y, rot, unfold, reveal, team }: {
   );
 }
 
-// ─── Animation state shape ─────────────────────────────────────────────────────
+// ─── Animation state ───────────────────────────────────────────────────────────
 type Phase = 'idle' | 'spinning' | 'stopping' | 'dropping' | 'unfolding' | 'overlay' | 'done';
 
 interface AS {
-  t: number;
-  drumRot: number;
-  agitation: number;
-  doorOpen: number;
-  phase: Phase;
-  phaseT: number;  // time when current phase started
-
+  t: number; drumRot: number; drumAngVelRad: number; agitation: number; doorOpen: number;
+  slipPhys: SlipPhys[];
+  phase: Phase; phaseT: number;
   dropX: number; dropY: number; dropRot: number;
-  dropActive: boolean;
-  dropT: number;   // seconds into drop phase
-  unfold: number;
-  reveal: number;
-
+  dropActive: boolean; dropT: number; unfold: number; reveal: number;
   overlayAlpha: number;
+  confetti: Confetti[];
   doneSignaled: boolean;
 }
 
@@ -125,20 +256,20 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
   const [, bump] = useReducer((n: number) => n + 1, 0);
 
   const as = useRef<AS>({
-    t: 0, drumRot: 0, agitation: 0, doorOpen: 0,
+    t: 0, drumRot: 0, drumAngVelRad: 0, agitation: 0, doorOpen: 0,
+    slipPhys: initSlipPhys(),
     phase: 'idle', phaseT: 0,
     dropX: CX, dropY: CY + R + 6, dropRot: 0,
-    dropActive: false, dropT: 0,
-    unfold: 0, reveal: 0,
-    overlayAlpha: 0, doneSignaled: false,
+    dropActive: false, dropT: 0, unfold: 0, reveal: 0,
+    overlayAlpha: 0, confetti: [], doneSignaled: false,
   });
 
-  const spinR  = useRef(spinning);
-  const teamR  = useRef(drawnTeam);
-  const doneR  = useRef(onDone);
-  useEffect(() => { spinR.current = spinning; },   [spinning]);
-  useEffect(() => { teamR.current = drawnTeam; },  [drawnTeam]);
-  useEffect(() => { doneR.current = onDone; },     [onDone]);
+  const spinR = useRef(spinning);
+  const teamR = useRef(drawnTeam);
+  const doneR = useRef(onDone);
+  useEffect(() => { spinR.current = spinning; },  [spinning]);
+  useEffect(() => { teamR.current = drawnTeam; }, [drawnTeam]);
+  useEffect(() => { doneR.current = onDone; },    [onDone]);
 
   useEffect(() => {
     let raf: number;
@@ -146,30 +277,27 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
 
     function tick(ts: number) {
       if (lastTs === null) { lastTs = ts; raf = requestAnimationFrame(tick); return; }
-      const dt  = Math.min((ts - lastTs) / 1000, 0.05);
+      const dt = Math.min((ts - lastTs) / 1000, 0.05);
       lastTs = ts;
 
-      const s   = as.current;
-      const sp  = spinR.current;
-      const tm  = teamR.current;
+      const s = as.current;
+      const sp = spinR.current;
+      const tm = teamR.current;
       s.t += dt;
       const elapsed = s.t - s.phaseT;
 
-      // ── Phase transitions ───────────────────────────────────────────────────
+      // ── Phase transitions ─────────────────────────────────────────────────
       if (s.phase === 'idle' && sp) {
         s.phase = 'spinning'; s.phaseT = s.t;
       }
-
       if (s.phase === 'spinning' && tm && !s.doneSignaled) {
         s.phase = 'stopping'; s.phaseT = s.t;
       }
-
       if (s.phase === 'stopping' && elapsed > 0.85) {
         s.phase = 'dropping'; s.phaseT = s.t;
         s.dropActive = true; s.dropT = 0;
         s.dropX = CX; s.dropY = CY + R + 6; s.dropRot = -12;
       }
-
       if (s.phase === 'dropping') {
         s.dropT += dt;
         const DROP = 1.1;
@@ -181,21 +309,22 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         y -= bounce;
         s.dropY = y;
         s.dropRot = -12 + 24 * p + Math.sin(p * Math.PI) * 8;
-
         if (s.dropT > DROP) {
           s.phase = 'unfolding'; s.phaseT = s.t;
           s.dropY = TRAY_Y; s.dropRot = 0;
         }
       }
-
       if (s.phase === 'unfolding') {
         const UNFOLD = 1.55;
-        s.unfold  = clamp(elapsed / UNFOLD, 0, 1);
-        s.reveal  = clamp((elapsed - UNFOLD * 0.48) / (UNFOLD * 0.46), 0, 1);
+        s.unfold = clamp(elapsed / UNFOLD, 0, 1);
+        s.reveal = clamp((elapsed - UNFOLD * 0.48) / (UNFOLD * 0.46), 0, 1);
         if (elapsed > UNFOLD + 0.4) { s.phase = 'overlay'; s.phaseT = s.t; }
       }
-
       if (s.phase === 'overlay') {
+        // Initialise confetti once on first frame of this phase
+        if (s.confetti.length === 0 && tm) {
+          s.confetti = buildConfetti(teamColors(tm), Math.round(s.t * 1000));
+        }
         s.overlayAlpha = clamp(elapsed / 0.5, 0, 1);
         if (elapsed > 2.8 && !s.doneSignaled) {
           s.doneSignaled = true;
@@ -203,38 +332,92 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         }
       }
 
-      // ── Drum rotation & agitation ───────────────────────────────────────────
+      // ── Drum rotation & agitation ─────────────────────────────────────────
+      let drumSpeedDeg = 0;
       switch (s.phase) {
         case 'idle':
-          s.drumRot   += dt * 22;
-          s.agitation  = Math.max(0, s.agitation - dt * 1.5);
-          s.doorOpen   = 0;
+          drumSpeedDeg = 30;
+          s.drumRot  += dt * drumSpeedDeg;
+          s.agitation = 0.28 + 0.06 * Math.sin(s.t * 0.65);
+          s.doorOpen  = 0;
           break;
         case 'spinning':
-          s.drumRot   += dt * 195;
-          s.agitation  = Math.min(1, s.agitation + dt * 2.8);
-          s.doorOpen   = 0;
+          drumSpeedDeg = SPIN_DEG_S;
+          s.drumRot  += dt * drumSpeedDeg;
+          s.agitation = Math.min(1, s.agitation + dt * 2.8);
+          s.doorOpen  = 0;
           break;
         case 'stopping': {
           const p = clamp(elapsed / 0.85, 0, 1);
-          s.drumRot   += dt * (195 * (1 - easeInQuad(p)) + 14);
-          s.agitation  = Math.max(0, 1 - p * 1.6);
-          s.doorOpen   = clamp((elapsed - 0.38) / 0.47, 0, 1);
+          drumSpeedDeg = SPIN_DEG_S * (1 - easeInQuad(p)) + 14;
+          s.drumRot  += dt * drumSpeedDeg;
+          s.agitation = Math.max(0, 1 - p * 1.6);
+          s.doorOpen  = clamp((elapsed - 0.38) / 0.47, 0, 1);
           break;
         }
         case 'dropping':
         case 'unfolding':
-          s.drumRot   += dt * 10;
-          s.agitation  = 0;
-          s.doorOpen   = 1;
+          drumSpeedDeg = 10;
+          s.drumRot  += dt * drumSpeedDeg;
+          s.agitation = 0;
+          s.doorOpen  = 1;
           break;
         case 'overlay':
-          s.drumRot   += dt * 7;
-          s.doorOpen   = Math.max(0, 1 - elapsed * 1.4);
+          drumSpeedDeg = 7;
+          s.drumRot  += dt * drumSpeedDeg;
+          s.doorOpen  = Math.max(0, 1 - elapsed * 1.4);
           break;
       }
-
+      s.drumAngVelRad = drumSpeedDeg * Math.PI / 180;
       s.drumRot = s.drumRot % 360;
+
+      // ── Paper slip physics ────────────────────────────────────────────────
+      // Each slip is a point-mass: gravity pulls down, drum wall applies
+      // tangential friction (carrying slips with the rotation), bounces are
+      // inelastic. At low ω slips cascade; at high ω they centrifuge to wall.
+      {
+        const INNER  = R * 0.88;  // effective inner radius
+        const G      = 420;       // gravity px/s²
+        const RESTIT = 0.22;      // wall restitution (paper is not bouncy)
+        const WFRICT = 0.50;      // fraction of wall-tangential vel imparted per contact frame
+        const DAMP   = Math.exp(-2.2 * dt); // exponential velocity decay (~air/pile friction)
+        const ω = s.drumAngVelRad; // drum angular velocity, rad/s
+
+        for (const sp of s.slipPhys) {
+          // Gravity + damping
+          sp.vy  += G * dt;
+          sp.vx  *= DAMP;
+          sp.vy  *= DAMP;
+          // Integrate
+          sp.x   += sp.vx * dt;
+          sp.y   += sp.vy * dt;
+          // Wall collision
+          const d = Math.sqrt(sp.x * sp.x + sp.y * sp.y);
+          if (d < 0.01) { sp.y = INNER * 0.75; continue; }
+          if (d > INNER) {
+            const nx = sp.x / d, ny = sp.y / d;
+            sp.x = nx * INNER;
+            sp.y = ny * INNER;
+            // Drum wall tangential velocity (clockwise ω in screen coords)
+            const wvx = -ω * sp.y, wvy = ω * sp.x;
+            // Kill inward velocity component (bounce)
+            const vn = sp.vx * nx + sp.vy * ny;
+            if (vn > 0) {
+              sp.vx -= (1 + RESTIT) * vn * nx;
+              sp.vy -= (1 + RESTIT) * vn * ny;
+            }
+            // Friction: blend tangential velocity toward the wall's tangential velocity
+            const vn2 = sp.vx * nx + sp.vy * ny;
+            const spTx = sp.vx - vn2 * nx,   spTy = sp.vy - vn2 * ny;
+            const wnorm = wvx * nx + wvy * ny;
+            const wTx   = wvx - wnorm * nx,   wTy   = wvy - wnorm * ny;
+            const f = Math.min(1, WFRICT * dt * 60);
+            sp.vx += f * (wTx - spTx);
+            sp.vy += f * (wTy - spTy);
+          }
+        }
+      }
+
       bump();
       raf = requestAnimationFrame(tick);
     }
@@ -244,52 +427,65 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Slip layout (static, generated once)
+  // Slip static visual properties — position & velocity live in as.current.slipPhys
   const slips = useMemo(() => {
     const r = rng(42);
     return Array.from({ length: N_SLIPS }, () => ({
-      restX:   (r() - 0.5) * R * 0.88,
-      restY:   R * 0.44 + (r() - 0.5) * R * 0.26,
-      ph:      r() * Math.PI * 2,
-      spdX:    1.1 + r() * 1.5,
-      spdY:    0.9 + r() * 1.3,
-      ampX:    44 + r() * 46,
-      ampY:    48 + r() * 58,
-      rotSpd:  (r() - 0.5) * 490,
-      baseRot: r() * 360,
-      w:       Math.round(28 + r() * 13),
-      tone:    r(),
+      baseRot:   r() * 360,
+      w:         Math.round(28 + r() * 13),
+      tone:      r(),
+      rotFactor: 1.0 + r() * 1.8,  // how many visual spins per orbit around the drum
     }));
   }, []);
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-  const s     = as.current;
-  const rad   = (s.drumRot * Math.PI) / 180;
-  // Crank: hub on the right post, arm swings vertically
-  const pivX  = CX + POST_OFF + Math.round(R * 0.06);
-  const gy    = -ARM_LEN * Math.cos(rad);
+  // ── Render ────────────────────────────────────────────────────────────────────
+  const s    = as.current;
+  const rad  = (s.drumRot * Math.PI) / 180;
+  const pivX = CX + POST_OFF + Math.round(R * 0.06);
+  const gy   = -ARM_LEN * Math.cos(rad);
   const gDepth = 1 + 0.18 * Math.sin(rad);
+  const postH  = Math.round(R + R * 0.22);
 
-  const postH = Math.round(R + (R * 0.22));  // post height (globe centre to base top)
+  // Confetti positions for current frame (computed from overlay elapsed time)
+  const confettiEls = s.phase === 'overlay' && s.confetti.length > 0
+    ? s.confetti.map((p, i) => {
+        const ct = s.t - s.phaseT;
+        const tt = Math.max(0, ct - p.delay);
+        if (tt <= 0) return null;
+        // Gravity: 370 px/s²
+        const x = CX + p.vx * tt + Math.sin(tt * p.sway * 5 + p.swayPh) * 14;
+        const y = (CY - 10) + p.vy * tt + 0.5 * 370 * tt * tt;
+        const op = Math.max(0, 1 - Math.max(0, tt - 1.4) / 1.1);
+        if (op <= 0) return null;
+        return (
+          <div key={i} style={{
+            position: 'absolute', left: x, top: y,
+            width: p.w, height: p.h,
+            background: p.color,
+            borderRadius: 1,
+            transform: `rotate(${p.rot0 + p.rotSpd * tt}deg)`,
+            opacity: op,
+            pointerEvents: 'none',
+          }} />
+        );
+      })
+    : null;
 
   return (
     <div style={{ position: 'relative', width: 300, height: TOTAL_H, margin: '0 auto' }}>
 
-      {/* ── Base ──────────────────────────────────────────────────────────── */}
+      {/* Base */}
       <div style={{
-        position: 'absolute',
-        left: CX, top: CY + R + 6,
-        width: R * 1.88, height: Math.round(R * 0.28),
-        marginLeft: -(R * 0.94),
+        position: 'absolute', left: CX, top: CY + R + 6,
+        width: R * 1.88, height: Math.round(R * 0.28), marginLeft: -(R * 0.94),
         borderRadius: '50%',
         background: `linear-gradient(180deg, ${BRASS_HI}, ${BRASS_MID} 45%, ${BRASS_DK})`,
         boxShadow: '0 14px 32px rgba(20,6,60,0.48)',
       }} />
 
-      {/* ── Axle ──────────────────────────────────────────────────────────── */}
+      {/* Axle */}
       <div style={{
-        position: 'absolute',
-        left: CX, top: CY,
+        position: 'absolute', left: CX, top: CY,
         width: (POST_OFF + R * 0.08) * 2, height: Math.round(R * 0.05),
         marginLeft: -(POST_OFF + R * 0.04), marginTop: -Math.round(R * 0.025),
         borderRadius: R * 0.025,
@@ -297,12 +493,11 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         boxShadow: '0 3px 8px rgba(20,6,60,0.32)',
       }} />
 
-      {/* ── Posts ─────────────────────────────────────────────────────────── */}
+      {/* Posts */}
       {([-1, 1] as const).map(side => (
         <div key={side} style={{
           position: 'absolute',
-          left: CX + side * POST_OFF,
-          top: CY,
+          left: CX + side * POST_OFF, top: CY,
           width: Math.round(R * 0.11), height: postH,
           marginLeft: -Math.round(R * 0.055),
           borderRadius: Math.round(R * 0.04),
@@ -311,24 +506,23 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         }} />
       ))}
 
-      {/* ── Globe glass body (clips the tumbling slips) ────────────────────── */}
+      {/* Globe glass body (clips slips) */}
       <div style={{
-        position: 'absolute',
-        left: CX - R, top: CY - R,
-        width: D, height: D,
-        borderRadius: '50%',
-        overflow: 'hidden',
+        position: 'absolute', left: CX - R, top: CY - R, width: D, height: D,
+        borderRadius: '50%', overflow: 'hidden',
         background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.14) 0%, rgba(135,95,215,0.07) 42%, rgba(38,10,102,0.26) 100%)',
         boxShadow: 'inset 0 -20px 44px rgba(38,10,102,0.40), inset 0 12px 36px rgba(255,255,255,0.07)',
       }}>
         {slips.map((sd, i) => {
-          const ax  = sd.restX + Math.sin(s.t * sd.spdX + sd.ph) * sd.ampX * s.agitation;
-          const ay  = sd.restY - (0.5 + 0.5 * Math.sin(s.t * sd.spdY + sd.ph * 1.7)) * sd.ampY * s.agitation;
-          const rot = sd.baseRot + s.t * sd.rotSpd * s.agitation;
+          const sp  = s.slipPhys[i];
+          // Visual rotation driven by the slip's angular position in the drum,
+          // so orientation tracks naturally as it cascades/centrifuges.
+          const posAng = Math.atan2(sp.x, -sp.y) * 180 / Math.PI;
+          const rot    = sd.baseRot + posAng * sd.rotFactor;
           return (
             <div key={i} style={{
               position: 'absolute', left: '50%', top: '50%',
-              transform: `translate(calc(-50% + ${ax}px), calc(-50% + ${ay}px)) rotate(${rot}deg)`,
+              transform: `translate(calc(-50% + ${sp.x}px), calc(-50% + ${sp.y}px)) rotate(${rot}deg)`,
               willChange: 'transform',
             }}>
               <FoldedSlip w={sd.w} tone={sd.tone} />
@@ -337,28 +531,24 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         })}
       </div>
 
-      {/* ── 3D wireframe rings (span globe, animate via perspective+rotateX) ── */}
+      {/* 3D wireframe rings */}
       {Array.from({ length: N_RINGS }, (_, i) => {
-        const ang  = s.drumRot + (i * 180) / N_RINGS;
+        const ang = s.drumRot + (i * 180) / N_RINGS;
         const isLime = i === 0;
         return (
           <div key={i} style={{
-            position: 'absolute',
-            left: CX, top: CY,
-            width: D, height: D,
-            marginLeft: -R, marginTop: -R,
-            borderRadius: '50%',
+            position: 'absolute', left: CX, top: CY, width: D, height: D,
+            marginLeft: -R, marginTop: -R, borderRadius: '50%',
             border: isLime
-              ? `2.5px solid rgba(194,238,46,0.58)`
+              ? `2.5px solid rgba(194,238,46,0.60)`
               : `1.5px solid rgba(255,255,255,${0.12 + 0.10 * (i % 2)})`,
             transform: `perspective(${Math.round(R * 7)}px) rotateX(${ang}deg)`,
-            pointerEvents: 'none',
-            willChange: 'transform',
+            pointerEvents: 'none', willChange: 'transform',
           }} />
         );
       })}
 
-      {/* ── Glass rim + specular ───────────────────────────────────────────── */}
+      {/* Glass rim + specular */}
       <div style={{
         position: 'absolute', left: CX - R, top: CY - R, width: D, height: D,
         borderRadius: '50%', pointerEvents: 'none',
@@ -366,18 +556,15 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         boxShadow: 'inset -8px -12px 36px rgba(255,255,255,0.12), inset 6px 8px 24px rgba(110,70,210,0.14), 0 22px 48px rgba(15,4,55,0.38)',
       }} />
       <div style={{
-        position: 'absolute',
-        left: CX - R * 0.44, top: CY - R * 0.57,
-        width: R * 0.65, height: R * 0.48,
-        borderRadius: '50%',
+        position: 'absolute', left: CX - R * 0.44, top: CY - R * 0.57,
+        width: R * 0.65, height: R * 0.48, borderRadius: '50%',
         background: 'radial-gradient(circle at 40% 40%, rgba(255,255,255,0.62), transparent 70%)',
         filter: 'blur(2px)', pointerEvents: 'none',
       }} />
 
-      {/* ── Drop hatch ─────────────────────────────────────────────────────── */}
+      {/* Drop hatch */}
       <div style={{
-        position: 'absolute',
-        left: CX, top: CY + R - 2,
+        position: 'absolute', left: CX, top: CY + R - 2,
         width: Math.round(R * 0.23), height: Math.round(R * 0.12),
         marginLeft: -Math.round(R * 0.115),
         transformOrigin: 'top center',
@@ -387,48 +574,37 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         boxShadow: '0 4px 8px rgba(0,0,0,0.28)',
       }} />
 
-      {/* ── Crank handle ───────────────────────────────────────────────────── */}
+      {/* Crank handle */}
       <div style={{ position: 'absolute', left: pivX, top: CY, pointerEvents: 'none' }}>
-        {/* hub disc */}
         <div style={{
-          position: 'absolute',
-          left: -Math.round(R * 0.06), top: -Math.round(R * 0.06),
-          width: Math.round(R * 0.12), height: Math.round(R * 0.12),
-          borderRadius: '50%',
+          position: 'absolute', left: -Math.round(R * 0.06), top: -Math.round(R * 0.06),
+          width: Math.round(R * 0.12), height: Math.round(R * 0.12), borderRadius: '50%',
           background: `radial-gradient(circle at 38% 32%, ${BRASS_HI}, ${BRASS_MID} 55%, ${BRASS_DK})`,
           boxShadow: '0 2px 6px rgba(20,6,60,0.45)',
         }} />
-        {/* arm from hub to crank pin */}
         <div style={{
-          position: 'absolute',
-          left: -Math.round(R * 0.032), top: Math.min(0, gy),
+          position: 'absolute', left: -Math.round(R * 0.032), top: Math.min(0, gy),
           width: Math.round(R * 0.064), height: Math.max(1, Math.abs(gy)),
           background: `linear-gradient(90deg, ${BRASS_DK}, ${BRASS_HI} 50%, ${BRASS_DK})`,
           borderRadius: Math.round(R * 0.032),
         }} />
-        {/* crank pin */}
         <div style={{
-          position: 'absolute',
-          left: -Math.round(R * 0.05), top: gy - Math.round(R * 0.05),
-          width: Math.round(R * 0.10), height: Math.round(R * 0.10),
-          borderRadius: '50%',
+          position: 'absolute', left: -Math.round(R * 0.05), top: gy - Math.round(R * 0.05),
+          width: Math.round(R * 0.10), height: Math.round(R * 0.10), borderRadius: '50%',
           background: `radial-gradient(circle at 35% 30%, ${BRASS_HI}, ${BRASS_MID} 55%, ${BRASS_DK})`,
           boxShadow: '0 2px 4px rgba(20,6,60,0.40)',
         }} />
-        {/* grip — extends outward (to the right), scales with depth */}
         <div style={{
-          position: 'absolute',
-          left: Math.round(R * 0.04), top: gy - Math.round(R * 0.044),
+          position: 'absolute', left: Math.round(R * 0.04), top: gy - Math.round(R * 0.044),
           width: Math.round(R * 0.22), height: Math.round(R * 0.088),
-          transform: `scaleY(${gDepth})`,
-          transformOrigin: 'left center',
+          transform: `scaleY(${gDepth})`, transformOrigin: 'left center',
           borderRadius: Math.round(R * 0.044),
           background: `radial-gradient(circle at 30% 28%, #ff6068, ${RED} 58%, #9A0E18)`,
           boxShadow: '0 3px 9px rgba(20,6,60,0.42)',
         }} />
       </div>
 
-      {/* ── Dropped slip (falls below hatch, then unfolds) ──────────────────── */}
+      {/* Dropped slip */}
       {s.dropActive && s.phase !== 'overlay' && s.phase !== 'done' && (
         <DroppingSlip
           x={s.dropX} y={s.dropY} rot={s.dropRot}
@@ -437,33 +613,41 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         />
       )}
 
-      {/* ── Hero reveal overlay ─────────────────────────────────────────────── */}
+      {/* Hero overlay + confetti */}
       {s.phase === 'overlay' && drawnTeam && (
         <div style={{
-          position: 'absolute', inset: 0,
+          position: 'absolute', inset: 0, overflow: 'hidden',
+          borderRadius: 'inherit',
           background: `radial-gradient(ellipse at 50% 42%, ${PURPLE} 0%, ${PURPLE_DK} 70%)`,
           opacity: s.overlayAlpha,
-          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-          gap: '0.5rem',
         }}>
-          <span style={{ fontSize: '4.2rem', lineHeight: 1, filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.45))' }}>
-            {getFlag(drawnTeam)}
-          </span>
-          <span style={{
-            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-            fontWeight: 800, fontSize: 'clamp(1.4rem, 5vw, 1.85rem)',
-            letterSpacing: '-0.02em', color: '#fff', textAlign: 'center',
-            textShadow: '0 6px 24px rgba(10,2,40,0.5)',
-            padding: '0 1rem',
-          }}>{drawnTeam}</span>
-          <span style={{
-            background: '#F1ECDD', color: PURPLE,
-            fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-            fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.16em',
-            padding: '0.3rem 1rem', borderRadius: 999, textTransform: 'uppercase',
-            boxShadow: '0 8px 24px rgba(10,2,40,0.35)',
-            opacity: clamp((s.overlayAlpha - 0.5) / 0.4, 0, 1),
-          }}>Your team</span>
+          {/* Confetti particles */}
+          {confettiEls}
+
+          {/* Content (above confetti) */}
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            gap: '0.5rem', pointerEvents: 'none',
+          }}>
+            <span style={{ fontSize: '4.2rem', lineHeight: 1, filter: 'drop-shadow(0 8px 24px rgba(0,0,0,0.45))' }}>
+              {getFlag(drawnTeam)}
+            </span>
+            <span style={{
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              fontWeight: 800, fontSize: 'clamp(1.4rem, 5vw, 1.85rem)',
+              letterSpacing: '-0.02em', color: '#fff', textAlign: 'center',
+              textShadow: '0 6px 24px rgba(10,2,40,0.5)', padding: '0 1rem',
+            }}>{drawnTeam}</span>
+            <span style={{
+              background: '#F1ECDD', color: PURPLE,
+              fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
+              fontWeight: 700, fontSize: '0.68rem', letterSpacing: '0.16em',
+              padding: '0.3rem 1rem', borderRadius: 999, textTransform: 'uppercase',
+              boxShadow: '0 8px 24px rgba(10,2,40,0.35)',
+              opacity: clamp((s.overlayAlpha - 0.5) / 0.4, 0, 1),
+            }}>Your team</span>
+          </div>
         </div>
       )}
 

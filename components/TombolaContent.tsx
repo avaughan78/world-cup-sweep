@@ -38,7 +38,7 @@ export default function TombolaContent({ company, onClose }: {
 
     setError(''); setPhase('drawing'); setSpinning(true);
 
-    const MIN_MS = 2800, t0 = Date.now();
+    const MIN_MS = 6000, t0 = Date.now();
     let result: { ok?: boolean; team_name?: string; error?: string } = {};
     try {
       const res = await fetch('/api/tombola/draw', {
