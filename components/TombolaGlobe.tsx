@@ -15,10 +15,11 @@ const N_SLIPS  = 11;
 const TRAY_Y   = CY + R + 62;
 const TOTAL_H  = TRAY_Y + 32;
 
-// Horizontal hoop baffles — match the rotateX wireframe rings, physics as sweeping chords
+// Hoop baffles — visual: horizontal rings (rotateX); physics: radial spokes (effective scatter)
 const N_BARS     = 4;
-const BAR_THICK  = 9;    // collision half-thickness for horizontal baffles (px)
+const BAR_THICK  = 8;    // collision half-thickness (px)
 const BAR_RESTIT = 0.55; // baffle bounciness
+const BAR_FRIC   = 0.42; // tangential friction fraction
 
 // 300 deg/s → 5 full rotations in 6 s; MIN_MS in TombolaContent is set to match
 const SPIN_DEG_S = 300;
@@ -419,24 +420,30 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
             sp.vy += Math.min(1, WFRICT * dt * 60) * (wTy - spTy);
           }
 
-          // Horizontal hoop collisions — each baffle is a chord sweeping top↔bottom
-          // Physics matches the rotateX visual: chord at y = INNER*sin(bAng)
+          // Baffle physics: radial-spoke model — sweeps the full drum diameter so it
+          // reaches slips at any position, including the bottom where they settle.
+          // Visual uses horizontal rings (rotateX) — geometry is intentionally decoupled.
           for (let b = 0; b < N_BARS; b++) {
-            const bAng    = s.drumRot * Math.PI / 180 + b * (Math.PI / 2);
-            const yBaffle = INNER * Math.sin(bAng);
-            const xSpan   = Math.sqrt(Math.max(0, INNER * INNER - yBaffle * yBaffle));
-            if (xSpan < 8) continue;              // skip near the wall poles
-            const dy = sp.y - yBaffle;
-            if (Math.abs(dy) >= BAR_THICK || Math.abs(sp.x) > xSpan) continue;
-            const ny  = dy >= 0 ? 1 : -1;
-            // Baffle sweeps vertically; cap to avoid over-violent kicks
-            const bvy = INNER * Math.cos(bAng) * Math.min(s.drumAngVelRad, 2.5);
-            const vrn = (sp.vy - bvy) * ny;
+            const barAng = s.drumRot * Math.PI / 180 + b * (Math.PI / 2);
+            const bc = Math.cos(barAng), bs = Math.sin(barAng);
+            const tAlong = clamp(sp.x * bc + sp.y * bs, -INNER, INNER);
+            const bpx = tAlong * bc, bpy = tAlong * bs;
+            const dx = sp.x - bpx, dy = sp.y - bpy;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist >= BAR_THICK || dist < 0.01) continue;
+            const nx = dx / dist, ny = dy / dist;
+            const bvx = -s.drumAngVelRad * bpy, bvy = s.drumAngVelRad * bpx;
+            const vrn = (sp.vx - bvx) * nx + (sp.vy - bvy) * ny;
             if (vrn < 0) {
-              sp.vy -= (1 + BAR_RESTIT) * vrn;
+              sp.vx -= (1 + BAR_RESTIT) * vrn * nx;
+              sp.vy -= (1 + BAR_RESTIT) * vrn * ny;
             }
-            sp.vx *= 0.85;                        // light x-damp as slip grazes baffle
-            sp.y   = yBaffle + ny * (BAR_THICK + 0.5);
+            const vrx2 = sp.vx - bvx, vry2 = sp.vy - bvy;
+            const vrn2 = vrx2 * nx + vry2 * ny;
+            sp.vx -= BAR_FRIC * (vrx2 - vrn2 * nx);
+            sp.vy -= BAR_FRIC * (vry2 - vrn2 * ny);
+            sp.x = bpx + nx * (BAR_THICK + 0.5);
+            sp.y = bpy + ny * (BAR_THICK + 0.5);
           }
         }
 
