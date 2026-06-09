@@ -28,16 +28,16 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '4mm 5mm',
-        gap: '2mm',
+        padding: '3mm 4mm',
+        gap: '1.5mm',
       }}>
         {flag
-          ? <img src={flag} alt={`${team} flag`} style={{ width: '4rem', height: 'auto', display: 'block' }} />
-          : <span style={{ fontSize: '3rem', lineHeight: 1 }}>🏳️</span>
+          ? <img src={flag} alt={`${team} flag`} style={{ width: '3.5rem', height: 'auto', display: 'block' }} />
+          : <span style={{ fontSize: '2.5rem', lineHeight: 1 }}>🏳️</span>
         }
         <span style={{
           fontWeight: 900,
-          fontSize: '1rem',
+          fontSize: '0.95rem',
           lineHeight: 1.2,
           color: '#111',
           fontFamily: 'system-ui, sans-serif',
@@ -45,7 +45,7 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
           {team}
         </span>
         <span style={{
-          fontSize: '0.55rem',
+          fontSize: '0.5rem',
           color: '#bbb',
           fontFamily: 'system-ui, sans-serif',
           letterSpacing: '0.05em',
@@ -64,31 +64,31 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '4mm',
-        gap: '2mm',
+        padding: '3mm',
+        gap: '1.5mm',
         flexShrink: 0,
       }}>
         {claimUrl ? (
           <>
-            <QRCode value={claimUrl} size={96} />
-            <span style={{ fontSize: '0.55rem', color: '#999', fontFamily: 'system-ui, sans-serif' }}>
+            <QRCode value={claimUrl} size={76} />
+            <span style={{ fontSize: '0.5rem', color: '#999', fontFamily: 'system-ui, sans-serif' }}>
               scan to claim
             </span>
           </>
         ) : (
-          <span style={{ fontSize: '0.7rem', color: '#ccc', fontFamily: 'system-ui, sans-serif' }}>No QR code</span>
+          <span style={{ fontSize: '0.65rem', color: '#ccc', fontFamily: 'system-ui, sans-serif' }}>No QR code</span>
         )}
       </div>
     </div>
   );
 }
 
-const PER_PAGE = 14; // 2 columns × 7 rows
+const PER_PAGE = 16; // 2 columns × 8 rows — 48 teams fills exactly 3 pages
 
 const gridStyle: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: '5mm',
+  gap: '4mm',
   background: '#fff',
 };
 
