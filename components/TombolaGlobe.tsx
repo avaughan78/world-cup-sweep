@@ -21,8 +21,8 @@ const BAR_THICK  = 8;    // collision half-thickness (px)
 const BAR_RESTIT = 0.55; // baffle bounciness
 const BAR_FRIC   = 0.42; // tangential friction fraction
 
-// 200 deg/s — slow enough that balls don't centrifuge to the wall
-const SPIN_DEG_S = 200;
+// 130 deg/s — gentle enough that wall friction can't centrifuge balls
+const SPIN_DEG_S = 130;
 
 // Ping-pong balls — uniform parchment colour
 const BALL_R     = 11;
@@ -410,14 +410,14 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         const INNER  = R - BALL_R;
         const G      = 420;
         const RESTIT = 0.50;
-        const WFRICT = 0.10;
+        const WFRICT = 0.03;  // smooth wire cage — barely transmits rotation to balls
         const DAMP   = Math.exp(-0.55 * dt);
-        // Cap angular velocity used in wall friction — keeps centrifuge force well below gravity
-        const ω      = Math.min(s.drumAngVelRad, 0.45);
-        // Gravity stays strong even at full spin so balls settle in lower half
-        const gEff = G * Math.max(0.55, 1 - s.agitation * 0.45);
+        // ω drives wall friction; keep it tiny so balls can't build up circular speed
+        const ω      = Math.min(s.drumAngVelRad, 0.18);
+        // Full gravity at all times — baffles do the mixing, not reduced-gravity centrifuge
+        const gEff = G;
         // Mild turbulence — enough to break symmetry, not enough to look chaotic
-        const turb = 28 * s.agitation * Math.sqrt(dt);
+        const turb = 24 * s.agitation * Math.sqrt(dt);
 
         for (const sp of s.slipPhys) {
           sp.vy += gEff * dt;
