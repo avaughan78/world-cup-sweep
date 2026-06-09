@@ -25,8 +25,8 @@ const BAR_FRIC   = 0.42; // tangential friction fraction
 const SPIN_DEG_S = 130;
 
 // Ping-pong balls — uniform parchment colour
-const BALL_R     = 11;
-const BALL_COLOR = '#F1ECDD';
+const BALL_R     = 13;
+const BALL_COLOR = '#F3F1EC';
 
 // ─── Colours ───────────────────────────────────────────────────────────────────
 const BRASS_HI  = '#FFFFFF';
