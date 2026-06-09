@@ -12,8 +12,8 @@ const POST_OFF = Math.round(R * 1.2);
 const ARM_LEN  = Math.round(R * 0.36);
 const N_RINGS  = 8;
 const N_SLIPS  = 11;
-const TRAY_Y   = CY + R + 88;
-const TOTAL_H  = TRAY_Y + 50;
+const TRAY_Y   = CY + R + 62;
+const TOTAL_H  = TRAY_Y + 32;
 
 // 300 deg/s → 5 full rotations in 6 s; MIN_MS in TombolaContent is set to match
 const SPIN_DEG_S = 300;
@@ -373,53 +373,62 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
       s.drumRot = s.drumRot % 360;
 
       // ── Paper slip physics ────────────────────────────────────────────────
-      // Point-mass per slip: gravity + wall bounce/friction + Brownian turbulence.
-      // ω is capped below critical speed (√(G/R) ≈ 1.84 rad/s) so slips always
-      // cascade rather than centrifuge — at max spin they behave like a vigorous
-      // waterwheel, not a centrifuge.
       {
-        const INNER  = R * 0.88;
-        const G      = 320;   // px/s² — lighter gravity keeps slips airborne longer
-        const RESTIT = 0.50;  // lively bounces off the wall
-        const WFRICT = 0.55;  // wall tangential friction per contact frame
-        const DAMP   = Math.exp(-1.1 * dt); // gentle damping — slips keep momentum
-        // Cap at 84% of critical speed: vigorous cascade without centrifuging
-        const ω = Math.min(s.drumAngVelRad, 1.55);
+        const INNER   = R * 0.88;
+        const G       = 300;   // px/s² gravity
+        const RESTIT  = 0.62;  // bouncy wall — slips ricochet rather than stick
+        const WFRICT  = 0.12;  // very light wall grip so slips don't accumulate on one side
+        const DAMP    = Math.exp(-0.55 * dt); // low damping — slips keep energy
+        // Gentle rotational bias only — turbulence drives most of the motion
+        const ω = Math.min(s.drumAngVelRad, 0.9);
+        // Strong turbulence during spinning; scaled by √dt for frame-rate independence
+        const turb = 135 * s.agitation * Math.sqrt(dt);
 
         for (const sp of s.slipPhys) {
           sp.vy += G * dt;
-          // Brownian turbulence (√dt = frame-rate-independent random walk)
-          // simulates paper-paper collisions and air disturbance
-          const turb = 80 * s.agitation * Math.sqrt(dt);
           sp.vx += (Math.random() - 0.5) * turb;
           sp.vy += (Math.random() - 0.5) * turb;
           sp.vx *= DAMP;
           sp.vy *= DAMP;
           sp.x  += sp.vx * dt;
           sp.y  += sp.vy * dt;
-          // Wall collision
           const d = Math.sqrt(sp.x * sp.x + sp.y * sp.y);
           if (d < 0.01) { sp.y = INNER * 0.75; continue; }
           if (d > INNER) {
             const nx = sp.x / d, ny = sp.y / d;
             sp.x = nx * INNER;
             sp.y = ny * INNER;
-            // Drum wall tangential velocity (clockwise ω in screen coords)
             const wvx = -ω * sp.y, wvy = ω * sp.x;
-            // Kill inward velocity component (bounce)
             const vn = sp.vx * nx + sp.vy * ny;
             if (vn > 0) {
               sp.vx -= (1 + RESTIT) * vn * nx;
               sp.vy -= (1 + RESTIT) * vn * ny;
             }
-            // Friction: blend tangential velocity toward the wall's tangential velocity
-            const vn2 = sp.vx * nx + sp.vy * ny;
-            const spTx = sp.vx - vn2 * nx,   spTy = sp.vy - vn2 * ny;
+            const vn2  = sp.vx * nx + sp.vy * ny;
+            const spTx = sp.vx - vn2 * nx, spTy = sp.vy - vn2 * ny;
             const wnorm = wvx * nx + wvy * ny;
-            const wTx   = wvx - wnorm * nx,   wTy   = wvy - wnorm * ny;
+            const wTx   = wvx - wnorm * nx, wTy = wvy - wnorm * ny;
             const f = Math.min(1, WFRICT * dt * 60);
             sp.vx += f * (wTx - spTx);
             sp.vy += f * (wTy - spTy);
+          }
+        }
+
+        // Soft repulsion between overlapping slips — prevents them all piling
+        // at the same point (O(N²) but N=11 so only 55 pairs per frame)
+        const REPEL_R = 28, REPEL_F = 220;
+        for (let i = 0; i < s.slipPhys.length - 1; i++) {
+          for (let j = i + 1; j < s.slipPhys.length; j++) {
+            const a = s.slipPhys[i], b = s.slipPhys[j];
+            const dx = a.x - b.x, dy = a.y - b.y;
+            const dist2 = dx * dx + dy * dy;
+            if (dist2 < REPEL_R * REPEL_R && dist2 > 0.01) {
+              const dist = Math.sqrt(dist2);
+              const f = REPEL_F * (1 - dist / REPEL_R) * dt;
+              const nx = dx / dist, ny = dy / dist;
+              a.vx += nx * f; a.vy += ny * f;
+              b.vx -= nx * f; b.vy -= ny * f;
+            }
           }
         }
       }
