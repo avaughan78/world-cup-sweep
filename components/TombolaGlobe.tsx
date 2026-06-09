@@ -320,13 +320,14 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
       if (s.phase === 'spinning' && tm && !s.doneSignaled) {
         s.phase = 'stopping'; s.phaseT = s.t;
       }
-      if (s.phase === 'stopping' && elapsed > 1.5) {
+      if (s.phase === 'stopping' && elapsed > 2.8) {
         const eb = s.slipPhys[s.exitBallIdx];
         s.phase = 'dropping'; s.phaseT = s.t;
         s.dropActive = true;
         // Hand off the exit ball's position and velocity so the drop feels continuous
         s.dropX = CX + clamp(eb.x, -(BALL_R + 2), BALL_R + 2);
-        s.dropY = CY + R + BALL_R;
+        // Start at the hatch opening so the ball visibly rolls out rather than appearing below
+        s.dropY = CY + R;
         s.dropVx = clamp(eb.vx, -60, 60);
         s.dropVy = Math.max(60, eb.vy);
       }
@@ -385,12 +386,14 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           s.doorOpen  = 0;
           break;
         case 'stopping': {
-          // Exponential decay = constant rotational friction = natural flywheel feel
-          drumSpeedDeg = SPIN_DEG_S * Math.exp(-3.2 * elapsed) + 8;
+          // Slower deceleration over ~2.8s; brief reverse jolt at ~2.2s mimics ratchet catch
+          const clunkT = elapsed - 2.2;
+          const clunk  = (clunkT > 0 && clunkT < 0.4) ? -18 * Math.exp(-clunkT * 12) : 0;
+          drumSpeedDeg = SPIN_DEG_S * Math.exp(-1.6 * elapsed) + 3 + clunk;
           s.drumRot  += dt * drumSpeedDeg;
-          s.agitation = Math.max(0, 1 - elapsed / 1.5 * 1.3);
-          // Door opens after drum has mostly slowed (elapsed 0.6 → 1.3s)
-          s.doorOpen  = clamp((elapsed - 0.6) / 0.7, 0, 1);
+          s.agitation = Math.max(0, 1 - elapsed / 2.2);
+          // Door opens as drum has mostly slowed (elapsed 1.6 → 2.4s)
+          s.doorOpen  = clamp((elapsed - 1.6) / 0.8, 0, 1);
           break;
         }
         case 'dropping':
@@ -745,24 +748,21 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
       </div>
 
       {/* Wire chute — two guide rails flanking the drop path */}
-      {s.dropActive && (s.phase === 'dropping' || s.phase === 'unfolding') && (
-        <>
-          <div style={{
-            position: 'absolute',
-            left: CX - (BALL_R + 3), top: CY + R - 2,
-            width: 2, height: TRAY_Y - (CY + R) + 14,
-            background: `linear-gradient(180deg, transparent, ${BRASS_MID} 18%, ${BRASS_MID} 80%, transparent)`,
-            opacity: 0.72, pointerEvents: 'none',
-          }} />
-          <div style={{
-            position: 'absolute',
-            left: CX + (BALL_R + 3), top: CY + R - 2,
-            width: 2, height: TRAY_Y - (CY + R) + 14,
-            background: `linear-gradient(180deg, transparent, ${BRASS_MID} 18%, ${BRASS_MID} 80%, transparent)`,
-            opacity: 0.72, pointerEvents: 'none',
-          }} />
-        </>
-      )}
+      {/* Wire chute — always visible; brightens as door opens */}
+      {([-1, 1] as const).map(side => (
+        <div key={side} style={{
+          position: 'absolute',
+          left: CX + side * (BALL_R + 3), top: CY + R - 2,
+          width: 2, height: TRAY_Y - (CY + R) + 14,
+          background: `linear-gradient(180deg, transparent, ${BRASS_MID} 18%, ${BRASS_MID} 80%, transparent)`,
+          opacity: s.phase === 'dropping' || s.phase === 'unfolding'
+            ? 0.72
+            : s.phase === 'stopping'
+            ? 0.18 + s.doorOpen * 0.54
+            : 0.18,
+          pointerEvents: 'none',
+        }} />
+      ))}
 
       {/* Dropping / growing ball */}
       {s.dropActive && s.phase !== 'overlay' && s.phase !== 'done' && (
