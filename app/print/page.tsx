@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { cookies } from 'next/headers';
 import { getParticipantsWithTokens, getCompanyByCode } from '@/lib/db';
-import { getFlag, getFlagUrl } from '@/lib/flags';
+import { getFlagUrl } from '@/lib/flags';
 import { GROUPS_2026 } from '@/lib/groups';
 import PrintTickets from '@/components/PrintTickets';
 import PrintButton from '@/components/PrintButton';
@@ -76,7 +76,7 @@ export default async function PrintPage({ searchParams }: { searchParams: Promis
 
   const tickets = teams.map(team => ({
     team,
-    flag: getFlag(team),
+    flag: getFlagUrl(team),
     token: tokenMap.get(team) ?? null,
     claimUrl: tokenMap.get(team) ? `${baseUrl}/claim/${tokenMap.get(team)}` : null,
   }));

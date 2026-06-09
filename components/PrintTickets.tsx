@@ -31,7 +31,10 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
         padding: '3mm 4mm',
         gap: '1.5mm',
       }}>
-        <span style={{ fontSize: '2.5rem', lineHeight: 1 }}>{flag}</span>
+        {flag
+          ? <img src={flag} alt={`${team} flag`} style={{ width: '3rem', height: 'auto', display: 'block' }} />
+          : <span style={{ fontSize: '2.5rem', lineHeight: 1 }}>🏳️</span>
+        }
         <span style={{
           fontWeight: 900,
           fontSize: '0.85rem',
