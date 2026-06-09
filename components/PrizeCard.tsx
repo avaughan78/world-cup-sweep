@@ -111,17 +111,17 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         <div className="flex-1 relative">
           <div className="flex items-start justify-between">
             {prize.slug === 'most_own_goals'
-              ? <VideoEasterEgg icon="😬" label="OG" videoSrc={process.env.NEXT_PUBLIC_VIDEO_OWN_GOAL || '/haiti-own-goal.mp4'} fontSize="1.5rem" />
+              ? <VideoEasterEgg icon="😬" label="OG" videoSrc={process.env.NEXT_PUBLIC_VIDEO_OWN_GOAL || '/haiti-own-goal.mp4'} fontSize="2rem" />
               : prize.slug === 'bicycle'
-              ? <VideoEasterEgg icon="🤸" label="The Bicycle" videoSrc={process.env.NEXT_PUBLIC_VIDEO_BICYCLE || '/richarlison.mp4'} fontSize="1.5rem" />
-              : <span className="text-2xl leading-none">{prize.icon}</span>
+              ? <VideoEasterEgg icon="🤸" label="The Bicycle" videoSrc={process.env.NEXT_PUBLIC_VIDEO_BICYCLE || '/richarlison.mp4'} fontSize="2rem" />
+              : <span className="text-4xl leading-none">{prize.icon}</span>
             }
             <TicketBadge amount="?" />
           </div>
-          <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
+          <p className="prize-name font-black text-xl mt-3 leading-tight" style={{ color: 'var(--text-primary)' }}>
             {prize.name}
           </p>
-          <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          <p className="prize-description text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             {prize.description}
           </p>
         </div>
@@ -144,22 +144,22 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
       <div className="flex-1">
         <div className="flex items-start justify-between">
           {prize.slug === 'longest_shot'
-            ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc={process.env.NEXT_PUBLIC_VIDEO_THUNDERBASTARD || '/van-bronckhorst.mp4'} fontSize="1.5rem" />
+            ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc={process.env.NEXT_PUBLIC_VIDEO_THUNDERBASTARD || '/van-bronckhorst.mp4'} fontSize="2rem" />
             : prize.slug === 'most_cards'
-            ? <VideoEasterEgg icon="🟨" label="The Josip Šimunić Award" modalTitle="Filthy Play" videoSrc={process.env.NEXT_PUBLIC_VIDEO_ZIDANE || '/zidane.mp4'} fontSize="1.5rem" />
+            ? <VideoEasterEgg icon="🟨" label="The Josip Šimunić Award" modalTitle="Filthy Play" videoSrc={process.env.NEXT_PUBLIC_VIDEO_ZIDANE || '/zidane.mp4'} fontSize="2rem" />
             : (
               <span
-                className="text-2xl leading-none"
+                className="text-4xl leading-none"
                 style={prize.slug === 'top_scorer_team' ? { filter: 'sepia(1) saturate(5) hue-rotate(5deg) brightness(1.15)' } : undefined}
               >{prize.icon}</span>
             )
           }
           {prizeAmount && <TicketBadge amount={prizeAmount} />}
         </div>
-        <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
+        <p className="prize-name font-black text-xl mt-3 leading-tight" style={{ color: 'var(--text-primary)' }}>
           {prize.slug === 'most_cards' ? <SimunicModal /> : prize.slug === 'sieve' ? <DerbyModal /> : prize.name}
         </p>
-        <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <p className="prize-description text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
           {prize.description}
         </p>
       </div>
