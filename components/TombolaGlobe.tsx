@@ -15,6 +15,13 @@ const N_SLIPS  = 11;
 const TRAY_Y   = CY + R + 62;
 const TOTAL_H  = TRAY_Y + 32;
 
+// Metal agitator bars inside the drum
+const N_BARS    = 4;
+const BAR_OUTER = Math.round(R * 0.82);  // bar tip radius (px)
+const BAR_THICK = 8;                      // collision half-thickness (px)
+const BAR_RESTIT = 0.52;                  // bar bounciness
+const BAR_FRIC   = 0.42;                  // tangential friction fraction
+
 // 300 deg/s → 5 full rotations in 6 s; MIN_MS in TombolaContent is set to match
 const SPIN_DEG_S = 300;
 
@@ -374,18 +381,16 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
 
       // ── Paper slip physics ────────────────────────────────────────────────
       {
-        const INNER   = R * 0.88;
-        const G       = 300;
-        const RESTIT  = 0.62;
-        const WFRICT  = 0.12;
-        const ω       = Math.min(s.drumAngVelRad, 0.9);
-        // Gravity linearly disappears as agitation rises — zero at full spin so
-        // tickets scatter freely like lottery balls. Returns as drum slows.
-        const gEff  = G * Math.max(0, 1 - s.agitation);
-        // Strong turbulence at full agitation drives chaotic scatter
-        const turb  = 260 * s.agitation * Math.sqrt(dt);
-        // Less damping when spinning — slips keep their energy between wall bounces
-        const DAMP  = Math.exp(-(0.55 - 0.45 * s.agitation) * dt);
+        const INNER  = R * 0.88;
+        const G      = 300;
+        const RESTIT = 0.58;
+        const WFRICT = 0.12;
+        const DAMP   = Math.exp(-0.45 * dt);
+        const ω      = Math.min(s.drumAngVelRad, 0.9);
+        // Bars do the scattering — only light gravity reduction needed
+        const gEff = G * Math.max(0.30, 1 - s.agitation * 0.70);
+        // Light turbulence just to break symmetry
+        const turb = 45 * s.agitation * Math.sqrt(dt);
 
         for (const sp of s.slipPhys) {
           sp.vy += gEff * dt;
@@ -395,31 +400,60 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
           sp.vy *= DAMP;
           sp.x  += sp.vx * dt;
           sp.y  += sp.vy * dt;
+
+          // Outer wall collision
           const d = Math.sqrt(sp.x * sp.x + sp.y * sp.y);
           if (d < 0.01) { sp.y = INNER * 0.75; continue; }
           if (d > INNER) {
             const nx = sp.x / d, ny = sp.y / d;
-            sp.x = nx * INNER;
-            sp.y = ny * INNER;
+            sp.x = nx * INNER; sp.y = ny * INNER;
             const wvx = -ω * sp.y, wvy = ω * sp.x;
             const vn = sp.vx * nx + sp.vy * ny;
             if (vn > 0) {
               sp.vx -= (1 + RESTIT) * vn * nx;
               sp.vy -= (1 + RESTIT) * vn * ny;
             }
-            const vn2  = sp.vx * nx + sp.vy * ny;
+            const vn2 = sp.vx * nx + sp.vy * ny;
             const spTx = sp.vx - vn2 * nx, spTy = sp.vy - vn2 * ny;
             const wnorm = wvx * nx + wvy * ny;
-            const wTx   = wvx - wnorm * nx, wTy = wvy - wnorm * ny;
-            const f = Math.min(1, WFRICT * dt * 60);
-            sp.vx += f * (wTx - spTx);
-            sp.vy += f * (wTy - spTy);
+            const wTx = wvx - wnorm * nx, wTy = wvy - wnorm * ny;
+            sp.vx += Math.min(1, WFRICT * dt * 60) * (wTx - spTx);
+            sp.vy += Math.min(1, WFRICT * dt * 60) * (wTy - spTy);
+          }
+
+          // Metal bar collisions — bars rotate with drum and physically flip
+          // tickets upward, eliminating the need to zero-out gravity
+          for (let b = 0; b < N_BARS; b++) {
+            const barAng = s.drumRot * Math.PI / 180 + b * (Math.PI / N_BARS);
+            const bc = Math.cos(barAng), bs = Math.sin(barAng);
+            // Closest point on bar segment (full diameter, centre to ±BAR_OUTER)
+            const tAlong = clamp(sp.x * bc + sp.y * bs, -BAR_OUTER, BAR_OUTER);
+            const bpx = tAlong * bc, bpy = tAlong * bs;
+            const dx = sp.x - bpx, dy = sp.y - bpy;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist >= BAR_THICK || dist < 0.01) continue;
+            const nx = dx / dist, ny = dy / dist;
+            // Bar surface velocity at contact point (drum rotation)
+            const bvx = -s.drumAngVelRad * bpy, bvy = s.drumAngVelRad * bpx;
+            // Normal relative velocity — bounce if approaching
+            const vrn = (sp.vx - bvx) * nx + (sp.vy - bvy) * ny;
+            if (vrn < 0) {
+              sp.vx -= (1 + BAR_RESTIT) * vrn * nx;
+              sp.vy -= (1 + BAR_RESTIT) * vrn * ny;
+            }
+            // Tangential friction — bar drags slip along with its sweep
+            const vrx2 = sp.vx - bvx, vry2 = sp.vy - bvy;
+            const vrn2 = vrx2 * nx + vry2 * ny;
+            sp.vx -= BAR_FRIC * (vrx2 - vrn2 * nx);
+            sp.vy -= BAR_FRIC * (vry2 - vrn2 * ny);
+            // Push slip clear of bar
+            sp.x = bpx + nx * (BAR_THICK + 0.5);
+            sp.y = bpy + ny * (BAR_THICK + 0.5);
           }
         }
 
-        // Soft repulsion between overlapping slips — prevents them all piling
-        // at the same point (O(N²) but N=11 so only 55 pairs per frame)
-        const REPEL_R = 28, REPEL_F = 220;
+        // Soft repulsion — stops all slips piling at the exact same point
+        const REPEL_R = 26, REPEL_F = 180;
         for (let i = 0; i < s.slipPhys.length - 1; i++) {
           for (let j = i + 1; j < s.slipPhys.length; j++) {
             const a = s.slipPhys[i], b = s.slipPhys[j];
@@ -545,6 +579,23 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
             }}>
               <FoldedSlip w={sd.w} tone={sd.tone} />
             </div>
+          );
+        })}
+
+        {/* Metal agitator bars — rotate with the drum and scatter the slips */}
+        {Array.from({ length: N_BARS }, (_, b) => {
+          const barAng = s.drumRot + b * (180 / N_BARS);
+          return (
+            <div key={b} style={{
+              position: 'absolute', left: '50%', top: '50%',
+              width: BAR_OUTER * 2, height: 3,
+              marginLeft: -BAR_OUTER, marginTop: -1.5,
+              transform: `rotate(${barAng}deg)`,
+              background: `linear-gradient(90deg, ${BRASS_DK} 0%, ${BRASS_MID} 25%, ${BRASS_HI} 50%, ${BRASS_MID} 75%, ${BRASS_DK} 100%)`,
+              borderRadius: 2,
+              boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
+              opacity: 0.72,
+            }} />
           );
         })}
       </div>
