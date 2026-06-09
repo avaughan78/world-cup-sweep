@@ -88,21 +88,30 @@ export default function SetupPage() {
       <div className="w-full rounded-2xl overflow-hidden" style={{ maxWidth: 580, border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
 
         {/* Header — mirrors the main page header style */}
-        <div className="px-8 pt-6 pb-5" style={{
+        <div className="px-6 sm:px-8 pt-3 pb-3" style={{
           backgroundImage: 'url(/wc2026-header-bg.png)',
           backgroundSize: 'cover',
           backgroundRepeat: 'no-repeat',
           backgroundPosition: 'center',
         }}>
-          <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.65)' }}>
+          <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
             FIFA World Cup · 2026
           </p>
-          <h1 className="album-title text-5xl font-black tracking-tight leading-none mt-0.5" style={{ color: '#fff' }}>
-            WC26 Sweep
-          </h1>
-          <p className="text-sm font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.72)' }}>
-            Set up your sweep
-          </p>
+          <div className="flex items-end gap-4 mt-1">
+            <img
+              src="/world-cup-trophy.png"
+              alt=""
+              style={{ height: 56, width: 'auto', flexShrink: 0 }}
+            />
+            <div>
+              <h1 className="album-title text-4xl sm:text-5xl font-black tracking-tight" style={{ color: '#fff', lineHeight: 1 }}>
+                WC26 Sweep
+              </h1>
+              <p className="text-sm font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                Set up your sweep
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Form — 2-column grid keeps everything on one screen */}
