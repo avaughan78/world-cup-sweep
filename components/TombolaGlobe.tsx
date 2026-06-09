@@ -452,6 +452,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
             const barAng = s.drumRot * Math.PI / 180 + b * (Math.PI / 2);
             const bc = Math.cos(barAng), bs = Math.sin(barAng);
             const tAlong = clamp(sp.x * bc + sp.y * bs, -INNER, INNER);
+            if (Math.abs(tAlong) < BALL_R + 2) continue; // no phantom axle at centre
             const bpx = tAlong * bc, bpy = tAlong * bs;
             const dx = sp.x - bpx, dy = sp.y - bpy;
             const dist = Math.sqrt(dx * dx + dy * dy);
