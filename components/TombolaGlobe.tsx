@@ -268,6 +268,7 @@ interface AS {
   overlayAlpha: number;
   confetti: Confetti[];
   doneSignaled: boolean;
+  exitBallIdx: number;
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
@@ -287,6 +288,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
     dropX: CX, dropY: CY + R + BALL_R, dropVx: 0, dropVy: 0,
     dropActive: false, unfold: 0, reveal: 0,
     overlayAlpha: 0, confetti: [], doneSignaled: false,
+    exitBallIdx: 0,
   });
 
   const spinR = useRef(spinning);
@@ -319,12 +321,14 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         s.phase = 'stopping'; s.phaseT = s.t;
       }
       if (s.phase === 'stopping' && elapsed > 1.5) {
+        const eb = s.slipPhys[s.exitBallIdx];
         s.phase = 'dropping'; s.phaseT = s.t;
         s.dropActive = true;
-        s.dropX = CX;
+        // Hand off the exit ball's position and velocity so the drop feels continuous
+        s.dropX = CX + clamp(eb.x, -(BALL_R + 2), BALL_R + 2);
         s.dropY = CY + R + BALL_R;
-        s.dropVx = (Math.random() - 0.5) * 50;
-        s.dropVy = 80;
+        s.dropVx = clamp(eb.vx, -60, 60);
+        s.dropVy = Math.max(60, eb.vy);
       }
       if (s.phase === 'dropping') {
         // Gravity-based physics with chute walls + bouncy floor
@@ -369,13 +373,13 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
       let drumSpeedDeg = 0;
       switch (s.phase) {
         case 'idle':
-          drumSpeedDeg = 30;
+          drumSpeedDeg = 40;
           s.drumRot  += dt * drumSpeedDeg;
-          s.agitation = 0.28 + 0.06 * Math.sin(s.t * 0.65);
+          s.agitation = 0.55 + 0.12 * Math.sin(s.t * 0.9);
           s.doorOpen  = 0;
           break;
         case 'spinning':
-          drumSpeedDeg = SPIN_DEG_S;
+          drumSpeedDeg = SPIN_DEG_S * (1 - Math.exp(-3.5 * elapsed));
           s.drumRot  += dt * drumSpeedDeg;
           s.agitation = Math.min(1, s.agitation + dt * 2.8);
           s.doorOpen  = 0;
@@ -419,7 +423,9 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         // Mild turbulence — enough to break symmetry, not enough to look chaotic
         const turb = 24 * s.agitation * Math.sqrt(dt);
 
-        for (const sp of s.slipPhys) {
+        for (let i = 0; i < s.slipPhys.length; i++) {
+          if (s.dropActive && i === s.exitBallIdx) continue;
+          const sp = s.slipPhys[i];
           sp.vy += gEff * dt;
           sp.vx += (Math.random() - 0.5) * turb;
           sp.vy += (Math.random() - 0.5) * turb;
@@ -427,6 +433,12 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           sp.vy *= DAMP;
           sp.x  += sp.vx * dt;
           sp.y  += sp.vy * dt;
+          // Gently guide exit ball toward the door during stopping so handoff is natural
+          if (s.phase === 'stopping' && i === s.exitBallIdx) {
+            const guide = clamp((elapsed - 0.2) / 1.0, 0, 1);
+            sp.vx += -sp.x * 3.0 * guide * dt;
+            sp.vy += (INNER * 0.8 - sp.y) * 2.0 * guide * dt;
+          }
 
           // Outer wall collision
           const d = Math.sqrt(sp.x * sp.x + sp.y * sp.y);
@@ -482,11 +494,13 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
             sp.y = bpy + ny * (BAR_THICK + 0.5);
           }
 
-          // Hard speed ceiling — no ball can go fast enough to centrifuge at any angle
-          const spd2 = sp.vx * sp.vx + sp.vy * sp.vy;
-          if (spd2 > 90 * 90) {
-            const sc = 90 / Math.sqrt(spd2);
-            sp.vx *= sc; sp.vy *= sc;
+          // Soft speed ceiling: quadratic drag above 75 px/s — no visible snap
+          {
+            const spd = Math.sqrt(sp.vx * sp.vx + sp.vy * sp.vy);
+            if (spd > 75) {
+              const soft = Math.exp(-0.012 * (spd - 75) * dt);
+              sp.vx *= soft; sp.vy *= soft;
+            }
           }
         }
 
@@ -495,7 +509,9 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         const BALL_RESTIT = 0.72;
         const MIN_DIST    = BALL_R * 2;
         for (let i = 0; i < s.slipPhys.length - 1; i++) {
+          if (s.dropActive && i === s.exitBallIdx) continue;
           for (let j = i + 1; j < s.slipPhys.length; j++) {
+            if (s.dropActive && j === s.exitBallIdx) continue;
             const a = s.slipPhys[i], b = s.slipPhys[j];
             const dx = a.x - b.x, dy = a.y - b.y;
             const dist2 = dx * dx + dy * dy;
@@ -544,9 +560,10 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
   // Sort back-to-front so front balls render on top.
   const ballsWithDepth = slips.map((sd, i) => {
     const sp = s.slipPhys[i];
+    const hidden = !sp || (s.dropActive && i === s.exitBallIdx);
     const posAng = sp ? Math.atan2(sp.x, sp.y) : 0;
     const z = (Math.sin(rad * 0.65 + posAng + sd.zPhase) + 1) / 2; // 0=back 1=front
-    return { i, sp, z, sd };
+    return { i, sp, z, sd, hidden };
   }).sort((a, b) => a.z - b.z);
 
   const pivX = CX + POST_OFF + Math.round(R * 0.06);
@@ -621,8 +638,8 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.14) 0%, rgba(135,95,215,0.07) 42%, rgba(38,10,102,0.26) 100%)',
         boxShadow: 'inset 0 -20px 44px rgba(38,10,102,0.40), inset 0 12px 36px rgba(255,255,255,0.07)',
       }}>
-        {ballsWithDepth.map(({ i, sp, z, sd }) => {
-          if (!sp) return null;
+        {ballsWithDepth.map(({ i, sp, z, sd, hidden }) => {
+          if (!sp || hidden) return null;
           const scale    = 0.86 + z * 0.28;           // 0.86 (back) → 1.14 (front)
           const dimAlpha = Math.max(0, (0.5 - z) * 0.80); // darken back-facing balls
           return (
@@ -636,18 +653,18 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           );
         })}
 
-        {/* Hoop baffles — same rotateX style as outer wireframe rings, inside the globe */}
+        {/* Spoke baffles — 2D bars through drum centre, matching the radial-spoke physics */}
         {Array.from({ length: N_BARS }, (_, b) => {
           const bAngDeg = s.drumRot + b * 90;
           return (
             <div key={b} style={{
               position: 'absolute', left: '50%', top: '50%',
-              width: D, height: D,
-              marginLeft: -R, marginTop: -R,
-              borderRadius: '50%',
-              border: `4px solid rgba(220,213,198,0.70)`,
-              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
-              transform: `perspective(${Math.round(R * 7)}px) rotateX(${bAngDeg}deg)`,
+              width: (R - BALL_R) * 2, height: BAR_THICK,
+              marginLeft: -(R - BALL_R), marginTop: -BAR_THICK / 2,
+              transform: `rotate(${bAngDeg}deg)`,
+              transformOrigin: 'center',
+              background: 'linear-gradient(90deg, transparent 0%, rgba(210,200,180,0.48) 12%, rgba(230,218,198,0.62) 50%, rgba(210,200,180,0.48) 88%, transparent 100%)',
+              borderRadius: BAR_THICK / 2,
               pointerEvents: 'none',
             }} />
           );
@@ -732,7 +749,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         <>
           <div style={{
             position: 'absolute',
-            left: CX - (BALL_R + 5), top: CY + R - 2,
+            left: CX - (BALL_R + 3), top: CY + R - 2,
             width: 2, height: TRAY_Y - (CY + R) + 14,
             background: `linear-gradient(180deg, transparent, ${BRASS_MID} 18%, ${BRASS_MID} 80%, transparent)`,
             opacity: 0.72, pointerEvents: 'none',
