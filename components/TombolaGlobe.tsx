@@ -184,23 +184,13 @@ function buildConfetti(colors: string[], seed: number): Confetti[] {
 }
 
 // ─── Ball in drum ──────────────────────────────────────────────────────────────
-function Ball({ dimAlpha }: { dimAlpha: number }) {
+function Ball() {
   return (
     <div style={{
       width: BALL_R * 2, height: BALL_R * 2, borderRadius: '50%', flexShrink: 0,
       background: `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.90) 0%, ${BALL_COLOR} 48%, rgba(0,0,0,0.18) 100%)`,
       boxShadow: '0 3px 10px rgba(0,0,0,0.40)',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      {/* Depth shadow for back-facing balls */}
-      {dimAlpha > 0.02 && (
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: `rgba(8,4,24,${dimAlpha.toFixed(3)})`,
-          pointerEvents: 'none',
-        }} />
-      )}
-    </div>
+    }} />
   );
 }
 
@@ -626,15 +616,14 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
       }}>
         {ballsWithDepth.map(({ i, sp, z, hidden }) => {
           if (!sp || hidden) return null;
-          const scale    = 0.86 + z * 0.28;           // 0.86 (back) → 1.14 (front)
-          const dimAlpha = Math.max(0, (0.5 - z) * 0.80); // darken back-facing balls
+          const scale = 0.86 + z * 0.28; // 0.86 (back) → 1.14 (front)
           return (
             <div key={i} style={{
               position: 'absolute', left: '50%', top: '50%',
               transform: `translate(calc(-50% + ${sp.x}px), calc(-50% + ${sp.y}px)) scale(${scale.toFixed(3)})`,
               willChange: 'transform',
             }}>
-              <Ball dimAlpha={dimAlpha} />
+              <Ball />
             </div>
           );
         })}
