@@ -653,18 +653,18 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           );
         })}
 
-        {/* Spoke baffles — 2D bars through drum centre, matching the radial-spoke physics */}
+        {/* Hoop baffles — same rotateX style as outer wireframe rings, inside the globe */}
         {Array.from({ length: N_BARS }, (_, b) => {
           const bAngDeg = s.drumRot + b * 90;
           return (
             <div key={b} style={{
               position: 'absolute', left: '50%', top: '50%',
-              width: (R - BALL_R) * 2, height: BAR_THICK,
-              marginLeft: -(R - BALL_R), marginTop: -BAR_THICK / 2,
-              transform: `rotate(${bAngDeg}deg)`,
-              transformOrigin: 'center',
-              background: 'linear-gradient(90deg, transparent 0%, rgba(210,200,180,0.48) 12%, rgba(230,218,198,0.62) 50%, rgba(210,200,180,0.48) 88%, transparent 100%)',
-              borderRadius: BAR_THICK / 2,
+              width: D, height: D,
+              marginLeft: -R, marginTop: -R,
+              borderRadius: '50%',
+              border: `4px solid rgba(220,213,198,0.70)`,
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
+              transform: `perspective(${Math.round(R * 7)}px) rotateX(${bAngDeg}deg)`,
               pointerEvents: 'none',
             }} />
           );
