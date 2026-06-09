@@ -230,7 +230,7 @@ export async function claimTeam(token: string, participantName: string) {
   `;
 }
 
-export async function adminSetParticipant(companyId: number, teamName: string, participantName: string) {
+export async function adminSetParticipant(companyId: number, teamName: string, participantName: string | null) {
   await sql`
     UPDATE participants SET participant_name = ${participantName}, synced_at = NOW()
     WHERE company_id = ${companyId} AND team_name = ${teamName}
