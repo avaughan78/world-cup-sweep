@@ -651,9 +651,21 @@ export default function ManageClient({ company: initialCompany }: { company: Com
 
           {/* Participants */}
           <div className="rounded-xl p-6" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <h2 className="text-lg font-bold mb-1" style={{ color: 'var(--text-primary)' }}>Participants</h2>
-            <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+            <div className="flex items-start justify-between gap-4 mb-1">
+              <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>Participants</h2>
+              <button
+                onClick={loadParticipants}
+                className="flex-shrink-0 font-bold px-3 py-1.5 rounded-lg text-xs transition-colors"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                Refresh
+              </button>
+            </div>
+            <p className="text-sm mb-1" style={{ color: 'var(--text-muted)' }}>
               Edit names directly — changes save on blur. Tick the checkbox once someone has paid.
+            </p>
+            <p className="text-sm mb-6 font-semibold" style={{ color: 'var(--text-primary)' }}>
+              {Object.values(names).filter(n => n.trim()).length} of {Object.keys(names).length} teams claimed
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(GROUPS_2026).map(([letter, teams]) => (
@@ -692,13 +704,16 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                           <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--green)' }}>✓</span>
                         )}
                       </div>
-                      <input
-                        type="checkbox"
-                        checked={paid[team] ?? false}
-                        onChange={() => togglePaid(team)}
-                        title={paid[team] ? 'Paid' : 'Not paid'}
-                        style={{ width: '1rem', height: '1rem', flexShrink: 0, cursor: 'pointer', accentColor: 'var(--green)' }}
-                      />
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                        <span aria-label="Paid?" title="Paid?" style={{ fontSize: '0.75rem', lineHeight: 1 }}>£</span>
+                        <input
+                          type="checkbox"
+                          checked={paid[team] ?? false}
+                          onChange={() => togglePaid(team)}
+                          title={paid[team] ? 'Paid' : 'Not paid'}
+                          style={{ width: '1rem', height: '1rem', cursor: 'pointer', accentColor: 'var(--green)' }}
+                        />
+                      </div>
                     </div>
                   ))}
                 </div>
