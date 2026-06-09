@@ -225,12 +225,12 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                     gap: '3mm',
                     alignItems: 'center',
                   }}>
-                    <span style={{ fontSize: '15pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
+                    <span style={{ fontSize: '20pt', lineHeight: 1, flexShrink: 0 }}>{p.icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p className="oswald" style={{ margin: 0, fontSize: '10pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.03em', lineHeight: 1.1 }}>
+                      <p className="oswald" style={{ margin: 0, fontSize: '13pt', fontWeight: 700, color: '#1a1a17', letterSpacing: '0.03em', lineHeight: 1.1 }}>
                         {p.name}
                       </p>
-                      <p style={{ margin: '0.8mm 0 0', fontSize: '7.5pt', color: '#8a8678', lineHeight: 1.35, fontFamily: 'system-ui, sans-serif' }}>
+                      <p style={{ margin: '1mm 0 0', fontSize: '8.5pt', color: '#8a8678', lineHeight: 1.35, fontFamily: 'system-ui, sans-serif' }}>
                         {p.tagline}
                       </p>
                     </div>
@@ -238,10 +238,10 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
                       <div style={{
                         background: '#4D10C8',
                         borderRadius: '1.5mm',
-                        padding: '1.5mm 2.5mm',
+                        padding: '2mm 3mm',
                         flexShrink: 0,
                       }}>
-                        <p className="bungee" style={{ margin: 0, fontSize: '10pt', color: '#fff', lineHeight: 1, letterSpacing: '0.02em' }}>
+                        <p className="bungee" style={{ margin: 0, fontSize: '12pt', color: '#fff', lineHeight: 1, letterSpacing: '0.02em' }}>
                           {amt}
                         </p>
                       </div>
