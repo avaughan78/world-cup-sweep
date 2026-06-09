@@ -57,6 +57,35 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
 
   const flag = team ? getFlag(team) : null;
 
+  if (existing) {
+    return (
+      <main className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
+        <div
+          className="w-full max-w-sm rounded-2xl p-8 text-center"
+          style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+        >
+          <div style={{ fontSize: '5rem', lineHeight: 1, marginBottom: '1rem' }}>{flag}</div>
+          <h1 className="text-4xl font-black tracking-tight mb-2" style={{ color: 'var(--text-primary)' }}>
+            {team}
+          </h1>
+          <p className="mb-6" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
+            This team has already been claimed.
+          </p>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+            Contact your organiser if you need to update your name.
+          </p>
+          <a
+            href={companyCode ? `/?code=${companyCode}` : '/'}
+            className="inline-block mt-8 font-bold px-6 py-3 rounded-xl"
+            style={{ background: 'var(--green)', color: '#fff', fontSize: '1rem' }}
+          >
+            View the sweep →
+          </a>
+        </div>
+      </main>
+    );
+  }
+
   if (done) {
     return (
       <main className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--bg)' }}>
@@ -105,9 +134,7 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
           {team}
         </h1>
         <p className="mb-8" style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
-          {existing
-            ? `Currently claimed by ${existing} — you can update it below.`
-            : 'Enter your name to claim this team.'}
+          Enter your name to claim this team.
         </p>
 
         <input
@@ -137,7 +164,7 @@ export default function ClaimPage({ params }: { params: Promise<{ token: string 
           className="w-full font-bold py-3 rounded-xl mt-4 transition-opacity"
           style={{ background: 'var(--green)', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '1.1rem' }}
         >
-          {loading ? 'Saving…' : existing ? 'Update Claim' : 'Claim This Team'}
+          {loading ? 'Saving…' : 'Claim This Team'}
         </button>
       </div>
     </main>
