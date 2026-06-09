@@ -9,6 +9,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 import BugReport from '@/components/BugReport';
 import CompanyGate from '@/components/CompanyGate';
 import HowItWorksModal from '@/components/HowItWorksModal';
+import TombolaDrawTrigger from '@/components/TombolaDrawTrigger';
 import PoweredByLink from '@/components/PoweredByLink';
 import HomeExitLink from '@/components/HomeExitLink';
 import { headers } from 'next/headers';
@@ -198,13 +199,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                 <strong style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length}</strong> claimed so far.
               </p>
               {company.tombola_enabled && (
-                <a
-                  href={`/draw?code=${company.code}`}
-                  className="flex-shrink-0 font-bold px-4 py-2 rounded-xl text-sm"
-                  style={{ background: '#4D10C8', color: '#fff', whiteSpace: 'nowrap', textDecoration: 'none' }}
-                >
-                  🎩 Draw a team
-                </a>
+                <TombolaDrawTrigger company={company} />
               )}
             </div>
           )}
