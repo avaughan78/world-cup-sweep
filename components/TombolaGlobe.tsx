@@ -15,12 +15,12 @@ const N_SLIPS  = 11;
 const TRAY_Y   = CY + R + 62;
 const TOTAL_H  = TRAY_Y + 32;
 
-// Metal agitator bars inside the drum
-const N_BARS    = 4;
-const BAR_OUTER = Math.round(R * 0.82);  // bar tip radius (px)
-const BAR_THICK = 8;                      // collision half-thickness (px)
-const BAR_RESTIT = 0.52;                  // bar bounciness
-const BAR_FRIC   = 0.42;                  // tangential friction fraction
+// Wall-mounted baffle paddles (like tumble-dryer fins, attached to inner wall)
+const N_BARS     = 4;
+const BAFFLE_L   = Math.round(R * 0.30);  // length extending inward from wall (px)
+const BAR_THICK  = 8;                      // collision half-thickness (px)
+const BAR_RESTIT = 0.55;                   // baffle bounciness
+const BAR_FRIC   = 0.45;                   // tangential friction fraction
 
 // 300 deg/s → 5 full rotations in 6 s; MIN_MS in TombolaContent is set to match
 const SPIN_DEG_S = 300;
@@ -421,13 +421,12 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
             sp.vy += Math.min(1, WFRICT * dt * 60) * (wTy - spTy);
           }
 
-          // Metal bar collisions — bars rotate with drum and physically flip
-          // tickets upward, eliminating the need to zero-out gravity
+          // Wall baffle collisions — 4 paddles attached to inner wall, 90° apart
           for (let b = 0; b < N_BARS; b++) {
-            const barAng = s.drumRot * Math.PI / 180 + b * (Math.PI / N_BARS);
+            const barAng = s.drumRot * Math.PI / 180 + b * (2 * Math.PI / N_BARS);
             const bc = Math.cos(barAng), bs = Math.sin(barAng);
-            // Closest point on bar segment (full diameter, centre to ±BAR_OUTER)
-            const tAlong = clamp(sp.x * bc + sp.y * bs, -BAR_OUTER, BAR_OUTER);
+            // Closest point on wall-mounted segment: from (INNER-BAFFLE_L) to INNER along radial
+            const tAlong = clamp(sp.x * bc + sp.y * bs, INNER - BAFFLE_L, INNER);
             const bpx = tAlong * bc, bpy = tAlong * bs;
             const dx = sp.x - bpx, dy = sp.y - bpy;
             const dist = Math.sqrt(dx * dx + dy * dy);
@@ -582,19 +581,30 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
           );
         })}
 
-        {/* Metal agitator bars — rotate with the drum and scatter the slips */}
+        {/* Wall-mounted baffle paddles — 4 fins attached to inner wall, 90° apart */}
         {Array.from({ length: N_BARS }, (_, b) => {
-          const barAng = s.drumRot + b * (180 / N_BARS);
+          const angDeg = s.drumRot + b * (360 / N_BARS);
+          const angRad = angDeg * Math.PI / 180;
+          const INNER_V = R * 0.88;
+          // Position the div centre at the midpoint of the baffle segment
+          const midR = INNER_V - BAFFLE_L / 2;
+          const bx = midR * Math.cos(angRad);
+          const by = midR * Math.sin(angRad);
           return (
             <div key={b} style={{
-              position: 'absolute', left: '50%', top: '50%',
-              width: BAR_OUTER * 2, height: 3,
-              marginLeft: -BAR_OUTER, marginTop: -1.5,
-              transform: `rotate(${barAng}deg)`,
-              background: `linear-gradient(90deg, ${BRASS_DK} 0%, ${BRASS_MID} 25%, ${BRASS_HI} 50%, ${BRASS_MID} 75%, ${BRASS_DK} 100%)`,
-              borderRadius: 2,
-              boxShadow: '0 1px 4px rgba(0,0,0,0.35)',
-              opacity: 0.72,
+              position: 'absolute',
+              left: `calc(50% + ${bx}px)`,
+              top: `calc(50% + ${by}px)`,
+              width: BAFFLE_L,
+              height: 8,
+              marginLeft: -BAFFLE_L / 2,
+              marginTop: -4,
+              transform: `rotate(${angDeg}deg)`,
+              // Gradient runs tangentially (180° = top→bottom = across the paddle face)
+              background: `linear-gradient(180deg, ${BRASS_HI} 0%, ${BRASS_MID} 45%, ${BRASS_DK} 100%)`,
+              borderRadius: '0 3px 3px 0',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.4)',
+              opacity: 0.88,
             }} />
           );
         })}
