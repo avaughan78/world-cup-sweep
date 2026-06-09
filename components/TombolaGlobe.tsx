@@ -584,15 +584,6 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         boxShadow: '0 14px 32px rgba(20,6,60,0.48)',
       }} />
 
-      {/* Axle */}
-      <div style={{
-        position: 'absolute', left: CX, top: CY,
-        width: (POST_OFF + R * 0.08) * 2, height: Math.round(R * 0.05),
-        marginLeft: -(POST_OFF + R * 0.04), marginTop: -Math.round(R * 0.025),
-        borderRadius: R * 0.025,
-        background: `linear-gradient(180deg, ${BRASS_HI}, ${BRASS_MID} 50%, ${BRASS_DK})`,
-        boxShadow: '0 3px 8px rgba(20,6,60,0.32)',
-      }} />
 
       {/* Posts */}
       {([-1, 1] as const).map(side => (
