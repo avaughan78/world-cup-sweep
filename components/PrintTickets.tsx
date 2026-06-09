@@ -28,16 +28,16 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
-        padding: '3mm 4mm',
-        gap: '1.5mm',
+        padding: '4mm 5mm',
+        gap: '2mm',
       }}>
         {flag
-          ? <img src={flag} alt={`${team} flag`} style={{ width: '3rem', height: 'auto', display: 'block' }} />
-          : <span style={{ fontSize: '2.5rem', lineHeight: 1 }}>🏳️</span>
+          ? <img src={flag} alt={`${team} flag`} style={{ width: '4rem', height: 'auto', display: 'block' }} />
+          : <span style={{ fontSize: '3rem', lineHeight: 1 }}>🏳️</span>
         }
         <span style={{
           fontWeight: 900,
-          fontSize: '0.85rem',
+          fontSize: '1rem',
           lineHeight: 1.2,
           color: '#111',
           fontFamily: 'system-ui, sans-serif',
@@ -45,7 +45,7 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
           {team}
         </span>
         <span style={{
-          fontSize: '0.45rem',
+          fontSize: '0.55rem',
           color: '#bbb',
           fontFamily: 'system-ui, sans-serif',
           letterSpacing: '0.05em',
@@ -64,35 +64,42 @@ function TicketCard({ team, flag, claimUrl }: Ticket) {
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '3mm',
-        gap: '1.5mm',
+        padding: '4mm',
+        gap: '2mm',
         flexShrink: 0,
       }}>
         {claimUrl ? (
           <>
-            <QRCode value={claimUrl} size={76} />
-            <span style={{ fontSize: '0.45rem', color: '#999', fontFamily: 'system-ui, sans-serif' }}>
+            <QRCode value={claimUrl} size={96} />
+            <span style={{ fontSize: '0.55rem', color: '#999', fontFamily: 'system-ui, sans-serif' }}>
               scan to claim
             </span>
           </>
         ) : (
-          <span style={{ fontSize: '0.6rem', color: '#ccc', fontFamily: 'system-ui, sans-serif' }}>No QR code</span>
+          <span style={{ fontSize: '0.7rem', color: '#ccc', fontFamily: 'system-ui, sans-serif' }}>No QR code</span>
         )}
       </div>
     </div>
   );
 }
 
+const PER_PAGE = 14; // 2 columns × 7 rows
+
 const gridStyle: React.CSSProperties = {
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: '4mm',
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gap: '5mm',
   background: '#fff',
 };
 
+function chunk<T>(arr: T[], size: number): T[][] {
+  const pages: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) pages.push(arr.slice(i, i + size));
+  return pages;
+}
+
 export default function PrintTickets({ tickets }: { tickets: Ticket[] }) {
-  const page1 = tickets.slice(0, 24);
-  const page2 = tickets.slice(24);
+  const pages = chunk(tickets, PER_PAGE);
 
   return (
     <>
@@ -107,33 +114,30 @@ export default function PrintTickets({ tickets }: { tickets: Ticket[] }) {
         }
       `}</style>
 
-      {/* Page 1 */}
-      <div className="ticket-sheet print-page" style={{ marginBottom: '0' }}>
-        <div style={gridStyle}>
-          {page1.map(t => <TicketCard key={t.team} {...t} />)}
-        </div>
-      </div>
+      {pages.map((page, i) => (
+        <div key={i}>
+          <div className={`ticket-sheet${i < pages.length - 1 ? ' print-page' : ''}`} style={{ marginBottom: '0' }}>
+            <div style={gridStyle}>
+              {page.map(t => <TicketCard key={t.team} {...t} />)}
+            </div>
+          </div>
 
-      {/* Screen-only page break indicator */}
-      <div className="print:hidden" style={{
-        textAlign: 'center',
-        padding: '1rem',
-        fontSize: '0.75rem',
-        color: '#aaa',
-        borderTop: '2px dashed #ddd',
-        borderBottom: '2px dashed #ddd',
-        margin: '0',
-        background: '#fafafa',
-      }}>
-        — page break —
-      </div>
-
-      {/* Page 2 */}
-      <div className="ticket-sheet" style={{ marginTop: '0' }}>
-        <div style={gridStyle}>
-          {page2.map(t => <TicketCard key={t.team} {...t} />)}
+          {i < pages.length - 1 && (
+            <div className="print:hidden" style={{
+              textAlign: 'center',
+              padding: '1rem',
+              fontSize: '0.75rem',
+              color: '#aaa',
+              borderTop: '2px dashed #ddd',
+              borderBottom: '2px dashed #ddd',
+              margin: '0',
+              background: '#fafafa',
+            }}>
+              — page break —
+            </div>
+          )}
         </div>
-      </div>
+      ))}
     </>
   );
 }
