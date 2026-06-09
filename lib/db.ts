@@ -236,6 +236,16 @@ export async function setCompanyTombolaEnabled(id: number, enabled: boolean): Pr
   await sql`UPDATE companies SET tombola_enabled = ${enabled} WHERE id = ${id}`;
 }
 
+export async function getUnclaimedCount(companyId: number): Promise<number> {
+  const rows = await sql`
+    SELECT COUNT(*) AS n FROM participants
+    WHERE company_id = ${companyId}
+      AND (participant_name IS NULL OR participant_name = '')
+      AND claim_token IS NOT NULL
+  `;
+  return Number((rows[0] as { n: string }).n);
+}
+
 export async function drawTombolaTeam(
   companyId: number,
   participantName: string,

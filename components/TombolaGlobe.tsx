@@ -24,12 +24,14 @@ const BAR_FRIC   = 0.42; // tangential friction fraction
 // 300 deg/s → 5 full rotations in 6 s; MIN_MS in TombolaContent is set to match
 const SPIN_DEG_S = 300;
 
+// Ping-pong balls
+const BALL_R      = 11;
+const BALL_COLORS = ['#EF4444','#F97316','#22C55E','#3B82F6','#8B5CF6','#EC4899','#06B6D4','#F59E0B','#10B981','#F43F5E','#6366F1','#14B8A6'];
+
 // ─── Colours ───────────────────────────────────────────────────────────────────
 const BRASS_HI  = '#FFFFFF';
 const BRASS_MID = '#EDE7D8';
 const BRASS_DK  = '#BCB3A0';
-const CREAM     = '#F1ECDD';
-const CREAM_DK  = '#E2D8BF';
 const PURPLE    = '#5A18E0';
 const PURPLE_DK = '#260A66';
 const RED       = '#ED1C2E';
@@ -124,15 +126,14 @@ function teamColors(team: string): string[] {
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 const clamp        = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
 const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-const easeInQuad   = (t: number) => t * t;
 
 // ─── Slip rigid-body state ─────────────────────────────────────────────────────
 interface SlipPhys { x: number; y: number; vx: number; vy: number }
 
-function initSlipPhys(): SlipPhys[] {
+function initSlipPhys(n: number): SlipPhys[] {
   const r = rng73();
-  const INNER = R * 0.88;
-  return Array.from({ length: N_SLIPS }, () => ({
+  const INNER = R - BALL_R;
+  return Array.from({ length: n }, () => ({
     x:  (r() - 0.5) * INNER * 0.8,
     y:  INNER * (0.50 + r() * 0.34),
     vx: (r() - 0.5) * 18,
@@ -182,57 +183,49 @@ function buildConfetti(colors: string[], seed: number): Confetti[] {
   });
 }
 
-// ─── FoldedSlip ────────────────────────────────────────────────────────────────
-function FoldedSlip({ w, tone }: { w: number; tone: number }) {
-  const h = Math.round(w * 0.52);
-  const face = tone > 0.5 ? CREAM_DK : CREAM;
+// ─── Ball in drum ──────────────────────────────────────────────────────────────
+function Ball({ color }: { color: string }) {
   return (
     <div style={{
-      width: w, height: h, borderRadius: 3, flexShrink: 0,
-      background: `linear-gradient(155deg, #f5eddb 0%, ${face} 55%, #cfc09e 100%)`,
-      boxShadow: '0 3px 9px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.4)',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      <div style={{ position: 'absolute', left: 3, right: 3, top: '50%', height: 1.5, marginTop: -0.75, background: 'rgba(100,80,40,0.20)' }} />
-    </div>
+      width: BALL_R * 2, height: BALL_R * 2, borderRadius: '50%', flexShrink: 0,
+      background: `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.80) 0%, ${color} 42%, rgba(0,0,0,0.30) 100%)`,
+      boxShadow: '0 3px 10px rgba(0,0,0,0.45)',
+    }} />
   );
 }
 
-// ─── DroppingSlip ──────────────────────────────────────────────────────────────
-function DroppingSlip({ x, y, rot, unfold, reveal, team }: {
-  x: number; y: number; rot: number;
+// ─── Dropping / revealing ball ─────────────────────────────────────────────────
+function DroppingBall({ x, y, unfold, reveal, color, team }: {
+  x: number; y: number;
   unfold: number; reveal: number;
-  team: string | null;
+  color: string; team: string | null;
 }) {
-  const eu    = easeOutCubic(unfold);
-  const foldW = 36, foldH = Math.round(36 * 0.52);
-  const openW = 170, openH = 102;
-  const w = foldW + (openW - foldW) * eu;
-  const h = foldH + (openH - foldH) * eu;
-  const fontSize = Math.max(10, h * 0.38);
-
+  const eu   = easeOutCubic(unfold);
+  const ballR = BALL_R + (55 - BALL_R) * eu;
+  // Rise gently as ball grows so the bottom stays in frame
+  const adjY  = y - eu * 36;
+  const showContent = reveal > 0.08 && !!team;
   return (
     <div style={{
-      position: 'absolute', left: x, top: y,
-      transform: `translate(-50%,-50%) rotate(${rot}deg)`,
-      width: w, height: h,
-      borderRadius: 6,
-      background: 'linear-gradient(150deg, #ffffff, #f4efe2 70%, #e6dcc4)',
-      boxShadow: `0 ${Math.round(h * 0.16)}px ${Math.round(h * 0.38)}px rgba(20,8,60,0.40), inset 0 1px 0 rgba(255,255,255,0.85)`,
+      position: 'absolute', left: x, top: adjY,
+      transform: 'translate(-50%, -50%)',
+      width: ballR * 2, height: ballR * 2,
+      borderRadius: '50%',
+      background: `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.80) 0%, ${color} 42%, rgba(0,0,0,0.30) 100%)`,
+      boxShadow: `0 ${Math.round(ballR * 0.18)}px ${Math.round(ballR * 0.65)}px rgba(0,0,0,0.45)`,
+      display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
       overflow: 'hidden',
-      display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 3,
     }}>
-      <div style={{ position: 'absolute', left: '33%', top: 0, bottom: 0, width: 1, background: 'rgba(90,24,224,0.16)', opacity: 1 - unfold }} />
-      <div style={{ position: 'absolute', left: '67%', top: 0, bottom: 0, width: 1, background: 'rgba(90,24,224,0.16)', opacity: 1 - unfold }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, top: '50%', height: 1, background: 'rgba(90,24,224,0.10)', opacity: 1 - reveal }} />
-      {reveal > 0.08 && team && (
-        <div style={{ opacity: reveal, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, padding: `0 ${Math.round(w * 0.07)}px` }}>
-          <span style={{ fontSize, lineHeight: 1 }}>{getFlag(team)}</span>
-          <span style={{
+      {showContent && (
+        <div style={{ opacity: reveal, textAlign: 'center', padding: `0 ${Math.round(ballR * 0.1)}px` }}>
+          <div style={{ fontSize: Math.round(ballR * 0.82), lineHeight: 1 }}>{getFlag(team!)}</div>
+          <div style={{
             fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif",
-            fontWeight: 800, fontSize: Math.max(8, h * 0.135),
-            color: '#1C1B1A', letterSpacing: '-0.01em', textAlign: 'center', lineHeight: 1.1,
-          }}>{team}</span>
+            fontWeight: 800, fontSize: Math.max(7, Math.round(ballR * 0.21)),
+            color: '#fff', letterSpacing: '-0.01em',
+            textAlign: 'center', lineHeight: 1.1,
+            textShadow: '0 1px 4px rgba(0,0,0,0.55)',
+          }}>{team}</div>
         </div>
       )}
     </div>
@@ -246,27 +239,31 @@ interface AS {
   t: number; drumRot: number; drumAngVelRad: number; agitation: number; doorOpen: number;
   slipPhys: SlipPhys[];
   phase: Phase; phaseT: number;
-  dropX: number; dropY: number; dropRot: number;
-  dropActive: boolean; dropT: number; unfold: number; reveal: number;
+  dropX: number; dropY: number; dropVx: number; dropVy: number;
+  dropActive: boolean; unfold: number; reveal: number;
+  drawnBallColor: string;
   overlayAlpha: number;
   confetti: Confetti[];
   doneSignaled: boolean;
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
-export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
+export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
   spinning:  boolean;
   drawnTeam: string | null;
   onDone:    () => void;
+  nSlips?:   number;
 }) {
+  const nBalls = Math.max(1, nSlips ?? N_SLIPS);
   const [, bump] = useReducer((n: number) => n + 1, 0);
 
   const as = useRef<AS>({
     t: 0, drumRot: 0, drumAngVelRad: 0, agitation: 0, doorOpen: 0,
-    slipPhys: initSlipPhys(),
+    slipPhys: initSlipPhys(nBalls),
     phase: 'idle', phaseT: 0,
-    dropX: CX, dropY: CY + R + 6, dropRot: 0,
-    dropActive: false, dropT: 0, unfold: 0, reveal: 0,
+    dropX: CX, dropY: CY + R + BALL_R, dropVx: 0, dropVy: 0,
+    dropActive: false, unfold: 0, reveal: 0,
+    drawnBallColor: BALL_COLORS[0],
     overlayAlpha: 0, confetti: [], doneSignaled: false,
   });
 
@@ -301,23 +298,34 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
       }
       if (s.phase === 'stopping' && elapsed > 1.5) {
         s.phase = 'dropping'; s.phaseT = s.t;
-        s.dropActive = true; s.dropT = 0;
-        s.dropX = CX; s.dropY = CY + R + 6; s.dropRot = -12;
+        s.dropActive = true;
+        s.dropX = CX;
+        s.dropY = CY + R + BALL_R;
+        s.dropVx = (Math.random() - 0.5) * 50;
+        s.dropVy = 80;
+        s.drawnBallColor = tm
+          ? (TEAM_COLORS[tm]?.[0] ?? BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)])
+          : BALL_COLORS[Math.floor(Math.random() * BALL_COLORS.length)];
       }
       if (s.phase === 'dropping') {
-        s.dropT += dt;
-        const DROP = 1.1;
-        const p = clamp(s.dropT / DROP, 0, 1);
-        const fall = easeInQuad(p);
-        const startY = CY + R + 6;
-        let y = startY + (TRAY_Y - startY) * fall;
-        const bounce = p > 0.72 ? Math.abs(Math.sin((p - 0.72) / 0.28 * Math.PI * 1.75)) * (1 - p) * 26 : 0;
-        y -= bounce;
-        s.dropY = y;
-        s.dropRot = -12 + 24 * p + Math.sin(p * Math.PI) * 8;
-        if (s.dropT > DROP) {
-          s.phase = 'unfolding'; s.phaseT = s.t;
-          s.dropY = TRAY_Y; s.dropRot = 0;
+        // Gravity-based physics with chute walls + bouncy floor
+        s.dropVy += 380 * dt;
+        s.dropVx *= Math.exp(-2.5 * dt);
+        s.dropX += s.dropVx * dt;
+        s.dropY += s.dropVy * dt;
+        const CHUTE_HALF = BALL_R + 3;
+        if (Math.abs(s.dropX - CX) > CHUTE_HALF) {
+          s.dropX = CX + Math.sign(s.dropX - CX) * CHUTE_HALF;
+          s.dropVx = -s.dropVx * 0.45;
+        }
+        if (s.dropY >= TRAY_Y) {
+          s.dropY = TRAY_Y;
+          s.dropVy = -Math.abs(s.dropVy) * (Math.abs(s.dropVy) > 60 ? 0.50 : 0.22);
+          s.dropVx *= 0.75;
+          if (Math.abs(s.dropVy) < 28) {
+            s.dropVy = 0; s.dropVx = 0;
+            s.phase = 'unfolding'; s.phaseT = s.t;
+          }
         }
       }
       if (s.phase === 'unfolding') {
@@ -378,9 +386,9 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
       s.drumAngVelRad = drumSpeedDeg * Math.PI / 180;
       s.drumRot = s.drumRot % 360;
 
-      // ── Paper slip physics ────────────────────────────────────────────────
+      // ── Ball physics ──────────────────────────────────────────────────────
       {
-        const INNER  = R * 0.88;
+        const INNER  = R - BALL_R;  // ball centre stops here so ball edge touches drum wall
         const G      = 300;
         const RESTIT = 0.58;
         const WFRICT = 0.12;
@@ -447,8 +455,8 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
           }
         }
 
-        // Soft repulsion — stops all slips piling at the exact same point
-        const REPEL_R = 26, REPEL_F = 180;
+        // Soft repulsion — keeps balls separated (each has radius BALL_R)
+        const REPEL_R = BALL_R * 2 + 2, REPEL_F = 180;
         for (let i = 0; i < s.slipPhys.length - 1; i++) {
           for (let j = i + 1; j < s.slipPhys.length; j++) {
             const a = s.slipPhys[i], b = s.slipPhys[j];
@@ -474,15 +482,13 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Slip static visual properties — position & velocity live in as.current.slipPhys
+  // Ball static visual properties — position & velocity live in as.current.slipPhys
   const slips = useMemo(() => {
     const r = rng(42);
-    return Array.from({ length: N_SLIPS }, () => ({
-      baseRot:   r() * 360,
-      w:         Math.round(28 + r() * 13),
-      tone:      r(),
-      rotFactor: 1.0 + r() * 1.8,  // how many visual spins per orbit around the drum
+    return Array.from({ length: nBalls }, () => ({
+      color: BALL_COLORS[Math.floor(r() * BALL_COLORS.length)],
     }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ── Render ────────────────────────────────────────────────────────────────────
@@ -561,18 +567,15 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         boxShadow: 'inset 0 -20px 44px rgba(38,10,102,0.40), inset 0 12px 36px rgba(255,255,255,0.07)',
       }}>
         {slips.map((sd, i) => {
-          const sp  = s.slipPhys[i];
-          // Visual rotation driven by the slip's angular position in the drum,
-          // so orientation tracks naturally as it cascades/centrifuges.
-          const posAng = Math.atan2(sp.x, -sp.y) * 180 / Math.PI;
-          const rot    = sd.baseRot + posAng * sd.rotFactor;
+          const sp = s.slipPhys[i];
+          if (!sp) return null;
           return (
             <div key={i} style={{
               position: 'absolute', left: '50%', top: '50%',
-              transform: `translate(calc(-50% + ${sp.x}px), calc(-50% + ${sp.y}px)) rotate(${rot}deg)`,
+              transform: `translate(calc(-50% + ${sp.x}px), calc(-50% + ${sp.y}px))`,
               willChange: 'transform',
             }}>
-              <FoldedSlip w={sd.w} tone={sd.tone} />
+              <Ball color={sd.color} />
             </div>
           );
         })}
@@ -668,12 +671,32 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         }} />
       </div>
 
-      {/* Dropped slip */}
+      {/* Wire chute — two guide rails flanking the drop path */}
+      {s.dropActive && (s.phase === 'dropping' || s.phase === 'unfolding') && (
+        <>
+          <div style={{
+            position: 'absolute',
+            left: CX - (BALL_R + 5), top: CY + R - 2,
+            width: 2, height: TRAY_Y - (CY + R) + 14,
+            background: `linear-gradient(180deg, transparent, ${BRASS_MID} 18%, ${BRASS_MID} 80%, transparent)`,
+            opacity: 0.72, pointerEvents: 'none',
+          }} />
+          <div style={{
+            position: 'absolute',
+            left: CX + (BALL_R + 3), top: CY + R - 2,
+            width: 2, height: TRAY_Y - (CY + R) + 14,
+            background: `linear-gradient(180deg, transparent, ${BRASS_MID} 18%, ${BRASS_MID} 80%, transparent)`,
+            opacity: 0.72, pointerEvents: 'none',
+          }} />
+        </>
+      )}
+
+      {/* Dropping / growing ball */}
       {s.dropActive && s.phase !== 'overlay' && s.phase !== 'done' && (
-        <DroppingSlip
-          x={s.dropX} y={s.dropY} rot={s.dropRot}
+        <DroppingBall
+          x={s.dropX} y={s.dropY}
           unfold={s.unfold} reveal={s.reveal}
-          team={drawnTeam}
+          color={s.drawnBallColor} team={drawnTeam}
         />
       )}
 

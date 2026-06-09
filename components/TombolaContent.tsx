@@ -7,6 +7,18 @@ import TombolaGlobe from './TombolaGlobe';
 
 type Phase = 'fee' | 'accept' | 'drawing' | 'done';
 
+// Number of balls in the drum fetched once on mount, then decremented as teams are drawn
+function useUnclaimedCount(code: string) {
+  const [unclaimed, setUnclaimed] = useState<number | null>(null);
+  useEffect(() => {
+    fetch(`/api/tombola/count?code=${encodeURIComponent(code)}`)
+      .then(r => r.json())
+      .then((d: { unclaimed?: number }) => { if (typeof d.unclaimed === 'number') setUnclaimed(d.unclaimed); })
+      .catch(() => {});
+  }, [code]);
+  return [unclaimed, setUnclaimed] as const;
+}
+
 function feeLabel(price: number | null | undefined): string | null {
   if (price == null) return null;
   return `£${price % 1 === 0 ? price : price.toFixed(2)}`;
@@ -24,6 +36,8 @@ export default function TombolaContent({ company, onClose }: {
   const [drawnTeam, setDrawnTeam]     = useState<string | null>(null);
   const [error, setError]             = useState('');
   const [localClaims, setLocalClaims] = useState<string[]>([]);
+  const [drawCount, setDrawCount]     = useState(0);
+  const [unclaimed, setUnclaimed]     = useUnclaimedCount(company.code);
 
   const storageKey = `tombola_claims_${company.code}`;
 
@@ -71,6 +85,8 @@ export default function TombolaContent({ company, onClose }: {
       const updated = [...localClaims, drawnTeam];
       try { localStorage.setItem(storageKey, JSON.stringify(updated)); } catch { /* ignore */ }
       setLocalClaims(updated);
+      setUnclaimed(u => u !== null ? Math.max(0, u - 1) : null);
+      setDrawCount(c => c + 1);
     }
     setSpinning(false);
     setPhase('done');
@@ -172,7 +188,13 @@ export default function TombolaContent({ company, onClose }: {
 
       {/* Globe animation */}
       <div style={{ background: '#080518', paddingTop: '0.5rem', paddingBottom: '0.5rem', overflow: 'hidden' }}>
-        <TombolaGlobe spinning={spinning} drawnTeam={drawnTeam} onDone={handleExitDone} />
+        <TombolaGlobe
+          key={drawCount}
+          spinning={spinning}
+          drawnTeam={drawnTeam}
+          onDone={handleExitDone}
+          nSlips={unclaimed ?? undefined}
+        />
       </div>
 
       {/* Form */}
