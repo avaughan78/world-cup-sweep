@@ -456,9 +456,9 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
             sp.vy += Math.min(1, WFRICT * dt * 60) * (wTy - spTy) * frictionScale;
           }
 
-          // Baffle physics: radial-spoke model — sweeps the full drum diameter so it
-          // reaches slips at any position, including the bottom where they settle.
-          // Visual uses horizontal rings (rotateX) — geometry is intentionally decoupled.
+          // Baffle physics — cap the angular velocity used here so baffles scatter
+          // balls without flinging them into a centrifuge orbit.
+          const bAngVel = Math.min(s.drumAngVelRad, 0.28);
           for (let b = 0; b < N_BARS; b++) {
             const barAng = s.drumRot * Math.PI / 180 + b * (Math.PI / 2);
             const bc = Math.cos(barAng), bs = Math.sin(barAng);
@@ -468,7 +468,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
             const dist = Math.sqrt(dx * dx + dy * dy);
             if (dist >= BAR_THICK || dist < 0.01) continue;
             const nx = dx / dist, ny = dy / dist;
-            const bvx = -s.drumAngVelRad * bpy, bvy = s.drumAngVelRad * bpx;
+            const bvx = -bAngVel * bpy, bvy = bAngVel * bpx;
             const vrn = (sp.vx - bvx) * nx + (sp.vy - bvy) * ny;
             if (vrn < 0) {
               sp.vx -= (1 + BAR_RESTIT) * vrn * nx;
@@ -480,6 +480,13 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
             sp.vy -= BAR_FRIC * (vry2 - vrn2 * ny);
             sp.x = bpx + nx * (BAR_THICK + 0.5);
             sp.y = bpy + ny * (BAR_THICK + 0.5);
+          }
+
+          // Hard speed ceiling — no ball can go fast enough to centrifuge at any angle
+          const spd2 = sp.vx * sp.vx + sp.vy * sp.vy;
+          if (spd2 > 90 * 90) {
+            const sc = 90 / Math.sqrt(spd2);
+            sp.vx *= sc; sp.vy *= sc;
           }
         }
 
