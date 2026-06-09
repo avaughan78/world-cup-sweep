@@ -670,9 +670,10 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(GROUPS_2026).map(([letter, teams]) => (
                 <div key={letter} className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                  <div className="px-3 py-2 font-black uppercase tracking-widest"
+                  <div className="px-3 py-2 font-black uppercase tracking-widest flex items-center justify-between"
                     style={{ background: 'var(--bg)', borderBottom: '1px solid var(--border)', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                    Group {letter}
+                    <span>Group {letter}</span>
+                    <span>£</span>
                   </div>
                   {teams.map(team => (
                     <div key={team} className="flex items-center gap-2 px-3 py-2"
@@ -704,16 +705,13 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                           <span style={{ position: 'absolute', right: 0, top: '0.15rem', fontSize: '0.7rem', color: 'var(--green)' }}>✓</span>
                         )}
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                        <span aria-label="Paid?" title="Paid?" style={{ fontSize: '0.75rem', lineHeight: 1 }}>£</span>
-                        <input
-                          type="checkbox"
-                          checked={paid[team] ?? false}
-                          onChange={() => togglePaid(team)}
-                          title={paid[team] ? 'Paid' : 'Not paid'}
-                          style={{ width: '1rem', height: '1rem', cursor: 'pointer', accentColor: 'var(--green)' }}
-                        />
-                      </div>
+                      <input
+                        type="checkbox"
+                        checked={paid[team] ?? false}
+                        onChange={() => togglePaid(team)}
+                        title={paid[team] ? 'Paid' : 'Not paid'}
+                        style={{ width: '1rem', height: '1rem', flexShrink: 0, cursor: 'pointer', accentColor: 'var(--green)' }}
+                      />
                     </div>
                   ))}
                 </div>
