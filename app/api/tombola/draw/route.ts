@@ -35,5 +35,5 @@ export async function POST(req: NextRequest) {
     ip,
   });
 
-  return NextResponse.json({ ok: true, team_name: result.team_name, claim_token: result.claim_token });
+  return NextResponse.json({ ok: true, team_name: result.team_name });
 }

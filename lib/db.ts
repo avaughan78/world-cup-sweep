@@ -239,7 +239,7 @@ export async function setCompanyTombolaEnabled(id: number, enabled: boolean): Pr
 export async function drawTombolaTeam(
   companyId: number,
   participantName: string,
-): Promise<{ ok: true; claim_token: string; team_name: string } | { ok: false; reason: 'name_limit' | 'none_available' }> {
+): Promise<{ ok: true; team_name: string } | { ok: false; reason: 'name_limit' | 'none_available' }> {
   const existing = await sql`
     SELECT COUNT(*) AS n FROM participants
     WHERE company_id = ${companyId}
@@ -247,16 +247,26 @@ export async function drawTombolaTeam(
   `;
   if (Number((existing[0] as { n: string }).n) >= 2) return { ok: false, reason: 'name_limit' };
 
+  // Atomically pick and claim a random unclaimed team in one CTE so the draw
+  // is committed immediately — no separate claim step needed.
   const rows = await sql`
-    SELECT team_name, claim_token FROM participants
-    WHERE company_id = ${companyId}
-      AND (participant_name IS NULL OR participant_name = '')
-      AND claim_token IS NOT NULL
-    ORDER BY RANDOM()
-    LIMIT 1
+    WITH picked AS (
+      SELECT id, team_name FROM participants
+      WHERE company_id = ${companyId}
+        AND (participant_name IS NULL OR participant_name = '')
+        AND claim_token IS NOT NULL
+      ORDER BY RANDOM()
+      LIMIT 1
+    )
+    UPDATE participants
+    SET participant_name = ${participantName}, synced_at = NOW()
+    FROM picked
+    WHERE participants.id = picked.id
+      AND (participants.participant_name IS NULL OR participants.participant_name = '')
+    RETURNING participants.team_name
   `;
   if (!rows[0]) return { ok: false, reason: 'none_available' };
-  return { ok: true, ...(rows[0] as { claim_token: string; team_name: string }) };
+  return { ok: true, team_name: (rows[0] as { team_name: string }).team_name };
 }
 
 export async function adminSetParticipant(companyId: number, teamName: string, participantName: string | null) {
