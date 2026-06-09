@@ -375,17 +375,17 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
       // ── Paper slip physics ────────────────────────────────────────────────
       {
         const INNER   = R * 0.88;
-        const G       = 300;   // px/s² gravity
-        const RESTIT  = 0.62;  // bouncy wall — slips ricochet rather than stick
-        const WFRICT  = 0.12;  // very light wall grip so slips don't accumulate on one side
-        const DAMP    = Math.exp(-0.55 * dt); // low damping — slips keep energy
-        // Gentle rotational bias only — turbulence drives most of the motion
-        const ω = Math.min(s.drumAngVelRad, 0.9);
-        // Strong turbulence during spinning; scaled by √dt for frame-rate independence
-        const turb = 135 * s.agitation * Math.sqrt(dt);
+        const G       = 300;
+        const RESTIT  = 0.62;
+        const WFRICT  = 0.12;
+        const DAMP    = Math.exp(-0.55 * dt);
+        const ω       = Math.min(s.drumAngVelRad, 0.9);
+        // Gravity almost vanishes when spinning so tickets scatter across the whole drum
+        const gEff  = G * Math.max(0.06, 1 - s.agitation * 0.94);
+        const turb  = 150 * s.agitation * Math.sqrt(dt);
 
         for (const sp of s.slipPhys) {
-          sp.vy += G * dt;
+          sp.vy += gEff * dt;
           sp.vx += (Math.random() - 0.5) * turb;
           sp.vy += (Math.random() - 0.5) * turb;
           sp.vx *= DAMP;
