@@ -378,11 +378,14 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
         const G       = 300;
         const RESTIT  = 0.62;
         const WFRICT  = 0.12;
-        const DAMP    = Math.exp(-0.55 * dt);
         const ω       = Math.min(s.drumAngVelRad, 0.9);
-        // Gravity almost vanishes when spinning so tickets scatter across the whole drum
-        const gEff  = G * Math.max(0.06, 1 - s.agitation * 0.94);
-        const turb  = 150 * s.agitation * Math.sqrt(dt);
+        // Gravity linearly disappears as agitation rises — zero at full spin so
+        // tickets scatter freely like lottery balls. Returns as drum slows.
+        const gEff  = G * Math.max(0, 1 - s.agitation);
+        // Strong turbulence at full agitation drives chaotic scatter
+        const turb  = 260 * s.agitation * Math.sqrt(dt);
+        // Less damping when spinning — slips keep their energy between wall bounces
+        const DAMP  = Math.exp(-(0.55 - 0.45 * s.agitation) * dt);
 
         for (const sp of s.slipPhys) {
           sp.vy += gEff * dt;
