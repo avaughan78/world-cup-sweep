@@ -622,7 +622,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         position: 'absolute', left: CX - R, top: CY - R, width: D, height: D,
         borderRadius: '50%', overflow: 'hidden',
         background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.14) 0%, rgba(135,95,215,0.07) 42%, rgba(38,10,102,0.26) 100%)',
-        boxShadow: 'inset 0 -20px 44px rgba(38,10,102,0.40), inset 0 12px 36px rgba(255,255,255,0.07)',
+        boxShadow: 'inset 0 12px 36px rgba(255,255,255,0.07)',
       }}>
         {ballsWithDepth.map(({ i, sp, z, hidden }) => {
           if (!sp || hidden) return null;
