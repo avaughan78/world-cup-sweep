@@ -184,7 +184,7 @@ function buildConfetti(colors: string[], seed: number): Confetti[] {
 }
 
 // ─── Ball in drum ──────────────────────────────────────────────────────────────
-function Ball({ seamAngle, dimAlpha }: { seamAngle: number; dimAlpha: number }) {
+function Ball({ dimAlpha }: { dimAlpha: number }) {
   return (
     <div style={{
       width: BALL_R * 2, height: BALL_R * 2, borderRadius: '50%', flexShrink: 0,
@@ -192,13 +192,6 @@ function Ball({ seamAngle, dimAlpha }: { seamAngle: number; dimAlpha: number }) 
       boxShadow: '0 3px 10px rgba(0,0,0,0.40)',
       position: 'relative', overflow: 'hidden',
     }}>
-      {/* Seam line */}
-      <div style={{
-        position: 'absolute', left: '8%', right: '8%',
-        top: '50%', height: 1.5, marginTop: -0.75,
-        background: 'rgba(150,136,112,0.42)',
-        transform: `rotate(${seamAngle}deg)`, transformOrigin: 'center',
-      }} />
       {/* Depth shadow for back-facing balls */}
       {dimAlpha > 0.02 && (
         <div style={{
@@ -232,15 +225,6 @@ function DroppingBall({ x, y, unfold, reveal, team }: {
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
       overflow: 'hidden',
     }}>
-      {/* Seam — fades out as content is revealed */}
-      <div style={{
-        position: 'absolute', left: '8%', right: '8%',
-        top: '50%', height: Math.max(1, Math.round(ballR * 0.025)), marginTop: -Math.round(ballR * 0.013),
-        background: 'rgba(150,136,112,0.38)',
-        transform: 'rotate(15deg)', transformOrigin: 'center',
-        opacity: Math.max(0, 1 - reveal * 1.8),
-        pointerEvents: 'none',
-      }} />
       {showContent && (
         <div style={{ opacity: reveal, textAlign: 'center', padding: `0 ${Math.round(ballR * 0.1)}px` }}>
           <div style={{ fontSize: Math.round(ballR * 0.82), lineHeight: 1 }}>{getFlag(team!)}</div>
@@ -549,8 +533,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
   const slips = useMemo(() => {
     const r = rng(42);
     return Array.from({ length: nBalls }, () => ({
-      zPhase:    r() * Math.PI * 2,          // phase offset for depth oscillation
-      seamAngle: Math.round(r() * 160 - 80), // seam rotation -80..+80°
+      zPhase: r() * Math.PI * 2, // phase offset for depth oscillation
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -566,7 +549,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
     const hidden = !sp || (s.dropActive && i === s.exitBallIdx);
     const posAng = sp ? Math.atan2(sp.x, sp.y) : 0;
     const z = (Math.sin(rad * 0.65 + posAng + sd.zPhase) + 1) / 2; // 0=back 1=front
-    return { i, sp, z, sd, hidden };
+    return { i, sp, z, hidden };
   }).sort((a, b) => a.z - b.z);
 
   const pivX = CX + POST_OFF + Math.round(R * 0.06);
@@ -641,7 +624,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         background: 'radial-gradient(circle at 34% 28%, rgba(255,255,255,0.14) 0%, rgba(135,95,215,0.07) 42%, rgba(38,10,102,0.26) 100%)',
         boxShadow: 'inset 0 -20px 44px rgba(38,10,102,0.40), inset 0 12px 36px rgba(255,255,255,0.07)',
       }}>
-        {ballsWithDepth.map(({ i, sp, z, sd, hidden }) => {
+        {ballsWithDepth.map(({ i, sp, z, hidden }) => {
           if (!sp || hidden) return null;
           const scale    = 0.86 + z * 0.28;           // 0.86 (back) → 1.14 (front)
           const dimAlpha = Math.max(0, (0.5 - z) * 0.80); // darken back-facing balls
@@ -651,7 +634,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
               transform: `translate(calc(-50% + ${sp.x}px), calc(-50% + ${sp.y}px)) scale(${scale.toFixed(3)})`,
               willChange: 'transform',
             }}>
-              <Ball seamAngle={sd.seamAngle} dimAlpha={dimAlpha} />
+              <Ball dimAlpha={dimAlpha} />
             </div>
           );
         })}
