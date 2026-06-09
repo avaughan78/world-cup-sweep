@@ -7,8 +7,9 @@ import FootballPhysics from './FootballPhysics';
 function Gate() {
   const pathname    = usePathname();
   const searchParams = useSearchParams();
-  // Hide only on the bare landing page (/ with no code) — show everywhere else
+  // Hide on the bare landing page and the company creation/setup page
   if (pathname === '/' && !searchParams.get('code')) return null;
+  if (pathname === '/setup') return null;
   return <FootballPhysics />;
 }
 
