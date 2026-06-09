@@ -15,12 +15,10 @@ const N_SLIPS  = 11;
 const TRAY_Y   = CY + R + 62;
 const TOTAL_H  = TRAY_Y + 32;
 
-// Wall-mounted baffle paddles (like tumble-dryer fins, attached to inner wall)
+// Horizontal hoop baffles — match the rotateX wireframe rings, physics as sweeping chords
 const N_BARS     = 4;
-const BAFFLE_L   = Math.round(R * 0.30);  // length extending inward from wall (px)
-const BAR_THICK  = 8;                      // collision half-thickness (px)
-const BAR_RESTIT = 0.55;                   // baffle bounciness
-const BAR_FRIC   = 0.45;                   // tangential friction fraction
+const BAR_THICK  = 9;    // collision half-thickness for horizontal baffles (px)
+const BAR_RESTIT = 0.55; // baffle bounciness
 
 // 300 deg/s → 5 full rotations in 6 s; MIN_MS in TombolaContent is set to match
 const SPIN_DEG_S = 300;
@@ -421,33 +419,24 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
             sp.vy += Math.min(1, WFRICT * dt * 60) * (wTy - spTy);
           }
 
-          // Wall baffle collisions — 4 paddles attached to inner wall, 90° apart
+          // Horizontal hoop collisions — each baffle is a chord sweeping top↔bottom
+          // Physics matches the rotateX visual: chord at y = INNER*sin(bAng)
           for (let b = 0; b < N_BARS; b++) {
-            const barAng = s.drumRot * Math.PI / 180 + b * (2 * Math.PI / N_BARS);
-            const bc = Math.cos(barAng), bs = Math.sin(barAng);
-            // Closest point on wall-mounted segment: from (INNER-BAFFLE_L) to INNER along radial
-            const tAlong = clamp(sp.x * bc + sp.y * bs, INNER - BAFFLE_L, INNER);
-            const bpx = tAlong * bc, bpy = tAlong * bs;
-            const dx = sp.x - bpx, dy = sp.y - bpy;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist >= BAR_THICK || dist < 0.01) continue;
-            const nx = dx / dist, ny = dy / dist;
-            // Bar surface velocity at contact point (drum rotation)
-            const bvx = -s.drumAngVelRad * bpy, bvy = s.drumAngVelRad * bpx;
-            // Normal relative velocity — bounce if approaching
-            const vrn = (sp.vx - bvx) * nx + (sp.vy - bvy) * ny;
+            const bAng    = s.drumRot * Math.PI / 180 + b * (Math.PI / 2);
+            const yBaffle = INNER * Math.sin(bAng);
+            const xSpan   = Math.sqrt(Math.max(0, INNER * INNER - yBaffle * yBaffle));
+            if (xSpan < 8) continue;              // skip near the wall poles
+            const dy = sp.y - yBaffle;
+            if (Math.abs(dy) >= BAR_THICK || Math.abs(sp.x) > xSpan) continue;
+            const ny  = dy >= 0 ? 1 : -1;
+            // Baffle sweeps vertically; cap to avoid over-violent kicks
+            const bvy = INNER * Math.cos(bAng) * Math.min(s.drumAngVelRad, 2.5);
+            const vrn = (sp.vy - bvy) * ny;
             if (vrn < 0) {
-              sp.vx -= (1 + BAR_RESTIT) * vrn * nx;
-              sp.vy -= (1 + BAR_RESTIT) * vrn * ny;
+              sp.vy -= (1 + BAR_RESTIT) * vrn;
             }
-            // Tangential friction — bar drags slip along with its sweep
-            const vrx2 = sp.vx - bvx, vry2 = sp.vy - bvy;
-            const vrn2 = vrx2 * nx + vry2 * ny;
-            sp.vx -= BAR_FRIC * (vrx2 - vrn2 * nx);
-            sp.vy -= BAR_FRIC * (vry2 - vrn2 * ny);
-            // Push slip clear of bar
-            sp.x = bpx + nx * (BAR_THICK + 0.5);
-            sp.y = bpy + ny * (BAR_THICK + 0.5);
+            sp.vx *= 0.85;                        // light x-damp as slip grazes baffle
+            sp.y   = yBaffle + ny * (BAR_THICK + 0.5);
           }
         }
 
@@ -581,30 +570,19 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
           );
         })}
 
-        {/* Wall-mounted baffle paddles — 4 fins attached to inner wall, 90° apart */}
+        {/* Hoop baffles — same rotateX style as outer wireframe rings, inside the globe */}
         {Array.from({ length: N_BARS }, (_, b) => {
-          const angDeg = s.drumRot + b * (360 / N_BARS);
-          const angRad = angDeg * Math.PI / 180;
-          const INNER_V = R * 0.88;
-          // Position the div centre at the midpoint of the baffle segment
-          const midR = INNER_V - BAFFLE_L / 2;
-          const bx = midR * Math.cos(angRad);
-          const by = midR * Math.sin(angRad);
+          const bAngDeg = s.drumRot + b * 90;
           return (
             <div key={b} style={{
-              position: 'absolute',
-              left: `calc(50% + ${bx}px)`,
-              top: `calc(50% + ${by}px)`,
-              width: BAFFLE_L,
-              height: 8,
-              marginLeft: -BAFFLE_L / 2,
-              marginTop: -4,
-              transform: `rotate(${angDeg}deg)`,
-              // Gradient runs tangentially (180° = top→bottom = across the paddle face)
-              background: `linear-gradient(180deg, ${BRASS_HI} 0%, ${BRASS_MID} 45%, ${BRASS_DK} 100%)`,
-              borderRadius: '0 3px 3px 0',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.4)',
-              opacity: 0.88,
+              position: 'absolute', left: '50%', top: '50%',
+              width: D, height: D,
+              marginLeft: -R, marginTop: -R,
+              borderRadius: '50%',
+              border: `4px solid rgba(220,213,198,0.70)`,
+              boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.18)',
+              transform: `perspective(${Math.round(R * 7)}px) rotateX(${bAngDeg}deg)`,
+              pointerEvents: 'none',
             }} />
           );
         })}

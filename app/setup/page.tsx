@@ -101,17 +101,15 @@ export default function SetupPage() {
             <img
               src="/world-cup-trophy.png"
               alt=""
-              style={{ height: 56, width: 'auto', flexShrink: 0 }}
+              style={{ width: 56, height: 72, objectFit: 'contain', flexShrink: 0 }}
             />
-            <div>
-              <h1 className="album-title text-4xl sm:text-5xl font-black tracking-tight" style={{ color: '#fff', lineHeight: 1 }}>
-                WC26 Sweep
-              </h1>
-              <p className="text-sm font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                Set up your sweep
-              </p>
-            </div>
+            <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
+              WC26 Sweep
+            </h1>
           </div>
+          <p className="text-sm font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            Set up your sweep
+          </p>
         </div>
 
         {/* Form — 2-column grid keeps everything on one screen */}
