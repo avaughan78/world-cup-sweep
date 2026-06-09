@@ -32,7 +32,7 @@ export default function TombolaModal({ company, onClose }: {
       }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div style={{ position: 'relative', width: '100%', maxWidth: '22rem', margin: 'auto' }}>
+      <div style={{ position: 'relative', width: '100%', maxWidth: '28rem', margin: 'auto' }}>
         {/* Close button */}
         <button
           onClick={onClose}
