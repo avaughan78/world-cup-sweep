@@ -293,7 +293,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
       if (s.phase === 'spinning' && tm && !s.doneSignaled) {
         s.phase = 'stopping'; s.phaseT = s.t;
       }
-      if (s.phase === 'stopping' && elapsed > 0.85) {
+      if (s.phase === 'stopping' && elapsed > 1.5) {
         s.phase = 'dropping'; s.phaseT = s.t;
         s.dropActive = true; s.dropT = 0;
         s.dropX = CX; s.dropY = CY + R + 6; s.dropRot = -12;
@@ -348,11 +348,12 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
           s.doorOpen  = 0;
           break;
         case 'stopping': {
-          const p = clamp(elapsed / 0.85, 0, 1);
-          drumSpeedDeg = SPIN_DEG_S * (1 - easeInQuad(p)) + 14;
+          // Exponential decay = constant rotational friction = natural flywheel feel
+          drumSpeedDeg = SPIN_DEG_S * Math.exp(-3.2 * elapsed) + 8;
           s.drumRot  += dt * drumSpeedDeg;
-          s.agitation = Math.max(0, 1 - p * 1.6);
-          s.doorOpen  = clamp((elapsed - 0.38) / 0.47, 0, 1);
+          s.agitation = Math.max(0, 1 - elapsed / 1.5 * 1.3);
+          // Door opens after drum has mostly slowed (elapsed 0.6 → 1.3s)
+          s.doorOpen  = clamp((elapsed - 0.6) / 0.7, 0, 1);
           break;
         }
         case 'dropping':
@@ -372,25 +373,30 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone }: {
       s.drumRot = s.drumRot % 360;
 
       // ── Paper slip physics ────────────────────────────────────────────────
-      // Each slip is a point-mass: gravity pulls down, drum wall applies
-      // tangential friction (carrying slips with the rotation), bounces are
-      // inelastic. At low ω slips cascade; at high ω they centrifuge to wall.
+      // Point-mass per slip: gravity + wall bounce/friction + Brownian turbulence.
+      // ω is capped below critical speed (√(G/R) ≈ 1.84 rad/s) so slips always
+      // cascade rather than centrifuge — at max spin they behave like a vigorous
+      // waterwheel, not a centrifuge.
       {
-        const INNER  = R * 0.88;  // effective inner radius
-        const G      = 420;       // gravity px/s²
-        const RESTIT = 0.22;      // wall restitution (paper is not bouncy)
-        const WFRICT = 0.50;      // fraction of wall-tangential vel imparted per contact frame
-        const DAMP   = Math.exp(-2.2 * dt); // exponential velocity decay (~air/pile friction)
-        const ω = s.drumAngVelRad; // drum angular velocity, rad/s
+        const INNER  = R * 0.88;
+        const G      = 320;   // px/s² — lighter gravity keeps slips airborne longer
+        const RESTIT = 0.50;  // lively bounces off the wall
+        const WFRICT = 0.55;  // wall tangential friction per contact frame
+        const DAMP   = Math.exp(-1.1 * dt); // gentle damping — slips keep momentum
+        // Cap at 84% of critical speed: vigorous cascade without centrifuging
+        const ω = Math.min(s.drumAngVelRad, 1.55);
 
         for (const sp of s.slipPhys) {
-          // Gravity + damping
-          sp.vy  += G * dt;
-          sp.vx  *= DAMP;
-          sp.vy  *= DAMP;
-          // Integrate
-          sp.x   += sp.vx * dt;
-          sp.y   += sp.vy * dt;
+          sp.vy += G * dt;
+          // Brownian turbulence (√dt = frame-rate-independent random walk)
+          // simulates paper-paper collisions and air disturbance
+          const turb = 80 * s.agitation * Math.sqrt(dt);
+          sp.vx += (Math.random() - 0.5) * turb;
+          sp.vy += (Math.random() - 0.5) * turb;
+          sp.vx *= DAMP;
+          sp.vy *= DAMP;
+          sp.x  += sp.vx * dt;
+          sp.y  += sp.vy * dt;
           // Wall collision
           const d = Math.sqrt(sp.x * sp.x + sp.y * sp.y);
           if (d < 0.01) { sp.y = INNER * 0.75; continue; }
