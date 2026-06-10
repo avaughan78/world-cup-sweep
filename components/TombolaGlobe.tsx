@@ -188,7 +188,7 @@ function Ball() {
   return (
     <div style={{
       width: BALL_R * 2, height: BALL_R * 2, borderRadius: '50%', flexShrink: 0,
-      background: `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.90) 0%, ${BALL_COLOR} 48%, rgba(0,0,0,0.18) 100%)`,
+      background: `radial-gradient(circle at 38% 30%, #fff 0%, ${BALL_COLOR} 50%, #CEC9BE 100%)`,
       boxShadow: '0 3px 10px rgba(0,0,0,0.40)',
     }} />
   );
@@ -201,8 +201,8 @@ function DroppingBall({ x, y, unfold, reveal, team }: {
   team: string | null;
 }) {
   const eu    = easeOutCubic(unfold);
-  const ballR = BALL_R + (55 - BALL_R) * eu;
-  const adjY  = y - eu * 36;
+  const ballR = BALL_R + (75 - BALL_R) * eu;
+  const adjY  = y - eu * 50;
   const showContent = reveal > 0.08 && !!team;
   return (
     <div style={{
@@ -210,7 +210,7 @@ function DroppingBall({ x, y, unfold, reveal, team }: {
       transform: 'translate(-50%, -50%)',
       width: ballR * 2, height: ballR * 2,
       borderRadius: '50%',
-      background: `radial-gradient(circle at 38% 30%, rgba(255,255,255,0.90) 0%, ${BALL_COLOR} 48%, rgba(0,0,0,0.18) 100%)`,
+      background: `radial-gradient(circle at 38% 30%, #fff 0%, ${BALL_COLOR} 50%, #CEC9BE 100%)`,
       boxShadow: `0 ${Math.round(ballR * 0.18)}px ${Math.round(ballR * 0.65)}px rgba(0,0,0,0.42)`,
       display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column',
       overflow: 'hidden',
