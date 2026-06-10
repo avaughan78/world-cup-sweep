@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 
 interface AuditEntry {
   id: number;
@@ -28,6 +28,22 @@ const EVENT_META: Record<string, { label: string; icon: string; colour: string }
   tournament_reset:    { label: 'Tournament reset',    icon: '🔄', colour: '#ef4444' },
 };
 
+const PERIOD_OPTIONS = [
+  { value: '',    label: 'All time' },
+  { value: '1h',  label: 'Last hour' },
+  { value: '24h', label: 'Last 24 hours' },
+  { value: '7d',  label: 'Last 7 days' },
+  { value: '30d', label: 'Last 30 days' },
+];
+
+function periodMs(p: string): number {
+  if (p === '1h')  return 3_600_000;
+  if (p === '24h') return 86_400_000;
+  if (p === '7d')  return 7 * 86_400_000;
+  if (p === '30d') return 30 * 86_400_000;
+  return Infinity;
+}
+
 function formatDetails(details: Record<string, unknown> | null): string {
   if (!details) return '';
   return Object.entries(details)
@@ -38,18 +54,32 @@ function formatDetails(details: Record<string, unknown> | null): string {
 
 function timeAgo(iso: string): string {
   const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60)   return `${diff}s ago`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 60)    return `${diff}s ago`;
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+const selectStyle: React.CSSProperties = {
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  color: 'var(--text-primary)',
+  borderRadius: '0.5rem',
+  padding: '0.4rem 0.75rem',
+  fontSize: '0.8125rem',
+  outline: 'none',
+  cursor: 'pointer',
+};
+
 export default function AuditPage() {
-  const [entries, setEntries] = useState<AuditEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [filter, setFilter] = useState('');
-  const [, setTick] = useState(0);
+  const [entries, setEntries]       = useState<AuditEntry[]>([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState('');
+  const [textFilter, setTextFilter] = useState('');
+  const [company, setCompany]       = useState('');
+  const [eventType, setEventType]   = useState('');
+  const [period, setPeriod]         = useState('');
+  const [, setTick]                 = useState(0);
 
   const load = useCallback(async () => {
     const res = await fetch('/api/admin/audit');
@@ -68,18 +98,41 @@ export default function AuditPage() {
     return () => clearInterval(t);
   }, [load]);
 
-  const filtered = filter.trim()
-    ? entries.filter(e => {
-        const q = filter.toLowerCase();
-        return (
-          e.event.includes(q) ||
-          (e.actor ?? '').toLowerCase().includes(q) ||
-          (e.company_name ?? '').toLowerCase().includes(q) ||
-          (e.ip ?? '').includes(q) ||
-          formatDetails(e.details).toLowerCase().includes(q)
-        );
-      })
-    : entries;
+  // Unique company names for the dropdown
+  const companies = useMemo(() =>
+    [...new Set(entries.map(e => e.company_name).filter((n): n is string => !!n))].sort(),
+    [entries],
+  );
+
+  // Unique event types present in the data
+  const eventTypes = useMemo(() =>
+    [...new Set(entries.map(e => e.event))].sort(),
+    [entries],
+  );
+
+  const activeFilters = textFilter.trim() || company || eventType || period;
+  const cutoff = periodMs(period);
+
+  const filtered = useMemo(() => entries.filter(e => {
+    if (textFilter.trim()) {
+      const q = textFilter.toLowerCase();
+      const hit =
+        e.event.includes(q) ||
+        (e.actor ?? '').toLowerCase().includes(q) ||
+        (e.company_name ?? '').toLowerCase().includes(q) ||
+        (e.ip ?? '').includes(q) ||
+        formatDetails(e.details).toLowerCase().includes(q);
+      if (!hit) return false;
+    }
+    if (company   && (e.company_name ?? '') !== company)  return false;
+    if (eventType && e.event !== eventType)                return false;
+    if (period && Date.now() - new Date(e.created_at).getTime() > cutoff) return false;
+    return true;
+  }), [entries, textFilter, company, eventType, period, cutoff]);
+
+  function clearFilters() {
+    setTextFilter(''); setCompany(''); setEventType(''); setPeriod('');
+  }
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--bg)', color: 'var(--text-primary)' }}>
@@ -101,32 +154,55 @@ export default function AuditPage() {
               <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Last 300 events · refreshes every 30s</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={load}
-              className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-70"
-              style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
-            >
-              ↺ Refresh
-            </button>
-          </div>
+          <button
+            onClick={load}
+            className="text-sm font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-70"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-secondary)' }}
+          >
+            ↺ Refresh
+          </button>
         </div>
 
-        {/* Search */}
-        <input
-          type="search"
-          placeholder="Filter by event, actor, company, IP…"
-          value={filter}
-          onChange={e => setFilter(e.target.value)}
-          className="w-full mb-4 px-4 py-2 rounded-lg text-sm"
-          style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none' }}
-        />
+        {/* Filters */}
+        <div className="flex flex-wrap gap-2 mb-4 items-center">
+          <input
+            type="search"
+            placeholder="Search event, actor, IP…"
+            value={textFilter}
+            onChange={e => setTextFilter(e.target.value)}
+            className="flex-1 min-w-[160px] px-3 py-[0.4rem] rounded-lg text-sm"
+            style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-primary)', outline: 'none' }}
+          />
+          <select value={company} onChange={e => setCompany(e.target.value)} style={selectStyle}>
+            <option value="">All companies</option>
+            {companies.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={eventType} onChange={e => setEventType(e.target.value)} style={selectStyle}>
+            <option value="">All events</option>
+            {eventTypes.map(ev => (
+              <option key={ev} value={ev}>{EVENT_META[ev]?.label ?? ev}</option>
+            ))}
+          </select>
+          <select value={period} onChange={e => setPeriod(e.target.value)} style={selectStyle}>
+            {PERIOD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
+          {activeFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-xs px-2.5 py-1.5 rounded-lg transition-opacity hover:opacity-70"
+              style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}
+            >
+              ✕ Clear
+            </button>
+          )}
+        </div>
 
         {/* Stats strip */}
         {!loading && !error && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
             {[
-              { label: 'Logins (ok)', value: entries.filter(e => e.event.endsWith('_ok')).length },
+              { label: 'Showing',       value: filtered.length },
+              { label: 'Logins (ok)',   value: entries.filter(e => e.event.endsWith('_ok')).length },
               { label: 'Failed logins', value: entries.filter(e => e.event.endsWith('_fail')).length },
               { label: 'Teams claimed', value: entries.filter(e => e.event === 'participant_claimed').length },
             ].map(s => (
@@ -149,7 +225,7 @@ export default function AuditPage() {
         )}
         {!loading && !error && filtered.length === 0 && (
           <div className="text-center py-16 text-sm" style={{ color: 'var(--text-muted)' }}>
-            {filter ? 'No matching events.' : 'No events logged yet.'}
+            {activeFilters ? 'No matching events.' : 'No events logged yet.'}
           </div>
         )}
         {!loading && !error && filtered.length > 0 && (
