@@ -41,3 +41,5 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 public/world-cup-goals.mp4
+scripts/test-email.mjs
+scripts/check-schema.mjs

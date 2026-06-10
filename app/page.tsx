@@ -196,7 +196,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               <div className="flex-1">
                 <p className="text-sm" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
                   <strong style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length}</strong> claimed
-                  {' — '}names revealed when all are in or at kick-off{' '}
+                  {' — '}names will be automatically revealed when all are drawn or at kick-off{' '}
                   <strong style={{ color: 'var(--text-primary)' }}>11 Jun, 20:00 BST</strong>.
                 </p>
               </div>
