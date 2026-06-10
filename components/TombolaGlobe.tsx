@@ -21,8 +21,8 @@ const BAR_THICK  = 8;    // collision half-thickness (px)
 const BAR_RESTIT = 0.55; // baffle bounciness
 const BAR_FRIC   = 0.42; // tangential friction fraction
 
-// 130 deg/s — gentle enough that wall friction can't centrifuge balls
-const SPIN_DEG_S = 130;
+// 160 deg/s — 4 full rotations in ~9s before stopping
+const SPIN_DEG_S = 160;
 
 // Ping-pong balls — uniform parchment colour
 const BALL_R     = 13;
@@ -243,6 +243,8 @@ interface AS {
   confetti: Confetti[];
   doneSignaled: boolean;
   exitBallIdx: number;
+  spinRotTotal: number;    // cumulative rotation in spinning phase (deg)
+  postDropSpeedDeg: number; // drum speed captured at ball exit, for coast-down
 }
 
 // ─── Main component ────────────────────────────────────────────────────────────
@@ -262,7 +264,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
     dropX: CX, dropY: CY + R + BALL_R, dropVx: 0, dropVy: 0,
     dropActive: false, unfold: 0, reveal: 0,
     overlayAlpha: 0, confetti: [], doneSignaled: false,
-    exitBallIdx: 0,
+    exitBallIdx: 0, spinRotTotal: 0, postDropSpeedDeg: 0,
   });
 
   const spinR = useRef(spinning);
@@ -291,16 +293,15 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
       if (s.phase === 'idle' && sp) {
         s.phase = 'spinning'; s.phaseT = s.t;
       }
-      if (s.phase === 'spinning' && tm && !s.doneSignaled) {
+      if (s.phase === 'spinning' && tm && !s.doneSignaled && s.spinRotTotal >= 4 * 360) {
         s.phase = 'stopping'; s.phaseT = s.t;
       }
       {
-        // Trigger drop when the exit ball naturally reaches the open door,
-        // rather than on a fixed timer. Fallback at 3.5s if it never gets there.
+        // Trigger drop when exit ball reaches open door; fallback at 2.0s
         const eb = s.slipPhys[s.exitBallIdx];
-        const INNER = R - BALL_R;
-        const atDoor = s.phase === 'stopping' && s.doorOpen > 0.8 && eb.y > INNER * 0.70;
-        if (atDoor || (s.phase === 'stopping' && elapsed > 3.5)) {
+        const innerR = R - BALL_R;
+        const atDoor = s.phase === 'stopping' && s.doorOpen > 0.75 && eb.y > innerR * 0.65;
+        if (atDoor || (s.phase === 'stopping' && elapsed > 2.0)) {
           s.phase = 'dropping'; s.phaseT = s.t;
           s.dropActive = true;
           s.dropX = CX + clamp(eb.x, -(BALL_R + 2), BALL_R + 2);
@@ -359,30 +360,33 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           break;
         case 'spinning':
           drumSpeedDeg = SPIN_DEG_S * (1 - Math.exp(-3.5 * elapsed));
-          s.drumRot  += dt * drumSpeedDeg;
+          s.drumRot     += dt * drumSpeedDeg;
+          s.spinRotTotal += Math.abs(dt * drumSpeedDeg); // track rotations for 4× minimum
           s.agitation = Math.min(1, s.agitation + dt * 2.8);
           s.doorOpen  = 0;
           break;
         case 'stopping': {
-          // Slower deceleration over ~2.8s; brief reverse jolt at ~2.2s mimics ratchet catch
-          const clunkT = elapsed - 2.2;
-          const clunk  = (clunkT > 0 && clunkT < 0.4) ? -10 * Math.exp(-clunkT * 12) : 0;
-          drumSpeedDeg = SPIN_DEG_S * Math.exp(-1.6 * elapsed) + 3 + clunk;
+          // Short deceleration — door opens quickly so ball exits while drum still moving
+          drumSpeedDeg = SPIN_DEG_S * Math.exp(-1.0 * elapsed) + 5;
+          s.postDropSpeedDeg = drumSpeedDeg; // capture for post-drop coast
           s.drumRot  += dt * drumSpeedDeg;
-          s.agitation = Math.max(0, 1 - elapsed / 2.2);
-          // Door opens as drum has mostly slowed (elapsed 1.6 → 2.4s)
-          s.doorOpen  = clamp((elapsed - 1.6) / 0.8, 0, 1);
+          s.agitation = Math.max(0, 1 - elapsed / 1.2);
+          s.doorOpen  = clamp(elapsed / 0.6, 0, 1);
           break;
         }
         case 'dropping':
         case 'unfolding':
-          drumSpeedDeg = 10;
+          // Coast down from the speed captured at ball exit
+          s.postDropSpeedDeg = Math.max(0, s.postDropSpeedDeg * Math.exp(-1.6 * dt));
+          drumSpeedDeg = s.postDropSpeedDeg;
           s.drumRot  += dt * drumSpeedDeg;
           s.agitation = 0;
           s.doorOpen  = 1;
           break;
         case 'overlay':
-          drumSpeedDeg = 7;
+          // Continue coasting to a gentle stop
+          s.postDropSpeedDeg = Math.max(0, s.postDropSpeedDeg * Math.exp(-1.6 * dt));
+          drumSpeedDeg = s.postDropSpeedDeg;
           s.drumRot  += dt * drumSpeedDeg;
           s.doorOpen  = Math.max(0, 1 - elapsed * 1.4);
           break;
@@ -414,11 +418,11 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
           sp.vy *= DAMP;
           sp.x  += sp.vx * dt;
           sp.y  += sp.vy * dt;
-          // Gently guide exit ball toward the door during stopping so handoff is natural
+          // Guide exit ball toward door — starts immediately, strong pull for short stopping window
           if (s.phase === 'stopping' && i === s.exitBallIdx) {
-            const guide = clamp((elapsed - 0.2) / 1.0, 0, 1);
-            sp.vx += -sp.x * 3.0 * guide * dt;
-            sp.vy += (INNER * 0.8 - sp.y) * 2.0 * guide * dt;
+            const guide = clamp(elapsed / 0.3, 0, 1);
+            sp.vx += -sp.x * 7.0 * guide * dt;
+            sp.vy += (INNER * 0.85 - sp.y) * 6.0 * guide * dt;
           }
 
           // Outer wall collision
