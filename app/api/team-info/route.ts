@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { normaliseTeamName } from '@/lib/football-api';
-import { getSquadCache, setSquadCache } from '@/lib/db';
+import { getSquadCache, setSquadCache, getCountryCache, setCountryCache } from '@/lib/db';
 import { fetchPlayerPhoto } from '@/lib/player-photos';
 
 // Map sweepstake names → REST Countries search name
@@ -285,51 +285,71 @@ export async function GET(req: NextRequest) {
     return fetchPromise;
   }
 
-  // Run country data + Wikipedia extract + squad fetch in parallel
-  const [country, countryWiki, squad] = await Promise.all([
-    fetchCountry(),
-    wikiData(wikiName),
-    fetchSquad(),
-  ]);
+  // ── Country / wiki data: DB cache first ──────────────────────────────────────
+  let countryData = await getCountryCache(team);
 
-  const capital =
-    CAPITAL_OVERRIDE[team] ??
-    (country?.capital as string[] | undefined)?.[0] ??
-    null;
+  if (!countryData) {
+    // Cache miss — fetch REST Countries + Wikipedia in parallel
+    const [country, countryWiki] = await Promise.all([
+      fetchCountry(),
+      wikiData(wikiName),
+    ]);
 
-  // Hero image: prefer city landmark article, fall back to country article
-  const imageSource = wikiImageTitle ?? capital ?? wikiName;
-  let wikiImage: string | null = null;
-  let wikiExtract: string | null = countryWiki.extract;
+    const capital =
+      CAPITAL_OVERRIDE[team] ??
+      (country?.capital as string[] | undefined)?.[0] ??
+      null;
 
-  if (imageSource === wikiName) {
-    wikiImage = countryWiki.image;
+    const imageSource = wikiImageTitle ?? capital ?? wikiName;
+    let wikiImage: string | null = null;
+
+    if (imageSource === wikiName) {
+      wikiImage = countryWiki.image;
+    } else {
+      const imageData = await wikiData(imageSource);
+      wikiImage = imageData.image ?? countryWiki.image;
+    }
+
+    const currencies = country?.currencies
+      ? Object.values(country.currencies as Record<string, { name: string }>).map(c => c.name)
+      : [];
+    const languages = country?.languages
+      ? Object.values(country.languages as Record<string, string>)
+      : [];
+
+    countryData = {
+      capital,
+      population: (country?.population as number | undefined) ?? null,
+      area:       (country?.area       as number | undefined) ?? null,
+      currencies,
+      languages,
+      wiki_image:   wikiImage,
+      wiki_extract: countryWiki.extract,
+    };
+
+    // Persist to DB (fire-and-forget — don't block the response)
+    void setCountryCache(team, countryData);
+    console.log(`[country_cache] miss — fetched and stored for "${team}"`);
   } else {
-    const imageData = await wikiData(imageSource);
-    wikiImage = imageData.image ?? countryWiki.image;
+    console.log(`[country_cache] hit for "${team}"`);
   }
 
-  const currencies = country?.currencies
-    ? Object.values(country.currencies as Record<string, { name: string }>).map(c => c.name)
-    : [];
-  const languages = country?.languages
-    ? Object.values(country.languages as Record<string, string>)
-    : [];
+  const squad = await fetchSquad();
 
   const hasPhotos = squad.some(p => p.photo !== null);
-  const cacheControl = (hasPhotos && wikiImage)
+  const cacheControl = (hasPhotos && countryData.wiki_image)
     ? 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
     : 'no-store';
 
   return NextResponse.json({
     team,
-    capital,
-    population: (country?.population as number | undefined) ?? null,
-    area: (country?.area as number | undefined) ?? null,
-    currencies,
-    languages,
-    wikiImage,
-    wikiExtract,
+    capital:     countryData.capital,
+    population:  countryData.population,
+    area:        countryData.area,
+    currencies:  countryData.currencies,
+    languages:   countryData.languages,
+    wikiImage:   countryData.wiki_image,
+    wikiExtract: countryData.wiki_extract,
     squad,
   }, {
     headers: { 'Cache-Control': cacheControl },

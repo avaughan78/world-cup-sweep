@@ -465,6 +465,67 @@ export async function setSquadCache(teamName: string, squad: SquadPlayer[]): Pro
   }
 }
 
+// ── Country cache (shared across all sweeps) ─────────────────────────────────
+
+export interface CountryCache {
+  capital:      string | null;
+  population:   number | null;
+  area:         number | null;
+  currencies:   string[];
+  languages:    string[];
+  wiki_image:   string | null;
+  wiki_extract: string | null;
+}
+
+const COUNTRY_CACHE_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+
+export async function getCountryCache(teamName: string): Promise<CountryCache | null> {
+  try {
+    const rows = await sql`
+      SELECT capital, population, area, currencies, languages, wiki_image, wiki_extract, updated_at
+      FROM country_cache WHERE team_name = ${teamName}
+    `;
+    if (!rows.length) return null;
+    if (Date.now() - new Date(rows[0].updated_at as string).getTime() > COUNTRY_CACHE_TTL_MS) return null;
+    const r = rows[0];
+    return {
+      capital:      (r.capital      as string | null),
+      population:   (r.population   as number | null),
+      area:         (r.area         as number | null),
+      currencies:   (r.currencies   as string[]) ?? [],
+      languages:    (r.languages    as string[]) ?? [],
+      wiki_image:   (r.wiki_image   as string | null),
+      wiki_extract: (r.wiki_extract as string | null),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function setCountryCache(teamName: string, data: CountryCache): Promise<void> {
+  try {
+    await sql`
+      INSERT INTO country_cache
+        (team_name, capital, population, area, currencies, languages, wiki_image, wiki_extract, updated_at)
+      VALUES
+        (${teamName}, ${data.capital}, ${data.population}, ${data.area},
+         ${data.currencies}::text[], ${data.languages}::text[],
+         ${data.wiki_image}, ${data.wiki_extract}, NOW())
+      ON CONFLICT (team_name) DO UPDATE SET
+        capital      = EXCLUDED.capital,
+        population   = EXCLUDED.population,
+        area         = EXCLUDED.area,
+        currencies   = EXCLUDED.currencies,
+        languages    = EXCLUDED.languages,
+        wiki_image   = EXCLUDED.wiki_image,
+        wiki_extract = EXCLUDED.wiki_extract,
+        updated_at   = NOW()
+    `;
+  } catch (err) {
+    console.error('[country_cache] write error:', err);
+  }
+}
+
 // ── Sync log (shared) ─────────────────────────────────────────────────────────
 
 export async function logSync(syncType: string, status: string, message?: string) {
