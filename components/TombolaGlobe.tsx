@@ -294,21 +294,25 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
       if (s.phase === 'spinning' && tm && !s.doneSignaled) {
         s.phase = 'stopping'; s.phaseT = s.t;
       }
-      if (s.phase === 'stopping' && elapsed > 2.8) {
+      {
+        // Trigger drop when the exit ball naturally reaches the open door,
+        // rather than on a fixed timer. Fallback at 3.5s if it never gets there.
         const eb = s.slipPhys[s.exitBallIdx];
-        s.phase = 'dropping'; s.phaseT = s.t;
-        s.dropActive = true;
-        // Hand off the exit ball's position and velocity so the drop feels continuous
-        s.dropX = CX + clamp(eb.x, -(BALL_R + 2), BALL_R + 2);
-        // Start at the hatch opening so the ball visibly rolls out rather than appearing below
-        s.dropY = CY + R;
-        s.dropVx = clamp(eb.vx, -60, 60);
-        s.dropVy = Math.max(60, eb.vy);
+        const INNER = R - BALL_R;
+        const atDoor = s.phase === 'stopping' && s.doorOpen > 0.8 && eb.y > INNER * 0.70;
+        if (atDoor || (s.phase === 'stopping' && elapsed > 3.5)) {
+          s.phase = 'dropping'; s.phaseT = s.t;
+          s.dropActive = true;
+          s.dropX = CX + clamp(eb.x, -(BALL_R + 2), BALL_R + 2);
+          s.dropY = CY + R;
+          s.dropVx = clamp(eb.vx, -40, 40);
+          s.dropVy = Math.max(15, eb.vy); // gentle release — gravity does the work
+        }
       }
       if (s.phase === 'dropping') {
         // Gravity-based physics with chute walls + bouncy floor
-        s.dropVy += 280 * dt;
-        s.dropVx *= Math.exp(-2.5 * dt);
+        s.dropVy += 190 * dt;
+        s.dropVx *= Math.exp(-1.2 * dt);
         s.dropX += s.dropVx * dt;
         s.dropY += s.dropVy * dt;
         const CHUTE_HALF = BALL_R + 3;
@@ -318,9 +322,9 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         }
         if (s.dropY >= TRAY_Y) {
           s.dropY = TRAY_Y;
-          s.dropVy = -Math.abs(s.dropVy) * (Math.abs(s.dropVy) > 60 ? 0.50 : 0.22);
-          s.dropVx *= 0.75;
-          if (Math.abs(s.dropVy) < 22) {
+          s.dropVy = -Math.abs(s.dropVy) * (Math.abs(s.dropVy) > 50 ? 0.42 : 0.18);
+          s.dropVx *= 0.65;
+          if (Math.abs(s.dropVy) < 16) {
             s.dropVy = 0; s.dropVx = 0;
             s.phase = 'unfolding'; s.phaseT = s.t;
           }
@@ -362,7 +366,7 @@ export default function TombolaGlobe({ spinning, drawnTeam, onDone, nSlips }: {
         case 'stopping': {
           // Slower deceleration over ~2.8s; brief reverse jolt at ~2.2s mimics ratchet catch
           const clunkT = elapsed - 2.2;
-          const clunk  = (clunkT > 0 && clunkT < 0.4) ? -18 * Math.exp(-clunkT * 12) : 0;
+          const clunk  = (clunkT > 0 && clunkT < 0.4) ? -10 * Math.exp(-clunkT * 12) : 0;
           drumSpeedDeg = SPIN_DEG_S * Math.exp(-1.6 * elapsed) + 3 + clunk;
           s.drumRot  += dt * drumSpeedDeg;
           s.agitation = Math.max(0, 1 - elapsed / 2.2);
