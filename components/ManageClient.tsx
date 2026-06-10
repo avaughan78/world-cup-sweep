@@ -37,6 +37,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   async function loadParticipants() {
     const res = await fetch('/api/company/manage/participants', {
@@ -529,7 +530,21 @@ export default function ManageClient({ company: initialCompany }: { company: Com
 
           {/* Settings */}
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Settings</p>
+            <button
+              onClick={() => setSettingsOpen(o => !o)}
+              className="flex items-center justify-between w-full"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Settings</p>
+              <svg
+                width="16" height="16" viewBox="0 0 24 24" fill="currentColor"
+                style={{ color: 'var(--text-muted)', flexShrink: 0, transition: 'transform 0.2s', transform: settingsOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+              >
+                <path d="M7 10l5 5 5-5z"/>
+              </svg>
+            </button>
+
+            {settingsOpen && (<div className="mt-4">
 
             {/* Company name */}
             <div className="flex flex-wrap gap-2 items-end mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
@@ -699,6 +714,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
               </div>
             </div>
 
+            </div>)}
           </div>
 
           {/* Participants */}
