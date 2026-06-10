@@ -195,9 +195,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               <span className="text-lg flex-shrink-0">🔒</span>
               <div className="flex-1">
                 <p className="text-sm" style={{ color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                  <strong style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length}</strong> claimed
-                  {' — '}names will be automatically revealed when all teams have been drawn, or at the first match kick-off: {' '}
-                  <strong style={{ color: 'var(--text-primary)' }}>11 Jun, 20:00 BST</strong>.
+                  <strong style={{ color: 'var(--text-primary)' }}>{claimed} of {participants.length}</strong> claimed<br />
+                  Names will be automatically revealed when all teams have been drawn, or at the first match kick-off: <strong style={{ color: 'var(--text-primary)' }}>11 Jun, 20:00 BST</strong>.
                 </p>
               </div>
               {company.tombola_enabled && (
