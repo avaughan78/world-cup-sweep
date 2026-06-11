@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
+import { unstable_cache } from 'next/cache';
 import { GROUPS_2026 } from './groups';
 
 const sql = neon(process.env.DATABASE_URL!);
@@ -295,10 +296,14 @@ export async function setParticipantPaid(companyId: number, teamName: string, pa
 
 // ── Team stats (shared across all companies) ──────────────────────────────────
 
-export async function getAllTeamStats(): Promise<TeamStats[]> {
-  const rows = await sql`SELECT * FROM team_stats`;
-  return rows as TeamStats[];
-}
+export const getAllTeamStats = unstable_cache(
+  async (): Promise<TeamStats[]> => {
+    const rows = await sql`SELECT * FROM team_stats`;
+    return rows as TeamStats[];
+  },
+  ['all-team-stats'],
+  { tags: ['team-stats'], revalidate: 300 },
+);
 
 export async function upsertTeamStats(stats: {
   team_name: string;
@@ -373,14 +378,18 @@ export async function setPrizeOverride(companyId: number, override: PrizeOverrid
 
 // ── Group standings (shared) ──────────────────────────────────────────────────
 
-export async function getGroupStandings(): Promise<GroupStanding[]> {
-  try {
-    const rows = await sql`SELECT * FROM group_standings ORDER BY group_name, position`;
-    return rows as GroupStanding[];
-  } catch {
-    return [];
-  }
-}
+export const getGroupStandings = unstable_cache(
+  async (): Promise<GroupStanding[]> => {
+    try {
+      const rows = await sql`SELECT * FROM group_standings ORDER BY group_name, position`;
+      return rows as GroupStanding[];
+    } catch {
+      return [];
+    }
+  },
+  ['group-standings'],
+  { tags: ['group-standings'], revalidate: 300 },
+);
 
 export async function upsertGroupStanding(s: GroupStanding) {
   await sql`

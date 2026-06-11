@@ -202,7 +202,7 @@ export default function CompanyGate({
                 </p>
                 <div className="flex items-center gap-4">
                   <img
-                    src="/world-cup-trophy.png"
+                    src="/world-cup-trophy.webp"
                     alt=""
                     style={{ height: 'clamp(3.5rem, 8vw, 5.5rem)', width: 'auto', flexShrink: 0 }}
                   />

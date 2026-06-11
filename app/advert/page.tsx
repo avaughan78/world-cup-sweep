@@ -181,7 +181,7 @@ export default async function AdvertPage({ searchParams }: { searchParams: Promi
 
               {/* Right: trophy + sweep name */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'flex-end', gap: '2mm', flexShrink: 0 }}>
-                <img src="/world-cup-trophy.png" alt="World Cup trophy" style={{
+                <img src="/world-cup-trophy.webp" alt="World Cup trophy" style={{
                   height: '38mm', width: 'auto', opacity: 0.88,
                   filter: 'brightness(1.1) drop-shadow(0 2px 8px rgba(0,0,0,0.5))',
                 }} />

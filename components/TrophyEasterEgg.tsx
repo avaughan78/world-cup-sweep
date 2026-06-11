@@ -10,7 +10,7 @@ const VIDEO_URL = process.env.NEXT_PUBLIC_TROPHY_VIDEO_URL ?? '';
 
 export default function TrophyEasterEgg() {
   if (!VIDEO_URL) return (
-    <Image src="/world-cup-trophy.png" alt="FIFA World Cup Trophy" width={56} height={72} style={{ objectFit: 'contain', flexShrink: 0 }} />
+    <Image src="/world-cup-trophy.webp" alt="FIFA World Cup Trophy" width={56} height={72} style={{ objectFit: 'contain', flexShrink: 0 }} />
   );
   const [showModal, setShowModal] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -63,7 +63,7 @@ export default function TrophyEasterEgg() {
         style={{ cursor: 'default', flexShrink: 0, WebkitUserSelect: 'none', userSelect: 'none', position: 'relative' }}
       >
         <Image
-          src="/world-cup-trophy.png"
+          src="/world-cup-trophy.webp"
           alt="FIFA World Cup Trophy"
           width={56}
           height={72}

@@ -99,7 +99,7 @@ export default function SetupPage() {
           </p>
           <div className="flex items-end gap-4 mt-1">
             <img
-              src="/world-cup-trophy.png"
+              src="/world-cup-trophy.webp"
               alt=""
               style={{ width: 56, height: 72, objectFit: 'contain', flexShrink: 0 }}
             />

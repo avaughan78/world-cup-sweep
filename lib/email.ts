@@ -62,7 +62,7 @@ export async function sendPasswordResetEmail({
                       </p>
                     </td>
                     <td style="vertical-align:bottom;text-align:right;width:80px;padding-left:16px;">
-                      <img src="${BASE_URL}/world-cup-trophy.png" alt="World Cup trophy"
+                      <img src="${BASE_URL}/world-cup-trophy.webp" alt="World Cup trophy"
                         width="60" style="display:block;margin-left:auto;opacity:0.9;filter:brightness(1.1);" />
                     </td>
                   </tr>
