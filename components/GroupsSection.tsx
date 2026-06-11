@@ -92,7 +92,6 @@ export default function GroupsSection({
       )}
       {view === 'stats' && (
         <StatsView
-          groupStandings={groupStandings}
           teamStats={teamStats}
           participantMap={participantMap}
         />
