@@ -166,15 +166,14 @@ export default function TombolaContent({ company, onClose }: {
           </div>
         </div>
 
-        {/* Curaçao starburst badge — floats on the right, closable */}
+        {/* Curaçao starburst badge — top-right of card, closable */}
         {isCuracao && showStarPrize && (
           <div style={{
             position: 'absolute',
-            right: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: 215,
-            height: 215,
+            right: -10,
+            top: 14,
+            width: 150,
+            height: 150,
             zIndex: 20,
           }}>
             <div style={{
@@ -184,13 +183,13 @@ export default function TombolaContent({ company, onClose }: {
               animation: 'curacao-entrance 0.8s cubic-bezier(0.34,1.56,0.64,1) both 0.4s, curacao-badge-wobble 5s ease-in-out 1.2s infinite',
               transformOrigin: 'center center',
             }}>
-              {/* Starburst background — light lavender centre fades to brand purple at tips */}
+              {/* Gold starburst — near-white centre so multiply blend makes bottle bg transparent */}
               <div
                 className="curacao-starburst-bg"
                 style={{
                   position: 'absolute',
                   inset: 0,
-                  background: 'radial-gradient(circle at 50% 52%, #f0e8ff 0%, #c9a8f8 32%, #6b35e8 58%, #3a0d9a 80%, #2a0870 100%)',
+                  background: 'radial-gradient(circle at 50% 50%, #fffde7 0%, #fef9c3 38%, #fcd34d 65%, #f59e0b 82%, #d97706 100%)',
                   animation: 'curacao-starburst-glow 2.4s ease-in-out 1.2s infinite',
                 }}
               />
@@ -202,10 +201,10 @@ export default function TombolaContent({ company, onClose }: {
                 flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '3px',
+                gap: '2px',
                 zIndex: 2,
               }}>
-                <p style={{ fontSize: '7.5px', fontWeight: 900, letterSpacing: '0.18em', color: '#fff', textTransform: 'uppercase', margin: 0, lineHeight: 1, textShadow: '0 1px 4px rgba(40,0,120,0.5)' }}>
+                <p style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.15em', color: '#92400e', textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>
                   ⭐ Star Prize ⭐
                 </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -214,13 +213,13 @@ export default function TombolaContent({ company, onClose }: {
                   alt="Blue Curaçao"
                   loading="eager"
                   style={{
-                    height: '90px',
+                    height: '72px',
                     width: 'auto',
                     mixBlendMode: 'multiply',
                     animation: 'curacao-bottle-float 3s ease-in-out infinite',
                   }}
                 />
-                <p style={{ fontSize: '7px', fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.3, textAlign: 'center', textShadow: '0 1px 4px rgba(40,0,120,0.5)' }}>
+                <p style={{ fontSize: '6.5px', fontWeight: 700, color: '#92400e', margin: 0, lineHeight: 1.3, textAlign: 'center' }}>
                   De Kuyper<br/>Blue Curaçao
                 </p>
               </div>
@@ -230,15 +229,15 @@ export default function TombolaContent({ company, onClose }: {
                 aria-label="Dismiss star prize"
                 style={{
                   position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  width: 22,
-                  height: 22,
+                  top: 6,
+                  right: 6,
+                  width: 18,
+                  height: 18,
                   borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.25)',
-                  color: '#fff',
-                  border: '1.5px solid rgba(255,255,255,0.6)',
-                  fontSize: '13px',
+                  background: 'rgba(146,64,14,0.2)',
+                  color: '#92400e',
+                  border: '1px solid rgba(146,64,14,0.5)',
+                  fontSize: '11px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
