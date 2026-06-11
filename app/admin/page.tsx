@@ -6,7 +6,7 @@ import PasswordInput from '@/components/PasswordInput';
 import Flag from '@/components/Flag';
 import ThemeToggle from '@/components/ThemeToggle';
 
-interface Company { id: number; code: string; name: string; ticket_price: number | null; }
+interface Company { id: number; code: string; name: string; ticket_price: number | null; max_teams_per_person: number; }
 
 async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknown; raw: string }> {
   const raw = await res.text();
@@ -41,6 +41,10 @@ export default function AdminPage() {
   // Ticket price
   const [ticketPrice, setTicketPrice] = useState('');
   const [priceSaved, setPriceSaved] = useState(false);
+
+  // Max teams per person
+  const [maxTeams, setMaxTeams] = useState('2');
+  const [maxTeamsSaved, setMaxTeamsSaved] = useState(false);
 
   // Company name / code editing
   const [editName, setEditName] = useState('');
@@ -141,6 +145,7 @@ export default function AdminPage() {
   useEffect(() => {
     const company = companies.find(c => c.id === selectedCompanyId);
     setTicketPrice(company?.ticket_price != null ? String(company.ticket_price) : '');
+    setMaxTeams(String(company?.max_teams_per_person ?? 2));
     setEditName(company?.name ?? '');
     setEditCode(company?.code ?? '');
     setAdminPw('');
@@ -490,6 +495,29 @@ export default function AdminPage() {
         setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, ticket_price: isNaN(price) ? null : price } : c));
         setPriceSaved(true);
         setTimeout(() => setPriceSaved(false), 2000);
+      }
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
+  async function handleSaveMaxTeams() {
+    if (!selectedCompany) return;
+    const val = Math.max(1, Math.min(10, parseInt(maxTeams, 10)));
+    if (isNaN(val)) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/companies', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: selectedCompany.id, max_teams_per_person: val }),
+      });
+      const { ok } = await parseResponse(res);
+      if (ok) {
+        setCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, max_teams_per_person: val } : c));
+        setMaxTeamsSaved(true);
+        setTimeout(() => setMaxTeamsSaved(false), 2000);
       }
     } catch (e) {
       setStatus({ ok: false, message: String(e) });
@@ -904,6 +932,32 @@ export default function AdminPage() {
                   </button>
                   <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
                     Sets prize amounts shown on the draw page (48 tickets × price × split).
+                  </p>
+                </div>
+
+                {/* Max teams per person */}
+                <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Max Teams Per Person (Lucky Dip)</p>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    step="1"
+                    value={maxTeams}
+                    onChange={e => setMaxTeams(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleSaveMaxTeams()}
+                    style={{ ...smallInputStyle, width: '5rem' }}
+                  />
+                  <button
+                    onClick={handleSaveMaxTeams}
+                    disabled={loading}
+                    className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                    style={{ background: maxTeamsSaved ? '#f0fdf4' : 'var(--green)', color: maxTeamsSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                  >
+                    {maxTeamsSaved ? 'Saved ✓' : 'Save'}
+                  </button>
+                  <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                    How many teams each person can draw in the lucky dip. Default is 2.
                   </p>
                 </div>
 

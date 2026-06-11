@@ -14,6 +14,7 @@ export interface Company {
   ticket_price: number | null;
   admin_email: string | null;
   tombola_enabled: boolean;
+  max_teams_per_person: number;
 }
 
 export interface Participant {
@@ -64,12 +65,12 @@ export interface GroupStanding {
 // ── Companies ────────────────────────────────────────────────────────────────
 
 export async function listCompanies(): Promise<Company[]> {
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled FROM companies ORDER BY name`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled, max_teams_per_person FROM companies ORDER BY name`;
   return rows as Company[];
 }
 
 export async function getCompanyByCode(code: string): Promise<Company | null> {
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled FROM companies WHERE UPPER(code) = UPPER(${code})`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled, max_teams_per_person FROM companies WHERE UPPER(code) = UPPER(${code})`;
   return (rows[0] as Company) ?? null;
 }
 
@@ -86,7 +87,7 @@ export async function authenticateCompanyAdmin(code: string, password: string): 
   | { ok: true; company: Company }
   | { ok: false; reason: 'not_found' | 'not_configured' | 'wrong_password' }
 > {
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled, admin_password FROM companies WHERE UPPER(code) = UPPER(${code})`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled, max_teams_per_person, admin_password FROM companies WHERE UPPER(code) = UPPER(${code})`;
   if (!rows[0]) return { ok: false, reason: 'not_found' };
   const row = rows[0] as Company & { admin_password: string | null };
   if (!row.admin_password) return { ok: false, reason: 'not_configured' };
@@ -105,14 +106,14 @@ export async function authenticateCompanyAdmin(code: string, password: string): 
   }
 
   if (!valid) return { ok: false, reason: 'wrong_password' };
-  return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price, admin_email: row.admin_email ?? null, tombola_enabled: row.tombola_enabled ?? false } };
+  return { ok: true, company: { id: row.id, code: row.code, name: row.name, ticket_price: row.ticket_price, admin_email: row.admin_email ?? null, tombola_enabled: row.tombola_enabled ?? false, max_teams_per_person: row.max_teams_per_person ?? 2 } };
 }
 
 export async function createCompany(code: string, name: string, email?: string | null, tombolaEnabled = false, ticketPrice: number | null = null): Promise<Company> {
   const rows = await sql`
     INSERT INTO companies (code, name, admin_email, tombola_enabled, ticket_price)
     VALUES (UPPER(${code}), ${name}, ${email ?? null}, ${tombolaEnabled}, ${ticketPrice})
-    RETURNING id, code, name, ticket_price, admin_email, tombola_enabled
+    RETURNING id, code, name, ticket_price, admin_email, tombola_enabled, max_teams_per_person
   `;
   const company = rows[0] as Company;
   // Seed all 48 teams in one query via unnest (was 48 sequential round-trips)
@@ -136,12 +137,16 @@ export async function updateCompany(id: number, fields: { name?: string; code?: 
     const rows = await sql`UPDATE companies SET code = UPPER(${fields.code}) WHERE id = ${id} RETURNING id, code, name, ticket_price, admin_email`;
     return rows[0] as Company;
   }
-  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled FROM companies WHERE id = ${id}`;
+  const rows = await sql`SELECT id, code, name, ticket_price, admin_email, tombola_enabled, max_teams_per_person FROM companies WHERE id = ${id}`;
   return rows[0] as Company;
 }
 
 export async function setCompanyAdminEmail(id: number, email: string | null): Promise<void> {
   await sql`UPDATE companies SET admin_email = ${email} WHERE id = ${id}`;
+}
+
+export async function setCompanyMaxTeams(id: number, max: number): Promise<void> {
+  await sql`UPDATE companies SET max_teams_per_person = ${max} WHERE id = ${id}`;
 }
 
 // ── Password resets ───────────────────────────────────────────────────────────
@@ -250,13 +255,14 @@ export async function getUnclaimedCount(companyId: number): Promise<number> {
 export async function drawTombolaTeam(
   companyId: number,
   participantName: string,
+  maxTeams: number,
 ): Promise<{ ok: true; team_name: string } | { ok: false; reason: 'name_limit' | 'none_available' }> {
   const existing = await sql`
     SELECT COUNT(*) AS n FROM participants
     WHERE company_id = ${companyId}
       AND LOWER(TRIM(participant_name)) = LOWER(TRIM(${participantName}))
   `;
-  if (Number((existing[0] as { n: string }).n) >= 2) return { ok: false, reason: 'name_limit' };
+  if (Number((existing[0] as { n: string }).n) >= maxTeams) return { ok: false, reason: 'name_limit' };
 
   // Atomically pick and claim a random unclaimed team in one CTE so the draw
   // is committed immediately — no separate claim step needed.

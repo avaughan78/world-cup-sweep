@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, setCompanyAdminPassword, updateCompany, generateClaimTokens } from '@/lib/db';
+import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, setCompanyAdminPassword, updateCompany, generateClaimTokens, setCompanyMaxTeams } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 import { writeAudit } from '@/lib/audit';
 import { getIp } from '@/lib/rate-limit';
@@ -34,8 +34,8 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const denied = await requireAdmin(req);
   if (denied) return denied;
-  const { id, ticket_price, admin_password, name, code } = await req.json() as {
-    id?: number; ticket_price?: number | null; admin_password?: string; name?: string; code?: string;
+  const { id, ticket_price, admin_password, name, code, max_teams_per_person } = await req.json() as {
+    id?: number; ticket_price?: number | null; admin_password?: string; name?: string; code?: string; max_teams_per_person?: number;
   };
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   if (ticket_price !== undefined) {
@@ -44,6 +44,10 @@ export async function PATCH(req: NextRequest) {
   }
   if (admin_password !== undefined) {
     await setCompanyAdminPassword(id, admin_password.trim() || null);
+  }
+  if (max_teams_per_person !== undefined) {
+    const clamped = Math.max(1, Math.min(10, Math.floor(max_teams_per_person)));
+    await setCompanyMaxTeams(id, clamped);
   }
   if (name?.trim() || code?.trim()) {
     const updated = await updateCompany(id, { name: name?.trim(), code: code?.trim() });

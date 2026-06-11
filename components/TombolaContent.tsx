@@ -54,7 +54,8 @@ export default function TombolaContent({ company, onClose }: {
   async function handleDraw() {
     const trimmed = name.trim();
     if (!trimmed) { setError('Please enter your name first.'); return; }
-    if (localClaims.length >= 2) { setError("You've already drawn 2 teams."); return; }
+    const maxTeams = company.max_teams_per_person ?? 2;
+    if (localClaims.length >= maxTeams) { setError(`You've already drawn ${maxTeams} team${maxTeams === 1 ? '' : 's'}.`); return; }
 
     setError(''); setPhase('drawing'); setSpinning(true);
 
@@ -297,11 +298,11 @@ export default function TombolaContent({ company, onClose }: {
         {localClaims.length > 0 && (
           <div className="rounded-lg px-3 py-2 text-sm" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
             Already drawn: <strong style={{ color: 'var(--text-primary)' }}>{localClaims.join(', ')}</strong>
-            {localClaims.length >= 2 && <span className="block text-xs mt-0.5">Maximum 2 teams per person reached.</span>}
+            {localClaims.length >= (company.max_teams_per_person ?? 2) && <span className="block text-xs mt-0.5">Maximum {company.max_teams_per_person ?? 2} teams per person reached.</span>}
           </div>
         )}
 
-        {phase === 'accept' && localClaims.length < 2 ? (
+        {phase === 'accept' && localClaims.length < (company.max_teams_per_person ?? 2) ? (
           <>
             <input
               type="text" placeholder="Your name"
@@ -325,7 +326,7 @@ export default function TombolaContent({ company, onClose }: {
             <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Hold tight!</p>
           </div>
         ) : (
-          <p className="text-sm text-center" style={{ color: 'var(--text-muted)' }}>You&apos;ve reached the 2-team limit.</p>
+          <p className="text-sm text-center" style={{ color: 'var(--text-muted)' }}>You&apos;ve reached the {company.max_teams_per_person ?? 2}-team limit.</p>
         )}
 
         {backLink}

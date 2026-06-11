@@ -19,11 +19,12 @@ export async function POST(req: NextRequest) {
   if (!company) return NextResponse.json({ error: 'Sweep not found' }, { status: 404 });
   if (!company.tombola_enabled) return NextResponse.json({ error: 'Lucky dip is not enabled for this sweep' }, { status: 403 });
 
-  const result = await drawTombolaTeam(company.id, trimmed);
+  const maxTeams = company.max_teams_per_person ?? 2;
+  const result = await drawTombolaTeam(company.id, trimmed, maxTeams);
 
   if (!result.ok) {
     const message = result.reason === 'name_limit'
-      ? 'You have already drawn 2 teams for this sweep'
+      ? `You have already drawn ${maxTeams} team${maxTeams === 1 ? '' : 's'} for this sweep`
       : 'No teams left to claim — the draw is complete!';
     return NextResponse.json({ error: message, reason: result.reason }, { status: 409 });
   }

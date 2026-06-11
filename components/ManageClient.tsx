@@ -627,7 +627,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
               <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Lucky dip</p>
               <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Lets remote participants visit <strong>/draw?code={company.code}</strong> to be randomly assigned an unclaimed team. Max 2 teams per person. You collect the entry fee yourself.
+                Lets remote participants visit <strong>/draw?code={company.code}</strong> to be randomly assigned an unclaimed team. Max {company.max_teams_per_person ?? 2} teams per person. You collect the entry fee yourself.
               </p>
               <div className="flex items-center justify-between gap-3 px-3 py-2.5"
                 style={{ border: '1px solid var(--border)', borderRadius: '0.5rem' }}>

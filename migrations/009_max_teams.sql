@@ -1,0 +1,1 @@
+ALTER TABLE companies ADD COLUMN IF NOT EXISTS max_teams_per_person INT NOT NULL DEFAULT 2;
