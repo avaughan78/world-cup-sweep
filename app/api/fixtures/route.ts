@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { normaliseTeamName } from '@/lib/football-api';
-import { getLiveWCFixtures, mapStatus } from '@/lib/api-football';
+import { getAllWCFixtures, mapStatus, mapRound } from '@/lib/api-football';
+import { GROUPS_2026 } from '@/lib/groups';
 
 export interface MatchFixture {
   id: number;
@@ -16,9 +17,48 @@ export interface MatchFixture {
   elapsed: number | null;
 }
 
+// Build reverse lookup: team name → group letter
+const teamToGroup: Record<string, string> = {};
+for (const [letter, teams] of Object.entries(GROUPS_2026)) {
+  for (const team of teams) teamToGroup[team] = letter;
+}
+
 export async function GET() {
+  // Primary: api-football.com
+  if (process.env.API_FOOTBALL_KEY) {
+    try {
+      const raw = await getAllWCFixtures();
+      const fixtures: MatchFixture[] = raw.map(f => {
+        const home = normaliseTeamName(f.homeTeam);
+        const away = normaliseTeamName(f.awayTeam);
+        const stage = mapRound(f.round);
+        const groupLetter = stage === 'GROUP_STAGE' ? (teamToGroup[home] ?? null) : null;
+        const group = groupLetter ? `GROUP_${groupLetter}` : null;
+        return {
+          id: f.id,
+          utcDate: f.date,
+          status: mapStatus(f.statusShort),
+          stage,
+          group,
+          matchday: null,
+          homeTeam: home,
+          awayTeam: away,
+          homeScore: f.homeGoals,
+          awayScore: f.awayGoals,
+          elapsed: f.elapsed,
+        };
+      });
+      return NextResponse.json({ fixtures }, {
+        headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
+      });
+    } catch (err) {
+      console.warn('[fixtures] api-football failed, falling back:', err);
+    }
+  }
+
+  // Fallback: football-data.org
   const apiKey = process.env.FOOTBALL_DATA_API_KEY;
-  if (!apiKey) return NextResponse.json({ error: 'No API key' }, { status: 500 });
+  if (!apiKey) return NextResponse.json({ error: 'No API key configured' }, { status: 500 });
 
   const season = process.env.FOOTBALL_SEASON ?? '2026';
   try {
@@ -28,19 +68,14 @@ export async function GET() {
     );
     if (!res.ok) {
       const body = await res.text().catch(() => '');
-      console.error(`[fixtures] API error ${res.status}: ${body.slice(0, 200)}`);
+      console.error(`[fixtures] fallback API error ${res.status}: ${body.slice(0, 200)}`);
       return NextResponse.json({ error: `API error ${res.status}` }, { status: 502 });
     }
     const data = await res.json() as {
       matches: Array<{
-        id: number;
-        utcDate: string;
-        status: string;
-        stage: string;
-        group: string | null;
-        matchday: number | null;
-        homeTeam: { name: string };
-        awayTeam: { name: string };
+        id: number; utcDate: string; status: string; stage: string;
+        group: string | null; matchday: number | null;
+        homeTeam: { name: string }; awayTeam: { name: string };
         score: { fullTime: { home: number | null; away: number | null } };
       }>;
     };
@@ -57,32 +92,11 @@ export async function GET() {
       awayScore: m.score.fullTime.away,
       elapsed: null,
     }));
-
-    // Overlay live scores from api-football.com (only returns data during active matches)
-    if (process.env.API_FOOTBALL_KEY) {
-      try {
-        const live = await getLiveWCFixtures();
-        for (const lf of live) {
-          const home = normaliseTeamName(lf.homeTeam);
-          const away = normaliseTeamName(lf.awayTeam);
-          const match = fixtures.find(f => f.homeTeam === home && f.awayTeam === away);
-          if (match) {
-            match.status = mapStatus(lf.statusShort);
-            match.homeScore = lf.homeGoals;
-            match.awayScore = lf.awayGoals;
-            match.elapsed = lf.elapsed;
-          }
-        }
-      } catch (err) {
-        console.warn('[fixtures] live overlay failed:', err);
-      }
-    }
-
     return NextResponse.json({ fixtures }, {
       headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
     });
   } catch (err) {
-    console.error('[fixtures] error:', err);
+    console.error('[fixtures] fallback error:', err);
     return NextResponse.json({ error: 'Failed to fetch fixtures' }, { status: 500 });
   }
 }

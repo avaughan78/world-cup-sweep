@@ -6,6 +6,7 @@ import Flag from './Flag';
 
 const STAGE_LABEL: Record<string, string> = {
   GROUP_STAGE: 'Group Stage',
+  ROUND_OF_32: 'Round of 32',
   ROUND_OF_16: 'Round of 16',
   QUARTER_FINALS: 'Quarter-finals',
   SEMI_FINALS: 'Semi-finals',

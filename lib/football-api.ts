@@ -118,6 +118,10 @@ const TEAM_NAME_MAP: Record<string, string> = {
   'Trinidad and Tobago': 'Trinidad And Tobago',
   'Korea DPR': 'North Korea',
   'Kyrgyz Republic': 'Kyrgyzstan',
+  'Bosnia & Herzegovina': 'Bosnia and Herzegovina',
+  'Bosnia-and-Herzegovina': 'Bosnia and Herzegovina',
+  'Cape Verde Islands': 'Cape Verde',
+  Curacao: 'Curaçao',
 };
 
 export function normaliseTeamName(apiName: string): string {
