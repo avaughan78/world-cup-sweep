@@ -60,7 +60,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
     );
   }
 
-  const playerMode = prize.slug === 'bicycle';
+  const playerMode = prize.slug === 'bicycle' || prize.slug === 'top_scorer_team';
   const displayName = playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team;
   const nameEl = prize.video_url
     ? <PrizeVideoModal name={displayName} team={prize.current_team} videoUrl={prize.video_url} prizeName={prize.name} />
@@ -72,7 +72,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
       <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
         {nameEl}
       </span>
-      {!playerMode && !prize.video_url && prize.value_label && prize.slug !== 'top_scorer_team' && (
+      {!playerMode && !prize.video_url && prize.value_label && (
         <span className="text-sm flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</span>
       )}
     </div>
