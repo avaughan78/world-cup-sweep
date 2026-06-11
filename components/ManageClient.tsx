@@ -34,6 +34,8 @@ export default function ManageClient({ company: initialCompany }: { company: Com
   const [pwError, setPwError] = useState('');
   const [hiddenPrizes, setHiddenPrizes] = useState<Set<string>>(new Set());
   const [tombolaEnabled, setTombolaEnabled] = useState(initialCompany.tombola_enabled ?? false);
+  const [maxTeams, setMaxTeams] = useState(String(initialCompany.max_teams_per_person ?? 2));
+  const [maxTeamsSaved, setMaxTeamsSaved] = useState(false);
   const [copied, setCopied] = useState(false);
   const [status, setStatus] = useState<{ ok: boolean; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -227,6 +229,28 @@ export default function ManageClient({ company: initialCompany }: { company: Com
       });
       const data = await res.json() as { ok: boolean; message?: string };
       setStatus({ ok: !!data.ok, message: data.message ?? 'Done' });
+    } catch (e) { setStatus({ ok: false, message: String(e) }); }
+    setLoading(false);
+  }
+
+  async function handleSaveMaxTeams() {
+    const val = Math.max(1, Math.min(10, parseInt(maxTeams, 10)));
+    if (isNaN(val)) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/company/manage/max-teams', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ max_teams_per_person: val }),
+      });
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (res.ok && data.ok) {
+        setCompany(prev => ({ ...prev, max_teams_per_person: val }));
+        setMaxTeamsSaved(true);
+        setTimeout(() => setMaxTeamsSaved(false), 2000);
+      } else {
+        setStatus({ ok: false, message: data.error ?? `Failed to save (${res.status}) — try logging out and back in` });
+      }
     } catch (e) { setStatus({ ok: false, message: String(e) }); }
     setLoading(false);
   }
@@ -627,7 +651,7 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             <div className="mb-4 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
               <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Lucky dip</p>
               <p className="text-xs mb-3 leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                Lets remote participants visit <strong>/draw?code={company.code}</strong> to be randomly assigned an unclaimed team. Max {company.max_teams_per_person ?? 2} teams per person. You collect the entry fee yourself.
+                Lets remote participants visit <strong>/draw?code={company.code}</strong> to be randomly assigned an unclaimed team. You collect the entry fee yourself.
               </p>
               <div className="flex items-center justify-between gap-3 px-3 py-2.5"
                 style={{ border: '1px solid var(--border)', borderRadius: '0.5rem' }}>
@@ -656,6 +680,27 @@ export default function ManageClient({ company: initialCompany }: { company: Com
                       boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
                     }} />
                   </span>
+                </button>
+              </div>
+              <div className="flex items-center gap-2 mt-3">
+                <label className="text-xs font-semibold flex-shrink-0" style={{ color: 'var(--text-muted)' }}>Max teams per person</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value={maxTeams}
+                  onChange={e => setMaxTeams(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleSaveMaxTeams()}
+                  style={{ width: '4rem', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.375rem', padding: '0.375rem 0.5rem', color: 'var(--text-primary)', fontSize: '0.875rem', outline: 'none', textAlign: 'center' }}
+                />
+                <button
+                  onClick={handleSaveMaxTeams}
+                  disabled={loading}
+                  className="font-bold px-3 py-1.5 rounded-lg text-xs flex-shrink-0"
+                  style={{ background: maxTeamsSaved ? '#f0fdf4' : 'var(--green)', color: maxTeamsSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1 }}
+                >
+                  {maxTeamsSaved ? 'Saved ✓' : 'Save'}
                 </button>
               </div>
             </div>
