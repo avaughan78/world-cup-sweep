@@ -170,10 +170,10 @@ export default function TombolaContent({ company, onClose }: {
         {isCuracao && showStarPrize && (
           <div style={{
             position: 'absolute',
-            right: -10,
-            top: 14,
-            width: 150,
-            height: 150,
+            right: -14,
+            top: 10,
+            width: 180,
+            height: 180,
             zIndex: 20,
           }}>
             <div style={{
@@ -183,7 +183,6 @@ export default function TombolaContent({ company, onClose }: {
               animation: 'curacao-entrance 0.8s cubic-bezier(0.34,1.56,0.64,1) both 0.4s, curacao-badge-wobble 5s ease-in-out 1.2s infinite',
               transformOrigin: 'center center',
             }}>
-              {/* Gold starburst — near-white centre so multiply blend makes bottle bg transparent */}
               <div
                 className="curacao-starburst-bg"
                 style={{
@@ -204,22 +203,21 @@ export default function TombolaContent({ company, onClose }: {
                 gap: '2px',
                 zIndex: 2,
               }}>
-                <p style={{ fontSize: '7px', fontWeight: 900, letterSpacing: '0.15em', color: '#92400e', textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>
+                <p style={{ fontSize: '9px', fontWeight: 900, letterSpacing: '0.15em', color: '#92400e', textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>
                   ⭐ Star Prize ⭐
                 </p>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/blue_curacao.webp"
+                  src="/blue_curacao_transparent.webp"
                   alt="Blue Curaçao"
                   loading="eager"
                   style={{
-                    height: '72px',
+                    height: '88px',
                     width: 'auto',
-                    mixBlendMode: 'multiply',
                     animation: 'curacao-bottle-float 3s ease-in-out infinite',
                   }}
                 />
-                <p style={{ fontSize: '6.5px', fontWeight: 700, color: '#92400e', margin: 0, lineHeight: 1.3, textAlign: 'center' }}>
+                <p style={{ fontSize: '8px', fontWeight: 700, color: '#92400e', margin: 0, lineHeight: 1.3, textAlign: 'center' }}>
                   De Kuyper<br/>Blue Curaçao
                 </p>
               </div>
@@ -229,15 +227,15 @@ export default function TombolaContent({ company, onClose }: {
                 aria-label="Dismiss star prize"
                 style={{
                   position: 'absolute',
-                  top: 6,
-                  right: 6,
-                  width: 18,
-                  height: 18,
+                  top: 8,
+                  right: 8,
+                  width: 20,
+                  height: 20,
                   borderRadius: '50%',
                   background: 'rgba(146,64,14,0.2)',
                   color: '#92400e',
                   border: '1px solid rgba(146,64,14,0.5)',
-                  fontSize: '11px',
+                  fontSize: '12px',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
