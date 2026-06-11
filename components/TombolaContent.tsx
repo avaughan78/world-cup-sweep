@@ -38,6 +38,7 @@ export default function TombolaContent({ company, onClose }: {
   const [localClaims, setLocalClaims] = useState<string[]>([]);
   const [drawCount, setDrawCount]     = useState(0);
   const [unclaimed, setUnclaimed]     = useUnclaimedCount(company.code);
+  const [showStarPrize, setShowStarPrize] = useState(true);
 
   const storageKey = `tombola_claims_${company.code}`;
 
@@ -47,6 +48,8 @@ export default function TombolaContent({ company, onClose }: {
       if (s) setLocalClaims(JSON.parse(s) as string[]);
     } catch { /* ignore */ }
   }, [storageKey]);
+
+  useEffect(() => { setShowStarPrize(true); }, [drawnTeam]);
 
   async function handleDraw() {
     const trimmed = name.trim();
@@ -134,99 +137,120 @@ export default function TombolaContent({ company, onClose }: {
 
   // ── Done state ────────────────────────────────────────────────────────────────
   if (phase === 'done' && drawnTeam) {
-    const sparkles: { top: string; left: string; size: string; ch: string; delay: string }[] = [
-      { top: '8%',  left: '5%',  size: '1.1rem', ch: '✦', delay: '0s'    },
-      { top: '10%', left: '88%', size: '0.8rem', ch: '★', delay: '0.35s' },
-      { top: '48%', left: '3%',  size: '0.9rem', ch: '✸', delay: '0.65s' },
-      { top: '82%', left: '8%',  size: '0.7rem', ch: '✦', delay: '0.95s' },
-      { top: '88%', left: '82%', size: '1.0rem', ch: '★', delay: '0.45s' },
-      { top: '55%', left: '93%', size: '0.75rem',ch: '✸', delay: '0.75s' },
-      { top: '28%', left: '14%', size: '1.2rem', ch: '✦', delay: '1.1s'  },
-      { top: '22%', left: '84%', size: '0.9rem', ch: '★', delay: '0.2s'  },
-    ];
-
     return (
-      <div className="w-full rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
-        {header}
-        <div className="px-6 py-6 text-center" style={{ background: 'var(--card)' }}>
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>You drew…</p>
-          <span style={{ fontSize: '5rem', lineHeight: 1, display: 'block' }}>{getFlag(drawnTeam)}</span>
-          <h2 className="font-black text-3xl mt-3 tracking-tight" style={{ color: 'var(--text-primary)' }}>{drawnTeam}</h2>
+      <div style={{ position: 'relative' }}>
+        <div className="w-full rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
+          {header}
+          <div className="px-6 py-6 text-center" style={{ background: 'var(--card)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>You drew…</p>
+            <span style={{ fontSize: '5rem', lineHeight: 1, display: 'block' }}>{getFlag(drawnTeam)}</span>
+            <h2 className="font-black text-3xl mt-3 tracking-tight" style={{ color: 'var(--text-primary)' }}>{drawnTeam}</h2>
+            {isCuracao && (
+              <p className="text-sm font-bold mt-2" style={{ color: '#b36a00' }}>
+                Congratulations! You won a bottle of Blue Curaçao for drawing the ultimate underdogs!
+              </p>
+            )}
+            <p className="text-base mt-2 mb-6" style={{ color: 'var(--text-muted)' }}>
+              Good luck, {name.trim()}.{fee && ` Remember to pay ${fee} to the organiser.`}
+            </p>
+            {localClaims.length < 2 && (
+              <button
+                onClick={() => { setPhase(fee ? 'fee' : 'accept'); setDrawnTeam(null); setSpinning(false); setError(''); }}
+                className="w-full font-bold py-3 rounded-xl mb-3 text-sm"
+                style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                Draw a second team
+              </button>
+            )}
+            {viewSweepButton}
+          </div>
+        </div>
 
-          {isCuracao && (
+        {/* Curaçao starburst badge — floats on the right, closable */}
+        {isCuracao && showStarPrize && (
+          <div style={{
+            position: 'absolute',
+            right: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: 170,
+            height: 170,
+            zIndex: 20,
+          }}>
             <div style={{
+              width: '100%',
+              height: '100%',
               position: 'relative',
-              margin: '1.25rem 0 0.5rem',
-              padding: '1.25rem 1rem 1rem',
-              borderRadius: '1rem',
-              background: 'linear-gradient(160deg, #fffdf0 0%, #fff8d6 55%, #fffaeb 100%)',
-              border: '1.5px solid rgba(212,160,10,0.45)',
-              animation: 'curacao-glow-pulse 2.4s ease-in-out infinite, curacao-entrance 0.7s cubic-bezier(0.34,1.56,0.64,1) both',
-              overflow: 'hidden',
+              animation: 'curacao-entrance 0.8s cubic-bezier(0.34,1.56,0.64,1) both 0.4s, curacao-badge-wobble 5s ease-in-out 1.2s infinite',
+              transformOrigin: 'center center',
             }}>
-              {sparkles.map((s, i) => (
-                <span key={i} style={{
-                  position: 'absolute',
-                  top: s.top, left: s.left,
-                  fontSize: s.size,
-                  color: '#c9860a',
-                  animation: `curacao-star-twinkle 1.4s ease-in-out infinite`,
-                  animationDelay: s.delay,
-                  pointerEvents: 'none',
-                  userSelect: 'none',
-                  lineHeight: 1,
-                }}>{s.ch}</span>
-              ))}
-              <p style={{
-                fontSize: '0.6rem',
-                fontWeight: 900,
-                letterSpacing: '0.22em',
-                textTransform: 'uppercase',
-                margin: '0 0 0.75rem',
-                animation: 'curacao-text-shimmer 2.2s ease-in-out infinite',
-                position: 'relative',
-                zIndex: 1,
-              }}>⭐ Star Prize ⭐</p>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/blue_curacao.webp"
-                alt="Star Prize: Blue Curaçao"
-                loading="eager"
+              {/* Starburst background */}
+              <div
+                className="curacao-starburst-bg"
                 style={{
-                  height: '140px',
-                  width: 'auto',
-                  display: 'block',
-                  margin: '0 auto',
-                  mixBlendMode: 'multiply',
-                  animation: 'curacao-bottle-float 3s ease-in-out infinite',
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(135deg, #ffe033 0%, #ffaa00 50%, #ffc800 100%)',
+                  animation: 'curacao-starburst-glow 2.4s ease-in-out 1.2s infinite',
                 }}
               />
-              <p style={{
-                fontSize: '0.7rem',
-                fontWeight: 700,
-                color: '#9a6308',
-                margin: '0.6rem 0 0',
-                letterSpacing: '0.04em',
-                position: 'relative',
-                zIndex: 1,
-              }}>De Kuyper Blue Curaçao</p>
+              {/* Content */}
+              <div style={{
+                position: 'absolute',
+                inset: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '3px',
+                zIndex: 2,
+              }}>
+                <p style={{ fontSize: '6.5px', fontWeight: 900, letterSpacing: '0.15em', color: '#7a3e00', textTransform: 'uppercase', margin: 0, lineHeight: 1 }}>
+                  ⭐ Star Prize ⭐
+                </p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/blue_curacao.webp"
+                  alt="Blue Curaçao"
+                  loading="eager"
+                  style={{
+                    height: '76px',
+                    width: 'auto',
+                    mixBlendMode: 'multiply',
+                    animation: 'curacao-bottle-float 3s ease-in-out infinite',
+                  }}
+                />
+                <p style={{ fontSize: '6.5px', fontWeight: 700, color: '#7a3e00', margin: 0, lineHeight: 1.3, textAlign: 'center' }}>
+                  De Kuyper<br/>Blue Curaçao
+                </p>
+              </div>
+              {/* Close button */}
+              <button
+                onClick={() => setShowStarPrize(false)}
+                aria-label="Dismiss star prize"
+                style={{
+                  position: 'absolute',
+                  top: 6,
+                  right: 6,
+                  width: 20,
+                  height: 20,
+                  borderRadius: '50%',
+                  background: 'rgba(60,30,0,0.55)',
+                  color: '#fff',
+                  border: '1.5px solid rgba(255,255,255,0.55)',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  zIndex: 10,
+                  lineHeight: 1,
+                }}
+              >×</button>
             </div>
-          )}
-
-          <p className="text-base mt-2 mb-6" style={{ color: 'var(--text-muted)' }}>
-            Good luck, {name.trim()}.{fee && ` Remember to pay ${fee} to the organiser.`}
-          </p>
-          {localClaims.length < 2 && (
-            <button
-              onClick={() => { setPhase(fee ? 'fee' : 'accept'); setDrawnTeam(null); setSpinning(false); setError(''); }}
-              className="w-full font-bold py-3 rounded-xl mb-3 text-sm"
-              style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer' }}
-            >
-              Draw a second team
-            </button>
-          )}
-          {viewSweepButton}
-        </div>
+          </div>
+        )}
       </div>
     );
   }
