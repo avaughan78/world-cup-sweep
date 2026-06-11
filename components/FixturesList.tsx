@@ -44,10 +44,28 @@ export default function FixturesList({ participantMap }: { participantMap: Recor
   const [filter, setFilter] = useState<ViewFilter>('all');
 
   useEffect(() => {
-    fetch('/api/fixtures')
-      .then(r => r.json())
-      .then((d: { fixtures?: MatchFixture[] }) => setFixtures(d.fixtures ?? []))
-      .catch(() => setFixtures([]));
+    let cancelled = false;
+
+    function load() {
+      fetch('/api/fixtures')
+        .then(r => r.json())
+        .then((d: { fixtures?: MatchFixture[] }) => {
+          if (!cancelled) setFixtures(d.fixtures ?? []);
+        })
+        .catch(() => { if (!cancelled) setFixtures([]); });
+    }
+
+    load();
+
+    const id = setInterval(() => {
+      setFixtures(prev => {
+        const hasLive = prev?.some(m => m.status === 'IN_PLAY' || m.status === 'LIVE' || m.status === 'PAUSED');
+        if (hasLive) load();
+        return prev;
+      });
+    }, 60_000);
+
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
 
   if (fixtures === null) {
