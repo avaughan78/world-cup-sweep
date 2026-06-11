@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getWCTopScorers } from '@/lib/api-football';
-import { normaliseTeamName } from '@/lib/football-api';
+import { getPlayerGoals } from '@/lib/db';
 
 export interface TopScorerEntry {
   playerName: string;
@@ -10,19 +9,16 @@ export interface TopScorerEntry {
 }
 
 export async function GET() {
-  if (!process.env.API_FOOTBALL_KEY) {
-    return NextResponse.json({ scorers: [] });
-  }
   try {
-    const raw = await getWCTopScorers();
-    const scorers: TopScorerEntry[] = raw.map(s => ({
-      playerName: s.playerName,
-      teamName: normaliseTeamName(s.teamName),
-      goals: s.goals,
-      nationality: s.nationality,
+    const rows = await getPlayerGoals();
+    const scorers: TopScorerEntry[] = rows.map(r => ({
+      playerName: r.player_name,
+      teamName: r.team_name,
+      goals: r.goals,
+      nationality: r.nationality,
     }));
     return NextResponse.json({ scorers }, {
-      headers: { 'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=300' },
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120' },
     });
   } catch (err) {
     console.error('[topscorers]', err);

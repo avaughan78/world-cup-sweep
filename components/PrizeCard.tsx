@@ -69,12 +69,14 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   return (
     <div className="flex items-center gap-1.5 min-w-0">
       <Flag team={prize.current_team} height="1.1rem" />
-      <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
-        {nameEl}
-      </span>
-      {!playerMode && !prize.video_url && prize.value_label && (
-        <span className="text-sm flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</span>
-      )}
+      <div className="min-w-0">
+        <span className="font-semibold text-sm truncate block" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+          {nameEl}
+        </span>
+        {!playerMode && !prize.video_url && prize.value_label && (
+          <span className="text-xs block" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</span>
+        )}
+      </div>
     </div>
   );
 }

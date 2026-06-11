@@ -360,6 +360,44 @@ export async function setTopScorer(scorer: TopScorer) {
   `;
 }
 
+// ── Player goals leaderboard ──────────────────────────────────────────────────
+
+export interface PlayerGoal {
+  player_name: string;
+  team_name: string;
+  goals: number;
+  nationality: string | null;
+}
+
+export async function setPlayerGoals(scorers: PlayerGoal[]): Promise<void> {
+  await sql`CREATE TABLE IF NOT EXISTS player_goals (
+    player_name TEXT NOT NULL,
+    team_name   TEXT NOT NULL,
+    goals       INTEGER NOT NULL DEFAULT 0,
+    nationality TEXT,
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (player_name, team_name)
+  )`;
+  await sql`TRUNCATE player_goals`;
+  for (const s of scorers) {
+    await sql`
+      INSERT INTO player_goals (player_name, team_name, goals, nationality, updated_at)
+      VALUES (${s.player_name}, ${s.team_name}, ${s.goals}, ${s.nationality}, NOW())
+      ON CONFLICT (player_name, team_name) DO UPDATE SET
+        goals = ${s.goals}, updated_at = NOW()
+    `;
+  }
+}
+
+export async function getPlayerGoals(): Promise<PlayerGoal[]> {
+  try {
+    const rows = await sql`SELECT player_name, team_name, goals, nationality FROM player_goals ORDER BY goals DESC`;
+    return rows as PlayerGoal[];
+  } catch {
+    return [];
+  }
+}
+
 // ── Prize overrides (per company) ─────────────────────────────────────────────
 
 export async function getPrizeOverride(companyId: number, category: string): Promise<PrizeOverride | null> {

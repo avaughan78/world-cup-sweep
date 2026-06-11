@@ -1,8 +1,10 @@
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from './football-api';
 import {
-  getAllWCFixtures, getFixtureEvents, getWCStandings, getWCTopScorers, mapRound,
+  getAllWCFixtures, getFixtureEvents, getWCTopScorers, mapRound,
 } from './api-football';
-import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding } from './db';
+import type { WCFixture } from './api-football';
+import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding, setPlayerGoals } from './db';
+import type { GroupStanding, PlayerGoal } from './db';
 import { GROUPS_2026 } from './groups';
 import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeEliminations } from './prizes';
 
@@ -20,9 +22,8 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
     if (process.env.API_FOOTBALL_KEY) {
       // ── Primary path: api-football.com ──────────────────────────────────────
-      const [fixturesResult, standingsResult, scorersResult] = await Promise.allSettled([
+      const [fixturesResult, scorersResult] = await Promise.allSettled([
         getAllWCFixtures(),
-        getWCStandings(),
         getWCTopScorers(),
       ]);
 
@@ -52,6 +53,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
       const cards = new Map<string, { yellow: number; red: number }>();
       const ownGoals = new Map<string, number>();
+      const playerGoalMap = new Map<string, PlayerGoal>();
 
       for (const f of needEvents) {
         try {
@@ -64,8 +66,15 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
               else if (ev.detail === 'Red Card' || ev.detail === 'Second Yellow card') c.red++;
               cards.set(team, c);
             } else if (ev.type === 'Goal' && ev.detail === 'Own Goal') {
-              // team = the side that conceded the own goal
               ownGoals.set(team, (ownGoals.get(team) ?? 0) + 1);
+            } else if (ev.type === 'Goal' && ev.player) {
+              const key = `${ev.player}|||${team}`;
+              const existing = playerGoalMap.get(key);
+              if (existing) {
+                existing.goals++;
+              } else {
+                playerGoalMap.set(key, { player_name: ev.player, team_name: team, goals: 1, nationality: null });
+              }
             }
           }
         } catch (err) {
@@ -73,9 +82,8 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         }
       }
 
-      // Eliminations: use standings to determine who's out after group stage
-      const wcStandings = standingsResult.status === 'fulfilled' ? standingsResult.value : [];
-      const eliminated = computeEliminationsFromApiFootball(wcStandings, allFixtures);
+      // Eliminations: compute from fixtures (standings API lags)
+      const eliminated = computeEliminationsFromFixtures(allFixtures);
 
       // Upsert team_stats for all known teams
       const allTeams = new Set(Object.values(GROUPS_2026).flat());
@@ -92,55 +100,42 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${needEvents.length} event fetches`);
 
-      // Top scorer
-      const scorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
-      if (scorers.length > 0) {
-        const top = scorers[0];
-        const tiedCount = scorers.filter(s => s.goals === top.goals).length;
+      // Top scorer (prize card) — try API first, fall back to events-derived data
+      const apiScorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
+      const eventScorers = [...playerGoalMap.values()].sort((a, b) => b.goals - a.goals);
+      // Use API scorers if they have goals; otherwise use events
+      const scorerSource = apiScorers.length > 0 && apiScorers[0].goals > 0 ? apiScorers.map(s => ({
+        player_name: s.playerName,
+        team_name: normaliseTeamName(s.teamName),
+        goals: s.goals,
+        nationality: s.nationality,
+      })) : eventScorers;
+
+      if (scorerSource.length > 0) {
+        const top = scorerSource[0];
+        const tiedCount = scorerSource.filter(s => s.goals === top.goals).length;
         const tied = tiedCount > 1;
         await setTopScorer({
-          player_name: tied ? `${tiedCount} players tied` : top.playerName,
-          team_name: tied ? null : normaliseTeamName(top.teamName),
+          player_name: tied ? `${tiedCount} players tied` : top.player_name,
+          team_name: tied ? null : top.team_name,
           goals: top.goals,
-          nationality: tied ? null : top.nationality,
+          nationality: tied ? null : top.nationality ?? null,
         });
-        statNotes.push(`top scorer: ${tied ? `${tiedCount} tied on ${top.goals}` : `${top.playerName} (${top.goals})`}`);
+        statNotes.push(`top scorer: ${tied ? `${tiedCount} tied on ${top.goals}` : `${top.player_name} (${top.goals})`}`);
       } else {
         statNotes.push('scorers: none yet');
       }
 
-      // Group standings
-      if (wcStandings.length > 0) {
-        for (const row of wcStandings) {
-          const letter = row.groupName.replace('Group ', '');
-          await upsertGroupStanding({
-            group_name: letter,
-            position: row.rank,
-            team_name: normaliseTeamName(row.team),
-            played: row.played,
-            won: row.won,
-            drawn: row.drawn,
-            lost: row.lost,
-            goals_for: row.goalsFor,
-            goals_against: row.goalsAgainst,
-            goal_difference: row.goalDiff,
-            points: row.points,
-          });
-        }
-        statNotes.push(`standings: ${wcStandings.length} rows`);
-      } else {
-        // Seed with draw order so the table isn't empty before play starts
-        for (const [letter, teams] of Object.entries(GROUPS_2026)) {
-          for (let i = 0; i < teams.length; i++) {
-            await upsertGroupStanding({
-              group_name: letter, position: i + 1, team_name: teams[i],
-              played: 0, won: 0, drawn: 0, lost: 0,
-              goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
-            });
-          }
-        }
-        statNotes.push('standings: initialised from draw');
+      // Player goals leaderboard
+      await setPlayerGoals(scorerSource);
+      statNotes.push(`player goals: ${scorerSource.length} scorers`);
+
+      // Group standings — computed directly from fixture scores (API endpoint lags)
+      const computedStandings = computeStandingsFromFixtures(allFixtures);
+      for (const row of computedStandings) {
+        await upsertGroupStanding(row);
       }
+      statNotes.push(`standings: ${computedStandings.length} rows (computed)`);
 
       await logSync('stats', 'success', statNotes.join(', '));
       results.stats = `ok (${statNotes.join(' · ')})`;
@@ -221,37 +216,83 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
   return { ok: true, results };
 }
 
-// Determine eliminated teams from api-football.com standings.
-// A team is eliminated when all group stage matches are played and they finish 4th,
-// or after losing a knockout match.
-function computeEliminationsFromApiFootball(
-  standings: import('./api-football').WCStandingRow[],
-  fixtures: import('./api-football').WCFixture[],
-): Set<string> {
+// Compute group standings directly from fixture scores — no API lag.
+function computeStandingsFromFixtures(fixtures: WCFixture[]): GroupStanding[] {
+  const teamToGroup = new Map<string, string>();
+  for (const [letter, teams] of Object.entries(GROUPS_2026)) {
+    for (const team of teams) teamToGroup.set(team, letter);
+  }
+
+  type Row = GroupStanding;
+  const rows = new Map<string, Row>();
+  for (const [letter, teams] of Object.entries(GROUPS_2026)) {
+    for (const team of teams) {
+      rows.set(team, {
+        group_name: letter, position: 0, team_name: team,
+        played: 0, won: 0, drawn: 0, lost: 0,
+        goals_for: 0, goals_against: 0, goal_difference: 0, points: 0,
+      });
+    }
+  }
+
+  for (const f of fixtures) {
+    if (!DONE_STATUSES.has(f.statusShort)) continue;
+    if (f.homeGoals == null || f.awayGoals == null) continue;
+    const home = normaliseTeamName(f.homeTeam);
+    const away = normaliseTeamName(f.awayTeam);
+    if (mapRound(f.round) !== 'GROUP_STAGE') continue;
+    const h = rows.get(home);
+    const a = rows.get(away);
+    if (!h || !a) continue;
+    h.played++; a.played++;
+    h.goals_for += f.homeGoals; h.goals_against += f.awayGoals;
+    a.goals_for += f.awayGoals; a.goals_against += f.homeGoals;
+    if (f.homeGoals > f.awayGoals) { h.won++; h.points += 3; a.lost++; }
+    else if (f.homeGoals < f.awayGoals) { a.won++; a.points += 3; h.lost++; }
+    else { h.drawn++; h.points += 1; a.drawn++; a.points += 1; }
+  }
+
+  const byGroup = new Map<string, Row[]>();
+  for (const row of rows.values()) {
+    row.goal_difference = row.goals_for - row.goals_against;
+    const g = byGroup.get(row.group_name) ?? [];
+    g.push(row);
+    byGroup.set(row.group_name, g);
+  }
+
+  const result: Row[] = [];
+  for (const group of byGroup.values()) {
+    group.sort((a, b) => b.points - a.points || b.goal_difference - a.goal_difference || b.goals_for - a.goals_for);
+    group.forEach((r, i) => { r.position = i + 1; });
+    result.push(...group);
+  }
+  return result;
+}
+
+// Determine eliminated teams from fixture results (no standings API needed).
+function computeEliminationsFromFixtures(fixtures: WCFixture[]): Set<string> {
   const eliminated = new Set<string>();
 
-  // Group stage: eliminate teams finishing 4th (bottom) once all 6 matches in their group are played
-  const groupRows = new Map<string, typeof standings>();
+  // Group stage: compute standings then eliminate 4th-place teams in completed groups
+  const standings = computeStandingsFromFixtures(fixtures);
+  const byGroup = new Map<string, GroupStanding[]>();
   for (const row of standings) {
-    const g = groupRows.get(row.groupName) ?? [];
+    const g = byGroup.get(row.group_name) ?? [];
     g.push(row);
-    groupRows.set(row.groupName, g);
+    byGroup.set(row.group_name, g);
   }
-
-  for (const [, rows] of groupRows) {
-    const sorted = [...rows].sort((a, b) => a.rank - b.rank);
-    const allPlayed3 = sorted.every(r => r.played >= 3);
+  for (const [, rows] of byGroup) {
+    const allPlayed3 = rows.every(r => r.played >= 3);
     if (!allPlayed3) continue;
-    const last = sorted[sorted.length - 1];
-    if (last) eliminated.add(normaliseTeamName(last.team));
+    const last = [...rows].sort((a, b) => a.position - b.position).at(-1);
+    if (last) eliminated.add(last.team_name);
   }
 
-  // Knockout rounds: teams that lost are eliminated
+  // Knockout rounds: losers are eliminated
   for (const f of fixtures) {
     if (!DONE_STATUSES.has(f.statusShort)) continue;
     const stage = mapRound(f.round);
-    if (stage === 'GROUP_STAGE') continue;
-    if (stage === 'THIRD_PLACE') continue; // both teams still playing
+    if (stage === 'GROUP_STAGE' || stage === 'THIRD_PLACE') continue;
     if (f.homeGoals == null || f.awayGoals == null) continue;
     const home = normaliseTeamName(f.homeTeam);
     const away = normaliseTeamName(f.awayTeam);
