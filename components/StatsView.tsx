@@ -13,11 +13,6 @@ type StatEntry = {
   badge?: string;
 };
 
-function gdLabel(gd: number): string {
-  if (gd > 0) return `+${gd}`;
-  return String(gd);
-}
-
 function Leaderboard({
   title,
   icon,
@@ -226,14 +221,6 @@ export default function StatsView({
     .map(team => ({ team, participant: participantMap[team] ?? null, value: conceded.get(team) ?? 0 }))
     .sort((a, b) => b.value - a.value);
 
-  const goalDiff: StatEntry[] = allTeams
-    .map(team => ({
-      team,
-      participant: participantMap[team] ?? null,
-      value: (scored.get(team) ?? 0) - (conceded.get(team) ?? 0),
-    }))
-    .sort((a, b) => a.value - b.value);
-
   // Cards: still from DB (sync-backed), accurate after each match
   const cards: StatEntry[] = [...teamStats]
     .map(t => ({
@@ -266,13 +253,6 @@ export default function StatsView({
         entries={cards}
         renderValue={e => <>{e.value}</>}
         emptyMsg={loading ? 'Loading…' : 'No cards yet'}
-      />
-      <Leaderboard
-        title="Worst Goal Difference"
-        icon="📉"
-        entries={goalDiff}
-        renderValue={e => <>{gdLabel(e.value)}</>}
-        emptyMsg={loading ? 'Loading…' : 'No matches played'}
       />
     </div>
   );
