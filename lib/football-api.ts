@@ -112,6 +112,12 @@ const TEAM_NAME_MAP: Record<string, string> = {
   'Bosnia-Herzegovina': 'Bosnia and Herzegovina',
   'Cabo Verde': 'Cape Verde',
   'Czech Republic': 'Czechia',
+  // api-football.com variants
+  'IR Iran': 'Iran',
+  México: 'Mexico',
+  'Trinidad and Tobago': 'Trinidad And Tobago',
+  'Korea DPR': 'North Korea',
+  'Kyrgyz Republic': 'Kyrgyzstan',
 };
 
 export function normaliseTeamName(apiName: string): string {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { normaliseTeamName } from '@/lib/football-api';
+import { getLiveWCFixtures, mapStatus } from '@/lib/api-football';
 
 export interface MatchFixture {
   id: number;
@@ -12,6 +13,7 @@ export interface MatchFixture {
   awayTeam: string;
   homeScore: number | null;
   awayScore: number | null;
+  elapsed: number | null;
 }
 
 export async function GET() {
@@ -53,7 +55,29 @@ export async function GET() {
       awayTeam: normaliseTeamName(m.awayTeam.name),
       homeScore: m.score.fullTime.home,
       awayScore: m.score.fullTime.away,
+      elapsed: null,
     }));
+
+    // Overlay live scores from api-football.com (only returns data during active matches)
+    if (process.env.API_FOOTBALL_KEY) {
+      try {
+        const live = await getLiveWCFixtures();
+        for (const lf of live) {
+          const home = normaliseTeamName(lf.homeTeam);
+          const away = normaliseTeamName(lf.awayTeam);
+          const match = fixtures.find(f => f.homeTeam === home && f.awayTeam === away);
+          if (match) {
+            match.status = mapStatus(lf.statusShort);
+            match.homeScore = lf.homeGoals;
+            match.awayScore = lf.awayGoals;
+            match.elapsed = lf.elapsed;
+          }
+        }
+      } catch (err) {
+        console.warn('[fixtures] live overlay failed:', err);
+      }
+    }
+
     return NextResponse.json({ fixtures }, {
       headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
     });

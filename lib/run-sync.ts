@@ -1,4 +1,5 @@
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from './football-api';
+import { getLiveWCFixtures, getFixtureEvents } from './api-football';
 import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding } from './db';
 import { GROUPS_2026 } from './groups';
 import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeEliminations } from './prizes';
@@ -30,6 +31,33 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
     const ownGoals = computeOwnGoals(matches);
     const goalsConceded = computeGoalsConceded(matches);
     const eliminated = computeEliminations(standings);
+
+    // Overlay live match data from api-football.com (goals + cards mid-match)
+    if (process.env.API_FOOTBALL_KEY) {
+      try {
+        const liveFixtures = await getLiveWCFixtures();
+        for (const lf of liveFixtures) {
+          const home = normaliseTeamName(lf.homeTeam);
+          const away = normaliseTeamName(lf.awayTeam);
+          // Add goals conceded from current live score
+          goalsConceded.set(home, (goalsConceded.get(home) ?? 0) + lf.awayGoals);
+          goalsConceded.set(away, (goalsConceded.get(away) ?? 0) + lf.homeGoals);
+          // Fetch events for cards
+          const events = await getFixtureEvents(lf.id);
+          for (const ev of events) {
+            if (ev.type !== 'Card') continue;
+            const team = normaliseTeamName(ev.team);
+            const c = cards.get(team) ?? { yellow: 0, red: 0 };
+            if (ev.detail === 'Yellow Card') c.yellow++;
+            else if (ev.detail === 'Red Card' || ev.detail === 'Second Yellow card') c.red++;
+            cards.set(team, c);
+          }
+          statNotes.push(`live: ${home} ${lf.homeGoals}-${lf.awayGoals} ${away} (${events.filter(e => e.type === 'Card').length} cards)`);
+        }
+      } catch (err) {
+        statNotes.push(`live overlay error: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
 
     const matchTeams = new Set<string>();
     for (const m of matches) {
