@@ -9,16 +9,6 @@ import StatsView from './StatsView';
 
 type View = 'standings' | 'fixtures' | 'stats';
 
-function TableIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="3" y="3" width="18" height="18" rx="2" />
-      <line x1="3" y1="9" x2="21" y2="9" />
-      <line x1="3" y1="15" x2="21" y2="15" />
-      <line x1="9" y1="9" x2="9" y2="21" />
-    </svg>
-  );
-}
 
 export default function GroupsSection({
   participantMap,
@@ -45,47 +35,35 @@ export default function GroupsSection({
   return (
     <section>
       <div className="flex flex-wrap items-baseline justify-between gap-y-1 mb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <p
             className="default-section-label text-sm font-bold uppercase tracking-widest"
             style={{ color: 'var(--text-muted)' }}
           >
             The Groups · {teamCount} Teams
           </p>
-          {/* Fixtures toggle */}
-          <button
-            onClick={() => setView(v => v === 'fixtures' ? 'standings' : 'fixtures')}
-            title={view === 'fixtures' ? 'Show group standings' : 'Show fixtures & results'}
-            className="flex items-center justify-center rounded-full transition-all hover:scale-110"
-            style={{
-              width: '1.6rem',
-              height: '1.6rem',
-              background: view === 'fixtures' ? 'var(--green)' : 'var(--card)',
-              border: '1px solid var(--border)',
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            ⚽
-          </button>
-          {/* Stats toggle */}
-          <button
-            onClick={() => setView(v => v === 'stats' ? 'standings' : 'stats')}
-            title={view === 'stats' ? 'Show group standings' : 'Show tournament stats'}
-            className="flex items-center justify-center rounded-full transition-all hover:scale-110"
-            style={{
-              width: '1.6rem',
-              height: '1.6rem',
-              background: view === 'stats' ? 'var(--green)' : 'var(--card)',
-              border: '1px solid var(--border)',
-              color: view === 'stats' ? '#fff' : 'var(--text-muted)',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <TableIcon />
-          </button>
+          <div className="flex rounded-lg overflow-hidden flex-shrink-0" style={{ border: '1px solid var(--border)' }}>
+            {(['standings', 'fixtures', 'stats'] as View[]).map((v, i) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                style={{
+                  padding: '0.2rem 0.55rem',
+                  fontSize: '0.65rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.06em',
+                  textTransform: 'uppercase',
+                  background: view === v ? 'var(--green)' : 'var(--card)',
+                  color: view === v ? '#fff' : 'var(--text-muted)',
+                  borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {v === 'standings' ? 'Tables' : v === 'fixtures' ? 'Fixtures' : 'Stats'}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="album-section-label" style={{ marginBottom: 0 }}>

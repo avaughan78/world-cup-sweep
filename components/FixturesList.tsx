@@ -166,7 +166,12 @@ export default function FixturesList({ participantMap }: { participantMap: Recor
                           {m.homeScore} – {m.awayScore}
                         </span>
                       ) : live ? (
-                        <span className="font-black" style={{ color: '#ef4444', fontSize: '0.75rem' }}>LIVE</span>
+                        <>
+                          <span className="font-black tabular-nums" style={{ color: '#ef4444', fontSize: '1rem', letterSpacing: '0.05em' }}>
+                            {m.homeScore ?? 0} – {m.awayScore ?? 0}
+                          </span>
+                          <span className="font-bold uppercase" style={{ color: '#ef4444', fontSize: '0.55rem', letterSpacing: '0.08em' }}>Live</span>
+                        </>
                       ) : (
                         <span className="font-bold" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
                           {formatKickoff(m.utcDate)}
