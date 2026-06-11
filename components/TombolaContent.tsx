@@ -130,8 +130,21 @@ export default function TombolaContent({ company, onClose }: {
     </div>
   );
 
+  const isCuracao = drawnTeam === 'Curaçao';
+
   // ── Done state ────────────────────────────────────────────────────────────────
   if (phase === 'done' && drawnTeam) {
+    const sparkles: { top: string; left: string; size: string; ch: string; delay: string }[] = [
+      { top: '8%',  left: '5%',  size: '1.1rem', ch: '✦', delay: '0s'    },
+      { top: '10%', left: '88%', size: '0.8rem', ch: '★', delay: '0.35s' },
+      { top: '48%', left: '3%',  size: '0.9rem', ch: '✸', delay: '0.65s' },
+      { top: '82%', left: '8%',  size: '0.7rem', ch: '✦', delay: '0.95s' },
+      { top: '88%', left: '82%', size: '1.0rem', ch: '★', delay: '0.45s' },
+      { top: '55%', left: '93%', size: '0.75rem',ch: '✸', delay: '0.75s' },
+      { top: '28%', left: '14%', size: '1.2rem', ch: '✦', delay: '1.1s'  },
+      { top: '22%', left: '84%', size: '0.9rem', ch: '★', delay: '0.2s'  },
+    ];
+
     return (
       <div className="w-full rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}>
         {header}
@@ -139,6 +152,67 @@ export default function TombolaContent({ company, onClose }: {
           <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>You drew…</p>
           <span style={{ fontSize: '5rem', lineHeight: 1, display: 'block' }}>{getFlag(drawnTeam)}</span>
           <h2 className="font-black text-3xl mt-3 tracking-tight" style={{ color: 'var(--text-primary)' }}>{drawnTeam}</h2>
+
+          {isCuracao && (
+            <div style={{
+              position: 'relative',
+              margin: '1.25rem 0 0.5rem',
+              padding: '1.25rem 1rem 1rem',
+              borderRadius: '1rem',
+              background: 'linear-gradient(160deg, #fffdf0 0%, #fff8d6 55%, #fffaeb 100%)',
+              border: '1.5px solid rgba(212,160,10,0.45)',
+              animation: 'curacao-glow-pulse 2.4s ease-in-out infinite, curacao-entrance 0.7s cubic-bezier(0.34,1.56,0.64,1) both',
+              overflow: 'hidden',
+            }}>
+              {sparkles.map((s, i) => (
+                <span key={i} style={{
+                  position: 'absolute',
+                  top: s.top, left: s.left,
+                  fontSize: s.size,
+                  color: '#c9860a',
+                  animation: `curacao-star-twinkle 1.4s ease-in-out infinite`,
+                  animationDelay: s.delay,
+                  pointerEvents: 'none',
+                  userSelect: 'none',
+                  lineHeight: 1,
+                }}>{s.ch}</span>
+              ))}
+              <p style={{
+                fontSize: '0.6rem',
+                fontWeight: 900,
+                letterSpacing: '0.22em',
+                textTransform: 'uppercase',
+                margin: '0 0 0.75rem',
+                animation: 'curacao-text-shimmer 2.2s ease-in-out infinite',
+                position: 'relative',
+                zIndex: 1,
+              }}>⭐ Star Prize ⭐</p>
+              <img
+                src="/blue_curacao.webp"
+                alt="Star Prize: Blue Curaçao"
+                style={{
+                  height: '130px',
+                  width: 'auto',
+                  display: 'block',
+                  margin: '0 auto',
+                  animation: 'curacao-bottle-float 3s ease-in-out infinite',
+                  filter: 'drop-shadow(0 6px 16px rgba(0,43,127,0.25)) drop-shadow(0 2px 6px rgba(0,0,0,0.15))',
+                  position: 'relative',
+                  zIndex: 1,
+                }}
+              />
+              <p style={{
+                fontSize: '0.7rem',
+                fontWeight: 700,
+                color: '#9a6308',
+                margin: '0.6rem 0 0',
+                letterSpacing: '0.04em',
+                position: 'relative',
+                zIndex: 1,
+              }}>De Kuyper Blue Curaçao</p>
+            </div>
+          )}
+
           <p className="text-base mt-2 mb-6" style={{ color: 'var(--text-muted)' }}>
             Good luck, {name.trim()}.{fee && ` Remember to pay ${fee} to the organiser.`}
           </p>
