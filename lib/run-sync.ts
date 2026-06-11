@@ -54,13 +54,15 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
     if (scorers.length > 0) {
       const top = scorers[0];
+      const tiedCount = scorers.filter(s => s.goals === top.goals).length;
+      const tied = tiedCount > 1;
       await setTopScorer({
-        player_name: top.player.name,
-        team_name: normaliseTeamName(top.team.name),
+        player_name: tied ? `${tiedCount} players tied` : top.player.name,
+        team_name: tied ? null : normaliseTeamName(top.team.name),
         goals: top.goals,
-        nationality: top.player.nationality,
+        nationality: tied ? null : top.player.nationality,
       });
-      statNotes.push(`top scorer: ${top.player.name} (${top.goals})`);
+      statNotes.push(`top scorer: ${tied ? `${tiedCount} tied on ${top.goals}` : `${top.player.name} (${top.goals})`}`);
     } else {
       statNotes.push('scorers: unavailable');
     }

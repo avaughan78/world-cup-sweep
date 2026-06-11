@@ -143,7 +143,7 @@ export default function GroupsGrid({
                           {participant && (
                             <div
                               className="participant-name truncate"
-                              style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}
+                              style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}
                             >
                               {participant}
                             </div>

@@ -31,6 +31,9 @@ const headerStrip: React.CSSProperties = {
 // Renders team/player info only — strip is rendered separately at card level
 function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   if (!prize.current_team) {
+    if (prize.value_label) {
+      return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</p>;
+    }
     return <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{empty}</p>;
   }
 
@@ -69,7 +72,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
       <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
         {nameEl}
       </span>
-      {!playerMode && !prize.video_url && prize.value_label && (
+      {!playerMode && !prize.video_url && prize.value_label && prize.slug !== 'top_scorer_team' && (
         <span className="text-sm flex-shrink-0" style={{ color: 'var(--text-muted)' }}>{prize.value_label}</span>
       )}
     </div>

@@ -221,6 +221,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
               eliminatedTeams={[...eliminatedTeams]}
               prizes={prizes}
               groupStandings={groupStandings}
+              teamStats={allTeamStats}
               teamCount={participants.length}
               inRunning={inRunning}
             />
