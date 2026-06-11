@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import type { Company } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import TombolaGlobe from './TombolaGlobe';
@@ -187,14 +188,15 @@ export default function TombolaContent({ company, onClose }: {
                 position: 'relative',
                 zIndex: 1,
               }}>⭐ Star Prize ⭐</p>
-              <img
+              <Image
                 src="/blue_curacao.webp"
                 alt="Star Prize: Blue Curaçao"
+                unoptimized
+                width={46}
+                height={130}
                 style={{
                   height: '130px',
                   width: 'auto',
-                  display: 'block',
-                  margin: '0 auto',
                   animation: 'curacao-bottle-float 3s ease-in-out infinite',
                   filter: 'drop-shadow(0 6px 16px rgba(0,43,127,0.25)) drop-shadow(0 2px 6px rgba(0,0,0,0.15))',
                   position: 'relative',
@@ -289,6 +291,9 @@ export default function TombolaContent({ company, onClose }: {
               maxLength={50} autoFocus
               style={{ width: '100%', background: 'var(--bg)', border: '1px solid var(--border)', borderRadius: '0.5rem', padding: '0.75rem 1rem', color: 'var(--text-primary)', fontSize: '1rem', outline: 'none', textAlign: 'center' }}
             />
+            <p className="text-xs text-center" style={{ color: 'var(--text-muted)', marginTop: '-4px' }}>
+              Use a unique name if there&apos;s more than one {name.trim() || 'person'} in the sweep
+            </p>
             {error && <p className="text-sm text-center" style={{ color: '#ef4444' }}>{error}</p>}
             <button onClick={handleDraw}
               style={{ width: '100%', background: '#4D10C8', color: '#fff', fontWeight: 700, fontSize: '1rem', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', cursor: 'pointer' }}>
