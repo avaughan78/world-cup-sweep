@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { TeamStats } from '@/lib/db';
 import type { MatchFixture } from '@/app/api/fixtures/route';
+import type { TopScorerEntry } from '@/app/api/topscorers/route';
 import Flag from './Flag';
 
 type StatEntry = {
@@ -44,7 +45,7 @@ function Leaderboard({
       {visible.length === 0 ? (
         <p className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>{emptyMsg}</p>
       ) : (
-        visible.slice(0, 8).map((entry, i, arr) => (
+        visible.slice(0, 10).map((entry, i, arr) => (
           <div
             key={entry.team}
             className="flex items-center gap-1.5 px-4 py-2"
@@ -100,6 +101,60 @@ function computeGoalsFromFixtures(fixtures: MatchFixture[]): {
   return { scored, conceded };
 }
 
+function GoldenBootLeaderboard({
+  scorers,
+  participantMap,
+  loading,
+}: {
+  scorers: TopScorerEntry[] | null;
+  participantMap: Record<string, string | null>;
+  loading: boolean;
+}) {
+  const entries = scorers?.slice(0, 10) ?? [];
+  return (
+    <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+      <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
+        <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>👟</span>
+        <span className="font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)', fontSize: '0.8rem' }}>
+          Golden Boot
+        </span>
+      </div>
+      {scorers === null || loading ? (
+        <p className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>Loading…</p>
+      ) : entries.length === 0 ? (
+        <p className="px-4 py-3 text-sm" style={{ color: 'var(--text-muted)' }}>No goals yet</p>
+      ) : (
+        entries.map((s, i, arr) => {
+          const participant = participantMap[s.teamName] ?? null;
+          return (
+            <div
+              key={`${s.playerName}-${s.teamName}`}
+              className="flex items-center gap-1.5 px-4 py-2"
+              style={{ borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}
+            >
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', width: '1rem', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                {i + 1}
+              </span>
+              <Flag team={s.teamName} height="0.95rem" width="1.4rem" />
+              <div className="flex-1 min-w-0">
+                <span className="font-semibold truncate block" style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>
+                  {s.playerName}
+                </span>
+                <span className="truncate block" style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>
+                  {s.teamName}{participant ? ` · ${participant}` : ''}
+                </span>
+              </div>
+              <span className="font-bold tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                {s.goals}
+              </span>
+            </div>
+          );
+        })
+      )}
+    </div>
+  );
+}
+
 export default function StatsView({
   teamStats,
   participantMap,
@@ -108,11 +163,12 @@ export default function StatsView({
   participantMap: Record<string, string | null>;
 }) {
   const [fixtures, setFixtures] = useState<MatchFixture[] | null>(null);
+  const [scorers, setScorers] = useState<TopScorerEntry[] | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    function load() {
+    function loadFixtures() {
       fetch('/api/fixtures')
         .then(r => r.json())
         .then((d: { fixtures?: MatchFixture[] }) => {
@@ -121,12 +177,22 @@ export default function StatsView({
         .catch(() => { if (!cancelled) setFixtures([]); });
     }
 
-    load();
+    function loadScorers() {
+      fetch('/api/topscorers')
+        .then(r => r.json())
+        .then((d: { scorers?: TopScorerEntry[] }) => {
+          if (!cancelled) setScorers(d.scorers ?? []);
+        })
+        .catch(() => { if (!cancelled) setScorers([]); });
+    }
+
+    loadFixtures();
+    loadScorers();
 
     const id = setInterval(() => {
       setFixtures(prev => {
         const hasLive = prev?.some(f => f.status === 'IN_PLAY' || f.status === 'PAUSED');
-        if (hasLive) load();
+        if (hasLive) { loadFixtures(); loadScorers(); }
         return prev;
       });
     }, 60_000);
@@ -182,12 +248,10 @@ export default function StatsView({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <Leaderboard
-        title="Goals Scored"
-        icon="⚽"
-        entries={goalScorers}
-        renderValue={e => <>{e.value}</>}
-        emptyMsg={loading ? 'Loading…' : 'No goals yet'}
+      <GoldenBootLeaderboard
+        scorers={scorers}
+        participantMap={participantMap}
+        loading={loading}
       />
       <Leaderboard
         title="Goals Conceded"
