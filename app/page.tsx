@@ -93,20 +93,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
           }}
         >
           <div className="px-6 sm:px-8 pt-3 pb-3">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: 'rgba(255,255,255,0.7)' }}>
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold uppercase tracking-widest truncate min-w-0" style={{ color: 'rgba(255,255,255,0.7)' }}>
                 FIFA World Cup · 2026 · {company.name}
               </p>
               <HomeExitLink />
             </div>
-            <div className="flex items-end justify-between mt-1">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-1 gap-y-2">
               <div className="flex items-end gap-4">
                 <TrophyEasterEgg />
                 <h1 className="album-title text-4xl sm:text-6xl font-black tracking-tight" style={{ color: '#fff' }}>
                   WC26 Sweep
                 </h1>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
                 <span className="hidden sm:flex text-base items-center gap-1.5" style={{ color: 'rgba(255,255,255,0.7)' }}>
                   <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.5)' }} />
                   {lastSync ? <>Synced <SyncTime timestamp={lastSync} /></> : 'Not yet synced'}

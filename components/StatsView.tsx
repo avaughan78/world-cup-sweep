@@ -232,7 +232,7 @@ export default function StatsView({
       participant: participantMap[team] ?? null,
       value: (scored.get(team) ?? 0) - (conceded.get(team) ?? 0),
     }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => a.value - b.value);
 
   // Cards: still from DB (sync-backed), accurate after each match
   const cards: StatEntry[] = [...teamStats]
@@ -268,8 +268,8 @@ export default function StatsView({
         emptyMsg={loading ? 'Loading…' : 'No cards yet'}
       />
       <Leaderboard
-        title="Goal Difference"
-        icon="📈"
+        title="Worst Goal Difference"
+        icon="📉"
         entries={goalDiff}
         renderValue={e => <>{gdLabel(e.value)}</>}
         emptyMsg={loading ? 'Loading…' : 'No matches played'}
