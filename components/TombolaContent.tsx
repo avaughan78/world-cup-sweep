@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import type { Company } from '@/lib/db';
 import { getFlag } from '@/lib/flags';
 import TombolaGlobe from './TombolaGlobe';
@@ -188,19 +187,18 @@ export default function TombolaContent({ company, onClose }: {
                 position: 'relative',
                 zIndex: 1,
               }}>⭐ Star Prize ⭐</p>
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
                 src="/blue_curacao.webp"
                 alt="Star Prize: Blue Curaçao"
-                unoptimized
-                width={46}
-                height={130}
+                loading="eager"
                 style={{
-                  height: '130px',
+                  height: '140px',
                   width: 'auto',
+                  display: 'block',
+                  margin: '0 auto',
+                  mixBlendMode: 'multiply',
                   animation: 'curacao-bottle-float 3s ease-in-out infinite',
-                  filter: 'drop-shadow(0 6px 16px rgba(0,43,127,0.25)) drop-shadow(0 2px 6px rgba(0,0,0,0.15))',
-                  position: 'relative',
-                  zIndex: 1,
                 }}
               />
               <p style={{
