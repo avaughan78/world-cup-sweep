@@ -541,8 +541,8 @@ export async function getCountryCache(teamName: string): Promise<CountryCache | 
     if (!rows.length) return null;
     if (Date.now() - new Date(rows[0].updated_at as string).getTime() > COUNTRY_CACHE_TTL_MS) return null;
     const r = rows[0];
-    // Treat as a miss if the entry is incomplete (no photo AND no population — likely a failed earlier fetch)
-    if (!r.wiki_image && !r.population) return null;
+    // Treat as a miss if population is missing — static data now always provides it
+    if (!r.population) return null;
     return {
       capital:      (r.capital      as string | null),
       population:   (r.population   as number | null),
