@@ -1,4 +1,4 @@
-import { getAllTeamStats, getTopScorer, getPrizeOverride, TeamStats } from './db';
+import { getAllTeamStats, getTopScorer, getPrizeOverride, TeamStats, GroupStanding } from './db';
 import type { ApiMatch, ApiStanding } from './football-api';
 import { normaliseTeamName } from './football-api';
 
@@ -18,7 +18,8 @@ export interface Prize {
 
 export async function computePrizes(
   participantMap: Map<string, string | null>,
-  companyId: number
+  companyId: number,
+  groupStandings: GroupStanding[] = []
 ): Promise<Prize[]> {
   const [allStats, topScorer, shotOverride, bicycleOverride, ownGoalOverride] = await Promise.all([
     getAllTeamStats(),
@@ -28,17 +29,22 @@ export async function computePrizes(
     getPrizeOverride(companyId, 'most_own_goals'),
   ]);
 
+  const standingsByTeam = new Map(groupStandings.map(s => [s.team_name, s]));
+
   function participant(teamName: string | null): string | null {
     if (!teamName) return null;
     return participantMap.get(teamName) ?? participantMap.get(teamName.toLowerCase()) ?? null;
   }
 
-  // 1. Most cards (yellow + red×2 weighted)
+  // 1. Most cards (yellow + red×2 weighted); tie-break: most reds, then most yellows
   let topCards: TeamStats | null = null;
   for (const t of allStats) {
-    const score = t.yellow_cards + t.red_cards * 2;
-    const bestScore = topCards ? topCards.yellow_cards + topCards.red_cards * 2 : -1;
-    if (score > bestScore) topCards = t;
+    if (!topCards) { topCards = t; continue; }
+    const score    = t.yellow_cards + t.red_cards * 2;
+    const best     = topCards.yellow_cards + topCards.red_cards * 2;
+    if (score > best) { topCards = t; continue; }
+    if (score === best && t.red_cards > topCards.red_cards) { topCards = t; continue; }
+    if (score === best && t.red_cards === topCards.red_cards && t.yellow_cards > topCards.yellow_cards) topCards = t;
   }
   const topCardsTotal = topCards ? topCards.yellow_cards + topCards.red_cards * 2 : 0;
 
@@ -56,10 +62,21 @@ export async function computePrizes(
   // 5. Top scorer's team
   const topScorerTeam = topScorer?.team_name ?? null;
 
-  // 6. Most goals conceded (The Sieve) — all matches via team_stats.goals_conceded
+  // 6. Most goals conceded (The Sieve); tie-break: worst goal difference, then fewest goals scored
   let topSieve: TeamStats | null = null;
   for (const t of allStats) {
-    if (!topSieve || t.goals_conceded > topSieve.goals_conceded) topSieve = t;
+    if (!topSieve) { topSieve = t; continue; }
+    if (t.goals_conceded > topSieve.goals_conceded) { topSieve = t; continue; }
+    if (t.goals_conceded === topSieve.goals_conceded) {
+      const tGD  = standingsByTeam.get(t.team_name)?.goal_difference  ?? 0;
+      const bGD  = standingsByTeam.get(topSieve.team_name)?.goal_difference ?? 0;
+      if (tGD < bGD) { topSieve = t; continue; }
+      if (tGD === bGD) {
+        const tGF = standingsByTeam.get(t.team_name)?.goals_for  ?? 0;
+        const bGF = standingsByTeam.get(topSieve.team_name)?.goals_for ?? 0;
+        if (tGF < bGF) topSieve = t;
+      }
+    }
   }
 
   return [

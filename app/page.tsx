@@ -53,7 +53,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
     ? participantMap
     : new Map(participants.map(p => [p.team_name, null]));
 
-  const prizes = await computePrizes(displayMap, company.id);
+  const prizes = await computePrizes(displayMap, company.id, groupStandings);
 
   function formatPrize(n: number): string {
     return `£${n % 1 === 0 ? n : n.toFixed(2)}`;
@@ -234,9 +234,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
         </div>
 
         <footer className="pb-8">
-          <div className="relative text-center">
+          <div className="flex flex-col items-center gap-2 sm:relative sm:block sm:text-center">
             <BugReport />
-            <div className="absolute right-0 top-1/2 -translate-y-1/2">
+            <div className="sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
               <PoweredByLink />
             </div>
           </div>

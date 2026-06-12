@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getFlag } from '@/lib/flags';
+import { getFlag, getFlagUrl } from '@/lib/flags';
 import { getWCHistory } from '@/lib/wc-history';
 
 interface TeamInfo {
@@ -117,6 +117,7 @@ export default function TeamModal({ team, participant, onClose }: {
   }, [onClose]);
 
   const flag = getFlag(team);
+  const flagUrl = getFlagUrl(team);
   const wcHistory = getWCHistory(team);
 
   const stats: Stat[] = [
@@ -174,6 +175,7 @@ export default function TeamModal({ team, participant, onClose }: {
             <img
               src={info!.wikiImage!}
               alt={info?.capital ?? team}
+              referrerPolicy="no-referrer"
               onError={() => setImgError(true)}
               style={{
                 position: 'absolute', inset: 0,
@@ -196,7 +198,12 @@ export default function TeamModal({ team, participant, onClose }: {
 
           {/* text over hero */}
           <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-7">
-            <div style={{ fontSize: '4rem', lineHeight: 1, marginBottom: '0.5rem' }}>{flag}</div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              {flagUrl
+                ? <img src={flagUrl} alt={`${team} flag`} style={{ height: '3rem', width: 'auto', display: 'block', borderRadius: '0.2rem' }} />
+                : <span style={{ fontSize: '4rem', lineHeight: 1 }}>{flag}</span>
+              }
+            </div>
             <h2
               className="font-black leading-none tracking-tight"
               style={{ color: '#fff', fontSize: 'clamp(2rem, 5vw, 3rem)' }}

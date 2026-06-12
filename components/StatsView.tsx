@@ -13,6 +13,61 @@ type StatEntry = {
   badge?: string;
 };
 
+type TiebreakerDef = { title: string; icon: string; criteria: string[] };
+
+function TiebreakerModal({ def, onClose }: { def: TiebreakerDef; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(8,8,6,0.75)', backdropFilter: 'blur(8px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-xs rounded-2xl overflow-hidden"
+        style={{ background: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 40px 100px rgba(0,0,0,0.5)' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="px-5 pt-4 pb-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--border)' }}>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: '1rem', lineHeight: 1 }}>{def.icon}</span>
+            <span className="font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)', fontSize: '0.78rem' }}>
+              {def.title}
+            </span>
+          </div>
+          <button
+            onClick={onClose}
+            className="w-6 h-6 flex items-center justify-center rounded-full text-xs"
+            style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)', cursor: 'pointer' }}
+          >
+            ✕
+          </button>
+        </div>
+        <div className="px-5 py-4">
+          <p className="font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>
+            Tie-break order
+          </p>
+          <ol className="space-y-2.5">
+            {def.criteria.map((c, i) => (
+              <li key={i} className="flex items-start gap-2.5">
+                <span className="font-black tabular-nums shrink-0" style={{ color: 'var(--text-muted)', fontSize: '0.7rem', width: '1rem', paddingTop: '0.15rem' }}>
+                  {i + 1}.
+                </span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: '0.875rem', lineHeight: 1.4 }}>{c}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Leaderboard({
   title,
   icon,
@@ -20,6 +75,7 @@ function Leaderboard({
   renderValue,
   emptyMsg,
   showZero,
+  tiebreaker,
 }: {
   title: string;
   icon: string;
@@ -27,12 +83,29 @@ function Leaderboard({
   renderValue: (e: StatEntry) => React.ReactNode;
   emptyMsg: string;
   showZero?: boolean;
+  tiebreaker?: TiebreakerDef;
 }) {
+  const [showTiebreaker, setShowTiebreaker] = useState(false);
   const visible = showZero ? entries : entries.filter(e => e.value !== 0);
   return (
+    <>
+      {showTiebreaker && tiebreaker && (
+        <TiebreakerModal def={tiebreaker} onClose={() => setShowTiebreaker(false)} />
+      )}
     <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-        <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>{icon}</span>
+        <button
+          onClick={() => tiebreaker && setShowTiebreaker(true)}
+          style={{
+            fontSize: '0.95rem', lineHeight: 1, background: 'none', border: 'none', padding: 0,
+            cursor: tiebreaker ? 'pointer' : 'default',
+            opacity: tiebreaker ? 1 : 1,
+          }}
+          aria-label={tiebreaker ? `${title} tie-break rules` : undefined}
+          title={tiebreaker ? 'View tie-break rules' : undefined}
+        >
+          {icon}
+        </button>
         <span className="font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)', fontSize: '0.8rem' }}>
           {title}
         </span>
@@ -74,6 +147,7 @@ function Leaderboard({
         ))
       )}
     </div>
+    </>
   );
 }
 
@@ -96,6 +170,15 @@ function computeGoalsFromFixtures(fixtures: MatchFixture[]): {
   return { scored, conceded };
 }
 
+const GOLDEN_BOOT_TIEBREAKER: TiebreakerDef = {
+  icon: '👟',
+  title: 'Golden Boot',
+  criteria: [
+    'Most goals scored',
+    'Prize shared if tied',
+  ],
+};
+
 function GoldenBootLeaderboard({
   scorers,
   participantMap,
@@ -105,11 +188,23 @@ function GoldenBootLeaderboard({
   participantMap: Record<string, string | null>;
   loading: boolean;
 }) {
+  const [showTiebreaker, setShowTiebreaker] = useState(false);
   const entries = scorers?.slice(0, 10) ?? [];
   return (
+    <>
+      {showTiebreaker && (
+        <TiebreakerModal def={GOLDEN_BOOT_TIEBREAKER} onClose={() => setShowTiebreaker(false)} />
+      )}
     <div className="rounded-xl overflow-hidden" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
       <div className="flex items-center gap-2 px-4 py-2.5" style={{ borderBottom: '1px solid var(--border)' }}>
-        <span style={{ fontSize: '0.95rem', lineHeight: 1 }}>👟</span>
+        <button
+          onClick={() => setShowTiebreaker(true)}
+          style={{ fontSize: '0.95rem', lineHeight: 1, background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+          aria-label="Golden Boot tie-break rules"
+          title="View tie-break rules"
+        >
+          👟
+        </button>
         <span className="font-black uppercase tracking-widest" style={{ color: 'var(--text-primary)', fontSize: '0.8rem' }}>
           Golden Boot
         </span>
@@ -147,6 +242,7 @@ function GoldenBootLeaderboard({
         })
       )}
     </div>
+    </>
   );
 }
 
@@ -246,6 +342,15 @@ export default function StatsView({
         entries={goalsConcededEntries}
         renderValue={e => <>{e.value}</>}
         emptyMsg={loading ? 'Loading…' : 'No goals yet'}
+        tiebreaker={{
+          icon: '🪣',
+          title: 'Derby County',
+          criteria: [
+            'Most goals conceded',
+            'Worst goal difference',
+            'Fewest goals scored',
+          ],
+        }}
       />
       <Leaderboard
         title="Discipline"
@@ -253,6 +358,15 @@ export default function StatsView({
         entries={cards}
         renderValue={e => <>{e.value}</>}
         emptyMsg={loading ? 'Loading…' : 'No cards yet'}
+        tiebreaker={{
+          icon: '🟨',
+          title: 'Josip Simunic Award',
+          criteria: [
+            'Most weighted cards (yellow = 1, red = 2)',
+            'Most red cards',
+            'Most yellow cards',
+          ],
+        }}
       />
     </div>
   );
