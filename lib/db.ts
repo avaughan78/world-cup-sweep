@@ -391,7 +391,7 @@ export async function setPlayerGoals(scorers: PlayerGoal[]): Promise<void> {
 
 export async function getPlayerGoals(): Promise<PlayerGoal[]> {
   try {
-    const rows = await sql`SELECT player_name, team_name, goals, nationality FROM player_goals ORDER BY goals DESC`;
+    const rows = await sql`SELECT player_name, team_name, goals, nationality FROM player_goals WHERE goals > 0 ORDER BY goals DESC`;
     return rows as PlayerGoal[];
   } catch {
     return [];

@@ -103,13 +103,16 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       // Top scorer (prize card) — try API first, fall back to events-derived data
       const apiScorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
       const eventScorers = [...playerGoalMap.values()].sort((a, b) => b.goals - a.goals);
-      // Use API scorers if they have goals; otherwise use events
-      const scorerSource = apiScorers.length > 0 && apiScorers[0].goals > 0 ? apiScorers.map(s => ({
-        player_name: s.playerName,
-        team_name: normaliseTeamName(s.teamName),
-        goals: s.goals,
-        nationality: s.nationality,
-      })) : eventScorers;
+      // Use API scorers if they have goals; otherwise use events. Always strip zero-goal entries.
+      const scorerSource = (apiScorers.length > 0 && apiScorers[0].goals > 0
+        ? apiScorers.map(s => ({
+            player_name: s.playerName,
+            team_name: normaliseTeamName(s.teamName),
+            goals: s.goals,
+            nationality: s.nationality,
+          }))
+        : eventScorers
+      ).filter(s => s.goals > 0);
 
       if (scorerSource.length > 0) {
         const top = scorerSource[0];
