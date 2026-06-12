@@ -199,9 +199,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                   Names will be automatically revealed when all teams have been drawn, or at the first match kick-off: <strong style={{ color: 'var(--text-primary)' }}>11 Jun, 20:00 BST</strong>.
                 </p>
               </div>
-              {company.tombola_enabled && (
-                <TombolaDrawTrigger company={company} />
-              )}
+            </div>
+          )}
+
+          {/* Draw a team button — visible until all teams are claimed */}
+          {company.tombola_enabled && claimed < participants.length && participants.length > 0 && (
+            <div className="flex justify-center">
+              <TombolaDrawTrigger company={company} large />
             </div>
           )}
 
