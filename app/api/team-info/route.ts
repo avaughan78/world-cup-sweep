@@ -4,71 +4,6 @@ import { getSquadCache, setSquadCache, getCountryCache, setCountryCache } from '
 import { fetchPlayerPhoto } from '@/lib/player-photos';
 import { COUNTRY_DATA } from '@/lib/country-data';
 
-// Wikipedia article to use for the hero image — explicit for all 48 teams
-// Landmark/skyline articles give much more reliable thumbnails than country pages
-const WIKI_IMAGE_TITLE: Record<string, string> = {
-  // Group A
-  'Mexico':               'Mexico City',
-  'South Africa':         'Johannesburg',
-  'South Korea':          'Seoul',
-  'Czechia':              'Prague',
-  // Group B
-  'Canada':               'Toronto',
-  'Bosnia and Herzegovina': 'Sarajevo',
-  'Qatar':                'Doha',
-  'Switzerland':          'Zurich',
-  // Group C
-  'Brazil':               'Rio de Janeiro',
-  'Morocco':              'Marrakesh',
-  'Haiti':                'Port-au-Prince',
-  'Scotland':             'Edinburgh',
-  // Group D
-  'United States':        'New York City',
-  'Paraguay':             'Asunción',
-  'Australia':            'Sydney',
-  'Türkiye':              'Istanbul',
-  // Group E
-  'Germany':              'Berlin',
-  'Curaçao':              'Willemstad',
-  'Ivory Coast':          'Abidjan',
-  'Ecuador':              'Quito',
-  // Group F
-  'Netherlands':          'Amsterdam',
-  'Japan':                'Tokyo',
-  'Sweden':               'Stockholm',
-  'Tunisia':              'Tunis',
-  // Group G
-  'Belgium':              'Brussels',
-  'Egypt':                'Cairo',
-  'Iran':                 'Tehran',
-  'New Zealand':          'Auckland',
-  // Group H
-  'Spain':                'Madrid',
-  'Cape Verde':           'Praia',
-  'Saudi Arabia':         'Riyadh',
-  'Uruguay':              'Montevideo',
-  // Group I
-  'France':               'Paris',
-  'Senegal':              'Dakar',
-  'Iraq':                 'Baghdad',
-  'Norway':               'Oslo',
-  // Group J
-  'Argentina':            'Buenos Aires',
-  'Algeria':              'Algiers',
-  'Austria':              'Vienna',
-  'Jordan':               'Amman',
-  // Group K
-  'Portugal':             'Lisbon',
-  'DR Congo':             'Kinshasa',
-  'Uzbekistan':           'Tashkent',
-  'Colombia':             'Bogotá',
-  // Group L
-  'England':              'London',
-  'Croatia':              'Zagreb',
-  'Ghana':                'Accra',
-  'Panama':               'Panama City',
-};
-
 // Wikipedia article to use for the About text
 const WIKI_MAP: Record<string, string> = {
   'Ivory Coast':             'Ivory Coast',
@@ -155,7 +90,6 @@ export async function GET(req: NextRequest) {
   const team: string = teamParam;
 
   const wikiName = WIKI_MAP[team] ?? team;
-  const wikiImageTitle = WIKI_IMAGE_TITLE[team] ?? null;
 
   type PlayerInfo = { photo: string | null; club: string | null; idTeam: string | null };
 
@@ -290,58 +224,42 @@ export async function GET(req: NextRequest) {
     return fetchPromise;
   }
 
-  // ── Country / wiki data: DB cache first ──────────────────────────────────────
-  let countryData = await getCountryCache(team);
+  // ── Static country data — always present for all 48 WC teams ────────────────
+  const staticData = COUNTRY_DATA[team] ?? null;
 
-  if (!countryData) {
-    // Static facts (capital, population, area, currency) — always available
-    const staticData = COUNTRY_DATA[team] ?? null;
-
-    // Wikipedia: image from city landmark, extract from country article
+  // ── About text: DB cache first, then Wikipedia ───────────────────────────────
+  let wikiExtract: string | null = null;
+  const cached = await getCountryCache(team);
+  if (cached?.wiki_extract) {
+    wikiExtract = cached.wiki_extract;
+  } else {
     const countryWiki = await wikiData(wikiName);
-    const imageSource = wikiImageTitle ?? staticData?.capital ?? wikiName;
-    let wikiImage: string | null = null;
-    if (imageSource === wikiName) {
-      wikiImage = countryWiki.image;
-    } else {
-      const imageData = await wikiData(imageSource);
-      wikiImage = imageData.image ?? countryWiki.image;
-    }
-
-    countryData = {
+    wikiExtract = countryWiki.extract;
+    // Persist extract to cache (fire-and-forget)
+    void setCountryCache(team, {
       capital:      staticData?.capital ?? null,
       population:   staticData?.population ?? null,
       area:         staticData?.area ?? null,
       currencies:   staticData?.currency ? [staticData.currency] : [],
       languages:    [],
-      wiki_image:   wikiImage,
-      wiki_extract: countryWiki.extract,
-    };
-
-    void setCountryCache(team, countryData);
-    console.log(`[country_cache] miss — stored for "${team}"`);
-  } else {
-    console.log(`[country_cache] hit for "${team}"`);
+      wiki_image:   staticData?.image ?? null,
+      wiki_extract: wikiExtract,
+    });
   }
 
   const squad = await fetchSquad();
 
-  const hasPhotos = squad.some(p => p.photo !== null);
-  const cacheControl = (hasPhotos && countryData.wiki_image)
-    ? 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400'
-    : 'no-store';
-
   return NextResponse.json({
     team,
-    capital:     countryData.capital,
-    population:  countryData.population,
-    area:        countryData.area,
-    currencies:  countryData.currencies,
-    languages:   countryData.languages,
-    wikiImage:   countryData.wiki_image,
-    wikiExtract: countryData.wiki_extract,
+    capital:     staticData?.capital ?? null,
+    population:  staticData?.population ?? null,
+    area:        staticData?.area ?? null,
+    currencies:  staticData?.currency ? [staticData.currency] : [],
+    languages:   [],
+    wikiImage:   staticData?.image ?? null,
+    wikiExtract,
     squad,
   }, {
-    headers: { 'Cache-Control': cacheControl },
+    headers: { 'Cache-Control': 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400' },
   });
 }
