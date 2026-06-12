@@ -4,30 +4,69 @@ import { getSquadCache, setSquadCache, getCountryCache, setCountryCache } from '
 import { fetchPlayerPhoto } from '@/lib/player-photos';
 import { COUNTRY_DATA } from '@/lib/country-data';
 
-// Wikipedia article to use for the hero image (city landmark preferred)
+// Wikipedia article to use for the hero image — explicit for all 48 teams
+// Landmark/skyline articles give much more reliable thumbnails than country pages
 const WIKI_IMAGE_TITLE: Record<string, string> = {
-  'England':              'London',
-  'Scotland':             'Edinburgh',
+  // Group A
+  'Mexico':               'Mexico City',
+  'South Africa':         'Johannesburg',
+  'South Korea':          'Seoul',
+  'Czechia':              'Prague',
+  // Group B
+  'Canada':               'Toronto',
+  'Bosnia and Herzegovina': 'Sarajevo',
+  'Qatar':                'Doha',
+  'Switzerland':          'Zurich',
+  // Group C
+  'Brazil':               'Rio de Janeiro',
+  'Morocco':              'Marrakesh',
   'Haiti':                'Port-au-Prince',
+  'Scotland':             'Edinburgh',
+  // Group D
+  'United States':        'New York City',
+  'Paraguay':             'Asunción',
+  'Australia':            'Sydney',
+  'Türkiye':              'Istanbul',
+  // Group E
+  'Germany':              'Berlin',
   'Curaçao':              'Willemstad',
-  'Jordan':               'Amman',
+  'Ivory Coast':          'Abidjan',
+  'Ecuador':              'Quito',
+  // Group F
+  'Netherlands':          'Amsterdam',
+  'Japan':                'Tokyo',
+  'Sweden':               'Stockholm',
+  'Tunisia':              'Tunis',
+  // Group G
+  'Belgium':              'Brussels',
+  'Egypt':                'Cairo',
+  'Iran':                 'Tehran',
+  'New Zealand':          'Auckland',
+  // Group H
+  'Spain':                'Madrid',
+  'Cape Verde':           'Praia',
+  'Saudi Arabia':         'Riyadh',
+  'Uruguay':              'Montevideo',
+  // Group I
+  'France':               'Paris',
+  'Senegal':              'Dakar',
+  'Iraq':                 'Baghdad',
+  'Norway':               'Oslo',
+  // Group J
+  'Argentina':            'Buenos Aires',
   'Algeria':              'Algiers',
   'Austria':              'Vienna',
-  'Panama':               'Panama City',
-  'Ghana':                'Accra',
-  'Uzbekistan':           'Tashkent',
-  'Iraq':                 'Baghdad',
-  'New Zealand':          'Auckland',
-  'Cape Verde':           'Praia',
-  'Czechia':              'Prague',
-  'South Africa':         'Johannesburg',
-  'Ivory Coast':          'Abidjan',
-  'United States':        'New York City',
-  'Bosnia and Herzegovina': 'Sarajevo',
+  'Jordan':               'Amman',
+  // Group K
+  'Portugal':             'Lisbon',
   'DR Congo':             'Kinshasa',
-  'Saudi Arabia':         'Riyadh',
-  'South Korea':          'Seoul',
-  'Türkiye':              'Istanbul',
+  'Uzbekistan':           'Tashkent',
+  'Colombia':             'Bogotá',
+  // Group L
+  'England':              'London',
+  'Croatia':              'Zagreb',
+  'Ghana':                'Accra',
+  'Panama':               'Panama City',
 };
 
 // Wikipedia article to use for the About text
