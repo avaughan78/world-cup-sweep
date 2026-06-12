@@ -2,29 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { normaliseTeamName } from '@/lib/football-api';
 import { getSquadCache, setSquadCache, getCountryCache, setCountryCache } from '@/lib/db';
 import { fetchPlayerPhoto } from '@/lib/player-photos';
-
-// Map sweepstake names → REST Countries search name
-// England & Scotland are not sovereign states — map to United Kingdom for stats
-const REST_MAP: Record<string, string> = {
-  'England':                 'United Kingdom',
-  'Scotland':                'United Kingdom',
-  'Ivory Coast':             "Côte d'Ivoire",
-  'DR Congo':                'Democratic Republic of the Congo',
-  'Türkiye':                 'Turkey',
-  'Curaçao':                 'Curaçao',
-  'Bosnia and Herzegovina':  'Bosnia and Herzegovina',
-  'South Korea':             'South Korea',
-  'United States':           'United States',
-  'New Zealand':             'New Zealand',
-  'Saudi Arabia':            'Saudi Arabia',
-  'Cape Verde':              'Cabo Verde',
-};
-
-// Override capital city when REST Countries would return wrong or no capital
-const CAPITAL_OVERRIDE: Record<string, string> = {
-  'England':  'London',
-  'Scotland': 'Edinburgh',
-};
+import { COUNTRY_DATA } from '@/lib/country-data';
 
 // Wikipedia article to use for the hero image (city landmark preferred)
 const WIKI_IMAGE_TITLE: Record<string, string> = {
@@ -137,28 +115,8 @@ export async function GET(req: NextRequest) {
   if (!teamParam) return NextResponse.json({ error: 'Missing team' }, { status: 400 });
   const team: string = teamParam;
 
-  const restName = REST_MAP[team] ?? team;
   const wikiName = WIKI_MAP[team] ?? team;
   const wikiImageTitle = WIKI_IMAGE_TITLE[team] ?? null;
-
-  // Fetch REST Countries + Wikipedia extract in parallel
-  type CountryRaw = Record<string, unknown>;
-
-  async function fetchCountry(): Promise<CountryRaw | null> {
-    for (const suffix of ['?fullText=true', '']) {
-      try {
-        const res = await fetchWithTimeout(
-          `https://restcountries.com/v3.1/name/${encodeURIComponent(restName)}${suffix}`,
-          { cache: 'no-store' }
-        );
-        if (res.ok) {
-          const arr = await res.json() as CountryRaw[];
-          if (arr[0]) return arr[0];
-        }
-      } catch { /* ignore */ }
-    }
-    return null;
-  }
 
   type PlayerInfo = { photo: string | null; club: string | null; idTeam: string | null };
 
@@ -297,20 +255,13 @@ export async function GET(req: NextRequest) {
   let countryData = await getCountryCache(team);
 
   if (!countryData) {
-    // Cache miss — fetch REST Countries + Wikipedia in parallel
-    const [country, countryWiki] = await Promise.all([
-      fetchCountry(),
-      wikiData(wikiName),
-    ]);
+    // Static facts (capital, population, area, currency) — always available
+    const staticData = COUNTRY_DATA[team] ?? null;
 
-    const capital =
-      CAPITAL_OVERRIDE[team] ??
-      (country?.capital as string[] | undefined)?.[0] ??
-      null;
-
-    const imageSource = wikiImageTitle ?? capital ?? wikiName;
+    // Wikipedia: image from city landmark, extract from country article
+    const countryWiki = await wikiData(wikiName);
+    const imageSource = wikiImageTitle ?? staticData?.capital ?? wikiName;
     let wikiImage: string | null = null;
-
     if (imageSource === wikiName) {
       wikiImage = countryWiki.image;
     } else {
@@ -318,26 +269,18 @@ export async function GET(req: NextRequest) {
       wikiImage = imageData.image ?? countryWiki.image;
     }
 
-    const currencies = country?.currencies
-      ? Object.values(country.currencies as Record<string, { name: string }>).map(c => c.name)
-      : [];
-    const languages = country?.languages
-      ? Object.values(country.languages as Record<string, string>)
-      : [];
-
     countryData = {
-      capital,
-      population: (country?.population as number | undefined) ?? null,
-      area:       (country?.area       as number | undefined) ?? null,
-      currencies,
-      languages,
+      capital:      staticData?.capital ?? null,
+      population:   staticData?.population ?? null,
+      area:         staticData?.area ?? null,
+      currencies:   staticData?.currency ? [staticData.currency] : [],
+      languages:    [],
       wiki_image:   wikiImage,
       wiki_extract: countryWiki.extract,
     };
 
-    // Persist to DB (fire-and-forget — don't block the response)
     void setCountryCache(team, countryData);
-    console.log(`[country_cache] miss — fetched and stored for "${team}"`);
+    console.log(`[country_cache] miss — stored for "${team}"`);
   } else {
     console.log(`[country_cache] hit for "${team}"`);
   }
