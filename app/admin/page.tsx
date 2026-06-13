@@ -100,6 +100,8 @@ export default function AdminPage() {
   const [hlSaving, setHlSaving] = useState(false);
   const [hlUploading, setHlUploading] = useState(false);
   const [hlFetching, setHlFetching] = useState(false);
+  const [prizesOpen, setPrizesOpen] = useState(false);
+  const [highlightsOpen, setHighlightsOpen] = useState(false);
   const [hlEditingId, setHlEditingId] = useState<number | null>(null);
   const hlFileRef = useRef<HTMLInputElement>(null);
   const hlFormRef = useRef<HTMLDivElement>(null);
@@ -809,8 +811,16 @@ export default function AdminPage() {
 
           {/* Global manual prizes */}
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Manual Prizes (Global — all companies)</p>
+            <button
+              type="button"
+              onClick={() => setPrizesOpen(o => !o)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Manual Prizes (Global — all companies)</p>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{prizesOpen ? '▲' : '▼'}</span>
+            </button>
 
+            {prizesOpen && <>
             {(() => {
               const allTeams = Object.values(GROUPS_2026).flat().sort();
               const teamSelect = (value: string, onChange: (v: string) => void) => (
@@ -923,14 +933,22 @@ export default function AdminPage() {
                 </div>
               );
             })()}
+            </>}
           </div>
 
           {/* Highlights */}
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Highlights (Global — all companies)</p>
+            <button
+              type="button"
+              onClick={() => setHighlightsOpen(o => !o)}
+              className="flex items-center justify-between w-full text-left"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Highlights (Global — all companies)</p>
+              <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{highlightsOpen ? '▲' : '▼'}</span>
+            </button>
 
             {/* Add / Edit form */}
-            <div ref={hlFormRef} className="rounded-xl p-4 mb-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+            {highlightsOpen && <><div ref={hlFormRef} className="rounded-xl p-4 mb-4 mt-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-bold uppercase tracking-widest" style={{ color: hlEditingId ? '#1d4ed8' : 'var(--text-muted)' }}>
                   {hlEditingId ? '✏️ Edit highlight' : 'Add highlight'}
@@ -1056,6 +1074,7 @@ export default function AdminPage() {
                 ))}
               </div>
             )}
+            </>}
           </div>
 
           {/* Companies */}
