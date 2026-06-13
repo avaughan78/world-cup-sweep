@@ -3,22 +3,97 @@
 import { useEffect, useState } from 'react';
 import type { Highlight } from '@/lib/db';
 
+const BRAND_STRIPE = 'linear-gradient(to right, #4D10C8, #D40100, #9DC417)';
+
+function toYouTubeEmbed(url: string): string | null {
+  const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
+  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1`;
+  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
+  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`;
+  return null;
+}
+
 function isYouTube(url: string) {
   return url.includes('youtube.com') || url.includes('youtu.be');
 }
 
-function HighlightCard({ h }: { h: Highlight }) {
+function VideoModal({ url, title, onClose }: { url: string; title: string; onClose: () => void }) {
+  const embedUrl = toYouTubeEmbed(url);
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose(); }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.85)' }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-3xl rounded-xl overflow-hidden"
+        style={{ background: '#000' }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Branded stripe */}
+        <div style={{ height: '4px', background: BRAND_STRIPE }} />
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 flex items-center justify-center rounded-full text-white text-sm font-bold"
+          style={{ width: '2rem', height: '2rem', background: 'rgba(0,0,0,0.6)', border: '1px solid rgba(255,255,255,0.2)' }}
+        >
+          ✕
+        </button>
+
+        {embedUrl ? (
+          <div style={{ aspectRatio: '16/9' }}>
+            <iframe
+              src={embedUrl}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              style={{ width: '100%', height: '100%', border: 'none', display: 'block' }}
+            />
+          </div>
+        ) : (
+          <div className="p-8 text-center text-white text-sm">
+            <a href={url} target="_blank" rel="noopener noreferrer" style={{ color: '#9DC417' }}>
+              Open video ↗
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function HighlightCard({ h, onVideoClick }: { h: Highlight; onVideoClick: (h: Highlight) => void }) {
   const isVideo = h.type === 'video';
   const hasThumb = !!h.image_url;
+
+  function handleClick(e: React.MouseEvent) {
+    if (isVideo) {
+      e.preventDefault();
+      onVideoClick(h);
+    }
+  }
 
   return (
     <a
       href={h.url}
       target="_blank"
       rel="noopener noreferrer"
+      onClick={handleClick}
       className="rounded-xl overflow-hidden flex flex-col transition-opacity hover:opacity-90"
       style={{ background: 'var(--card)', border: '1px solid var(--border)', textDecoration: 'none' }}
     >
+      {/* Branded top stripe */}
+      <div style={{ height: '4px', background: BRAND_STRIPE, flexShrink: 0 }} />
+
       {/* Thumbnail */}
       {hasThumb && (
         <div className="relative w-full" style={{ aspectRatio: '16/9', background: 'var(--bg)', overflow: 'hidden' }}>
@@ -94,6 +169,7 @@ function HighlightCard({ h }: { h: Highlight }) {
 
 export default function HighlightsView() {
   const [highlights, setHighlights] = useState<Highlight[] | null>(null);
+  const [activeVideo, setActiveVideo] = useState<Highlight | null>(null);
 
   useEffect(() => {
     fetch('/api/highlights')
@@ -119,8 +195,19 @@ export default function HighlightsView() {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {highlights.map(h => <HighlightCard key={h.id} h={h} />)}
-    </div>
+    <>
+      {activeVideo && (
+        <VideoModal
+          url={activeVideo.url}
+          title={activeVideo.title}
+          onClose={() => setActiveVideo(null)}
+        />
+      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {highlights.map(h => (
+          <HighlightCard key={h.id} h={h} onVideoClick={setActiveVideo} />
+        ))}
+      </div>
+    </>
   );
 }

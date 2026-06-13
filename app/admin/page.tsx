@@ -92,6 +92,8 @@ export default function AdminPage() {
   const [hlType, setHlType] = useState<'article' | 'video'>('article');
   const [hlOrder, setHlOrder] = useState('0');
   const [hlSaving, setHlSaving] = useState(false);
+  const [hlUploading, setHlUploading] = useState(false);
+  const hlFileRef = useRef<HTMLInputElement>(null);
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
 
@@ -261,6 +263,19 @@ export default function AdminPage() {
     if (!confirm('Delete this highlight?')) return;
     await fetch('/api/admin/highlights', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
     setHighlights(prev => prev.filter(h => h.id !== id));
+  }
+
+  async function handleImageUpload(file: File) {
+    setHlUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/admin/upload', { method: 'POST', body: fd });
+      const d = await res.json() as { url?: string; error?: string };
+      if (d.url) setHlImage(d.url);
+      else setStatus({ ok: false, message: d.error ?? 'Upload failed' });
+    } catch { setStatus({ ok: false, message: 'Upload failed' }); }
+    setHlUploading(false);
   }
 
   async function handleLogin() {
@@ -866,9 +881,31 @@ export default function AdminPage() {
                     style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Thumbnail URL</label>
-                  <input value={hlImage} onChange={e => setHlImage(e.target.value)} placeholder="https://… (direct image link)" maxLength={500}
-                    style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Thumbnail</label>
+                  <input
+                    ref={hlFileRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); e.target.value = ''; }}
+                  />
+                  <div className="flex gap-2">
+                    <input value={hlImage} onChange={e => setHlImage(e.target.value)} placeholder="https://… or upload →" maxLength={500}
+                      style={{ flex: 1, minWidth: 0, padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                    <button
+                      type="button"
+                      onClick={() => hlFileRef.current?.click()}
+                      disabled={hlUploading}
+                      className="font-bold px-3 py-1.5 rounded-lg flex-shrink-0 transition-opacity"
+                      style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '0.8rem', opacity: hlUploading ? 0.5 : 1, whiteSpace: 'nowrap' }}
+                    >
+                      {hlUploading ? 'Uploading…' : '⬆ Upload'}
+                    </button>
+                  </div>
+                  {hlImage && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={hlImage} alt="preview" style={{ marginTop: '0.5rem', height: '4rem', borderRadius: '0.375rem', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                  )}
                 </div>
                 <div>
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Source</label>
