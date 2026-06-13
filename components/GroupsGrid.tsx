@@ -153,7 +153,7 @@ export default function GroupsGrid({
 
                       {/* Prize icons — vertically centred across full row height, right-aligned before stats */}
                       {wonPrizes.length > 0 && (
-                        <div className="flex items-center gap-0.5 flex-shrink-0 px-1.5">
+                        <div className="flex items-center gap-2 flex-shrink-0 px-1.5">
                           {wonPrizes.map(prize => (
                             <span
                               key={prize.slug}
