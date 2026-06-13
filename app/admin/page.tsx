@@ -63,6 +63,7 @@ export default function AdminPage() {
   const [shotYards, setShotYards] = useState('');
   const [shotUrl, setShotUrl] = useState('');
   const [ownGoalTeam, setOwnGoalTeam] = useState('');
+  const [ownGoalPlayer, setOwnGoalPlayer] = useState('');
   const [ownGoalUrl, setOwnGoalUrl] = useState('');
   const [bicycleTeam, setBicycleTeam] = useState('');
   const [bicyclePlayer, setBicyclePlayer] = useState('');
@@ -74,7 +75,7 @@ export default function AdminPage() {
 
   // Track last-persisted values so auto-save doesn't fire on initial load
   const lastShot     = useRef({ team: '', player: '', url: '' });
-  const lastOwnGoal  = useRef({ team: '', url: '' });
+  const lastOwnGoal  = useRef({ team: '', player: '', url: '' });
   const lastBicycle  = useRef({ team: '', player: '', url: '' });
   const shotTimer    = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const ownGoalTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -126,9 +127,9 @@ export default function AdminPage() {
               setShotTeam(team); setShotPlayer(player); setShotYards(yards); setShotUrl(url);
               lastShot.current = { team, player: raw, url };
             } else if (o.category === 'most_own_goals') {
-              const team = o.team_name ?? '', url = o.notes ?? '';
-              setOwnGoalTeam(team); setOwnGoalUrl(url);
-              lastOwnGoal.current = { team, url };
+              const team = o.team_name ?? '', player = o.value_label ?? '', url = o.notes ?? '';
+              setOwnGoalTeam(team); setOwnGoalPlayer(player); setOwnGoalUrl(url);
+              lastOwnGoal.current = { team, player, url };
             } else if (o.category === 'bicycle') {
               const team = o.team_name ?? '', player = o.value_label ?? '', url = o.notes ?? '';
               setBicycleTeam(team); setBicyclePlayer(player); setBicycleUrl(url);
@@ -188,16 +189,16 @@ export default function AdminPage() {
 
   useEffect(() => {
     const ls = lastOwnGoal.current;
-    if (ownGoalTeam === ls.team && ownGoalUrl === ls.url) return;
+    if (ownGoalTeam === ls.team && ownGoalPlayer === ls.player && ownGoalUrl === ls.url) return;
     clearTimeout(ownGoalTimer.current);
     ownGoalTimer.current = setTimeout(async () => {
       await fetch('/api/admin/owngoal', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ team_name: ownGoalTeam, value_label: null, notes: ownGoalUrl }) });
-      lastOwnGoal.current = { team: ownGoalTeam, url: ownGoalUrl };
+        body: JSON.stringify({ team_name: ownGoalTeam, value_label: ownGoalPlayer || null, notes: ownGoalUrl }) });
+      lastOwnGoal.current = { team: ownGoalTeam, player: ownGoalPlayer, url: ownGoalUrl };
       setOwnGoalSaved(true);
       setTimeout(() => setOwnGoalSaved(false), 2000);
     }, 800);
-  }, [ownGoalTeam, ownGoalUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ownGoalTeam, ownGoalPlayer, ownGoalUrl]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const ls = lastBicycle.current;
@@ -736,11 +737,14 @@ export default function AdminPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                       <div><label style={labelStyle}>Team</label>{teamSelect(ownGoalTeam, setOwnGoalTeam)}</div>
+                      <div><label style={labelStyle}>Player surname</label>
+                        <input placeholder="e.g. Maguire" value={ownGoalPlayer} onChange={e => setOwnGoalPlayer(e.target.value)} maxLength={60} style={{ width: '100%', ...smallInputStyle }} />
+                      </div>
                       <div><label style={labelStyle}>Video URL</label>
                         <input placeholder="https://…" value={ownGoalUrl} onChange={e => setOwnGoalUrl(e.target.value)} maxLength={300} style={{ width: '100%', ...smallInputStyle }} />
                       </div>
                       <button onClick={() => clearPrize('/api/admin/owngoal', [
-                        () => { setOwnGoalTeam(''); setOwnGoalUrl(''); lastOwnGoal.current = { team: '', url: '' }; },
+                        () => { setOwnGoalTeam(''); setOwnGoalPlayer(''); setOwnGoalUrl(''); lastOwnGoal.current = { team: '', player: '', url: '' }; },
                       ], 'OG data')} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
                         style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
                         Clear
