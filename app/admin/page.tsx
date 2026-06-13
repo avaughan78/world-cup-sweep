@@ -81,6 +81,18 @@ export default function AdminPage() {
   const ownGoalTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const bicycleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
+  // Highlights
+  interface HighlightRow { id: number; title: string; url: string; image_url: string | null; description: string | null; source: string | null; type: string; display_order: number; created_at: string; }
+  const [highlights, setHighlights] = useState<HighlightRow[]>([]);
+  const [hlTitle, setHlTitle] = useState('');
+  const [hlUrl, setHlUrl] = useState('');
+  const [hlImage, setHlImage] = useState('');
+  const [hlDesc, setHlDesc] = useState('');
+  const [hlSource, setHlSource] = useState('');
+  const [hlType, setHlType] = useState<'article' | 'video'>('article');
+  const [hlOrder, setHlOrder] = useState('0');
+  const [hlSaving, setHlSaving] = useState(false);
+
   const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
 
   // Auto-dismiss toast
@@ -212,6 +224,44 @@ export default function AdminPage() {
       setTimeout(() => setBicycleSaved(false), 2000);
     }, 800);
   }, [bicycleTeam, bicyclePlayer, bicycleUrl]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load highlights after auth
+  useEffect(() => {
+    if (!authed) return;
+    fetch('/api/admin/highlights')
+      .then(r => r.json())
+      .then((d: { highlights?: HighlightRow[] }) => setHighlights(d.highlights ?? []))
+      .catch(() => {});
+  }, [authed]);
+
+  async function handleAddHighlight() {
+    if (!hlTitle.trim() || !hlUrl.trim()) return;
+    setHlSaving(true);
+    try {
+      const res = await fetch('/api/admin/highlights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: hlTitle.trim(), url: hlUrl.trim(),
+          image_url: hlImage.trim() || null, description: hlDesc.trim() || null,
+          source: hlSource.trim() || null, type: hlType,
+          display_order: parseInt(hlOrder) || 0,
+        }),
+      });
+      const d = await res.json() as { ok?: boolean; highlight?: HighlightRow };
+      if (d.ok && d.highlight) {
+        setHighlights(prev => [...prev, d.highlight!].sort((a, b) => a.display_order - b.display_order || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+        setHlTitle(''); setHlUrl(''); setHlImage(''); setHlDesc(''); setHlSource(''); setHlOrder('0');
+      }
+    } catch { /* ignore */ }
+    setHlSaving(false);
+  }
+
+  async function handleDeleteHighlight(id: number) {
+    if (!confirm('Delete this highlight?')) return;
+    await fetch('/api/admin/highlights', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+    setHighlights(prev => prev.filter(h => h.id !== id));
+  }
 
   async function handleLogin() {
     setLoginError('');
@@ -795,6 +845,90 @@ export default function AdminPage() {
                 </div>
               );
             })()}
+          </div>
+
+          {/* Highlights */}
+          <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Highlights (Global — all companies)</p>
+
+            {/* Add form */}
+            <div className="rounded-xl p-4 mb-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Add highlight</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                <div>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Title *</label>
+                  <input value={hlTitle} onChange={e => setHlTitle(e.target.value)} placeholder="Article or clip title" maxLength={200}
+                    style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>URL *</label>
+                  <input value={hlUrl} onChange={e => setHlUrl(e.target.value)} placeholder="https://…" maxLength={500}
+                    style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Thumbnail URL</label>
+                  <input value={hlImage} onChange={e => setHlImage(e.target.value)} placeholder="https://… (direct image link)" maxLength={500}
+                    style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                </div>
+                <div>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Source</label>
+                  <input value={hlSource} onChange={e => setHlSource(e.target.value)} placeholder="e.g. BBC Sport" maxLength={100}
+                    style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                </div>
+                <div className="sm:col-span-2">
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Description</label>
+                  <textarea value={hlDesc} onChange={e => setHlDesc(e.target.value)} placeholder="Optional short excerpt" maxLength={400} rows={2}
+                    style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem', resize: 'vertical' }} />
+                </div>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Type</label>
+                  <select value={hlType} onChange={e => setHlType(e.target.value as 'article' | 'video')}
+                    style={{ padding: '0.35rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }}>
+                    <option value="article">📰 Article</option>
+                    <option value="video">🎬 Video</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)' }}>Order</label>
+                  <input type="number" value={hlOrder} onChange={e => setHlOrder(e.target.value)} min="0" max="999"
+                    style={{ width: '4rem', padding: '0.35rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                </div>
+                <button onClick={handleAddHighlight} disabled={hlSaving || !hlTitle.trim() || !hlUrl.trim()}
+                  className="font-bold px-5 py-2 rounded-lg transition-opacity ml-auto"
+                  style={{ background: 'var(--green)', color: '#fff', opacity: hlSaving || !hlTitle.trim() || !hlUrl.trim() ? 0.5 : 1, fontSize: '0.9rem' }}>
+                  {hlSaving ? 'Adding…' : 'Add highlight'}
+                </button>
+              </div>
+            </div>
+
+            {/* Existing highlights */}
+            {highlights.length === 0 ? (
+              <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No highlights yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {highlights.map(h => (
+                  <div key={h.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+                    {h.image_url && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={h.image_url} alt="" style={{ width: '3.5rem', height: '2.5rem', objectFit: 'cover', borderRadius: '0.375rem', flexShrink: 0 }} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{h.title}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>
+                        {h.type === 'video' ? '🎬' : '📰'} {h.source ?? ''} · #{h.display_order} · {h.url}
+                      </p>
+                    </div>
+                    <button onClick={() => handleDeleteHighlight(h.id)}
+                      className="text-xs font-bold px-2 py-1 rounded flex-shrink-0"
+                      style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}>
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Companies */}

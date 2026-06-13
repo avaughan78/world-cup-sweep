@@ -610,6 +610,62 @@ export interface AuditEntry {
   created_at: string;
 }
 
+// ── Highlights ────────────────────────────────────────────────────────────────
+
+export interface Highlight {
+  id: number;
+  title: string;
+  url: string;
+  image_url: string | null;
+  description: string | null;
+  source: string | null;
+  type: 'article' | 'video';
+  display_order: number;
+  created_at: string;
+}
+
+async function ensureHighlightsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS highlights (
+      id            SERIAL PRIMARY KEY,
+      title         TEXT NOT NULL,
+      url           TEXT NOT NULL,
+      image_url     TEXT,
+      description   TEXT,
+      source        TEXT,
+      type          TEXT NOT NULL DEFAULT 'article',
+      display_order INTEGER NOT NULL DEFAULT 0,
+      created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getHighlights(): Promise<Highlight[]> {
+  await ensureHighlightsTable();
+  const rows = await sql`SELECT * FROM highlights ORDER BY display_order ASC, created_at DESC`;
+  return rows as Highlight[];
+}
+
+export async function createHighlight(h: Omit<Highlight, 'id' | 'created_at'>): Promise<Highlight> {
+  await ensureHighlightsTable();
+  const rows = await sql`
+    INSERT INTO highlights (title, url, image_url, description, source, type, display_order)
+    VALUES (${h.title}, ${h.url}, ${h.image_url ?? null}, ${h.description ?? null},
+            ${h.source ?? null}, ${h.type}, ${h.display_order})
+    RETURNING *
+  `;
+  return rows[0] as Highlight;
+}
+
+export async function deleteHighlight(id: number): Promise<void> {
+  await ensureHighlightsTable();
+  await sql`DELETE FROM highlights WHERE id = ${id}`;
+}
+
+export async function updateHighlightOrder(id: number, display_order: number): Promise<void> {
+  await sql`UPDATE highlights SET display_order = ${display_order} WHERE id = ${id}`;
+}
+
 export async function listAuditLogs(limit = 200): Promise<AuditEntry[]> {
   const rows = await sql`
     SELECT a.id, a.event, a.actor, a.company_id, c.name AS company_name, a.details, a.ip, a.created_at

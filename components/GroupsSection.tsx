@@ -14,7 +14,7 @@ const TABS: { id: View; label: string; disabled?: boolean }[] = [
   { id: 'standings',  label: 'Tables' },
   { id: 'fixtures',   label: 'Fixtures / Results' },
   { id: 'stats',      label: 'Stats' },
-  { id: 'highlights', label: 'Highlights', disabled: true },
+  { id: 'highlights', label: 'Highlights' },
 ];
 
 const STORAGE_KEY = 'wcsweep-tab';
@@ -22,7 +22,7 @@ const STORAGE_KEY = 'wcsweep-tab';
 function readStoredView(): View {
   if (typeof window === 'undefined') return 'standings';
   const v = localStorage.getItem(STORAGE_KEY);
-  return (v === 'standings' || v === 'fixtures' || v === 'stats') ? v : 'standings';
+  return (v === 'standings' || v === 'fixtures' || v === 'stats' || v === 'highlights') ? v : 'standings';
 }
 
 export default function GroupsSection({
