@@ -737,7 +737,7 @@ export default function AdminPage() {
                     </div>
                     <div className="flex flex-col gap-2">
                       <div><label style={labelStyle}>Team</label>{teamSelect(ownGoalTeam, setOwnGoalTeam)}</div>
-                      <div><label style={labelStyle}>Player surname</label>
+                      <div><label style={labelStyle}>Player</label>
                         <input placeholder="e.g. Maguire" value={ownGoalPlayer} onChange={e => setOwnGoalPlayer(e.target.value)} maxLength={60} style={{ width: '100%', ...smallInputStyle }} />
                       </div>
                       <div><label style={labelStyle}>Video URL</label>
