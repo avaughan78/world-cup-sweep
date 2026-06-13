@@ -95,6 +95,7 @@ export default function AdminPage() {
   const [hlUploading, setHlUploading] = useState(false);
   const [hlEditingId, setHlEditingId] = useState<number | null>(null);
   const hlFileRef = useRef<HTMLInputElement>(null);
+  const hlFormRef = useRef<HTMLDivElement>(null);
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
 
@@ -246,7 +247,7 @@ export default function AdminPage() {
     setHlSource(h.source ?? '');
     setHlType(h.type as 'article' | 'video');
     setHlOrder(String(h.display_order));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => hlFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
   }
 
   function handleCancelEdit() {
@@ -899,8 +900,8 @@ export default function AdminPage() {
           <div className="rounded-xl p-5" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-bold uppercase tracking-widest mb-4" style={{ color: 'var(--text-muted)' }}>Highlights (Global — all companies)</p>
 
-            {/* Add form */}
-            <div className="rounded-xl p-4 mb-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
+            {/* Add / Edit form */}
+            <div ref={hlFormRef} className="rounded-xl p-4 mb-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
               <div className="flex items-center justify-between mb-3">
                 <p className="text-xs font-bold uppercase tracking-widest" style={{ color: hlEditingId ? '#1d4ed8' : 'var(--text-muted)' }}>
                   {hlEditingId ? '✏️ Edit highlight' : 'Add highlight'}

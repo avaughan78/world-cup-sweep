@@ -5,11 +5,28 @@ import type { Highlight } from '@/lib/db';
 
 const BRAND_STRIPE = 'linear-gradient(to right, #4D10C8, #D40100, #9DC417)';
 
+function resolveImageUrl(url: string | null): string | null {
+  if (!url) return null;
+  // Convert Google Drive share/view URLs to a direct thumbnail URL
+  const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1280`;
+  return url;
+}
+
 function toYouTubeEmbed(url: string): string | null {
-  const watchMatch = url.match(/[?&]v=([a-zA-Z0-9_-]{11})/);
-  if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}?autoplay=1`;
-  const shortMatch = url.match(/youtu\.be\/([a-zA-Z0-9_-]{11})/);
-  if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}?autoplay=1`;
+  const ID = '[a-zA-Z0-9_-]{11}';
+  const patterns = [
+    new RegExp(`[?&]v=(${ID})`),           // watch?v=
+    new RegExp(`youtu\\.be\\/(${ID})`),    // youtu.be/
+    new RegExp(`\\/shorts\\/(${ID})`),     // /shorts/
+    new RegExp(`\\/live\\/(${ID})`),       // /live/
+    new RegExp(`\\/embed\\/(${ID})`),      // already an embed URL
+    new RegExp(`\\/v\\/(${ID})`),          // /v/
+  ];
+  for (const re of patterns) {
+    const m = url.match(re);
+    if (m) return `https://www.youtube.com/embed/${m[1]}?autoplay=1`;
+  }
   return null;
 }
 
@@ -73,7 +90,8 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
 
 function HighlightCard({ h, onVideoClick }: { h: Highlight; onVideoClick: (h: Highlight) => void }) {
   const isVideo = h.type === 'video';
-  const hasThumb = !!h.image_url;
+  const resolvedImage = resolveImageUrl(h.image_url);
+  const hasThumb = !!resolvedImage;
 
   function handleClick(e: React.MouseEvent) {
     if (isVideo) {
@@ -99,7 +117,7 @@ function HighlightCard({ h, onVideoClick }: { h: Highlight; onVideoClick: (h: Hi
         <div className="relative w-full" style={{ aspectRatio: '16/9', background: 'var(--bg)', overflow: 'hidden' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={h.image_url!}
+            src={resolvedImage!}
             alt={h.title}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
           />
