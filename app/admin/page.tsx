@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { GROUPS_2026 } from '@/lib/groups';
+import { GROUPS_2026, TOURNAMENT_START } from '@/lib/groups';
 import PasswordInput from '@/components/PasswordInput';
 import Flag from '@/components/Flag';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -911,33 +911,51 @@ export default function AdminPage() {
                 </div>
 
                 {/* Ticket price */}
-                <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
-                  <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Ticket Price</p>
-                  <div className="flex items-center gap-1 flex-shrink-0" style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
-                    <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={ticketPrice}
-                      onChange={e => setTicketPrice(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
-                      style={{ background: 'transparent', border: 'none', outline: 'none', width: '5rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}
-                    />
-                  </div>
-                  <button
-                    onClick={handleSaveTicketPrice}
-                    disabled={loading}
-                    className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
-                    style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
-                  >
-                    {priceSaved ? 'Saved ✓' : 'Save'}
-                  </button>
-                  <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-                    Sets prize amounts shown on the draw page (48 tickets × price × split).
-                  </p>
-                </div>
+                {(() => {
+                  const locked = Date.now() >= TOURNAMENT_START.getTime();
+                  return (
+                    <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>
+                      <p className="w-full text-xs font-bold uppercase tracking-widest mb-1" style={{ color: 'var(--text-muted)' }}>Ticket Price</p>
+                      {locked ? (
+                        <div className="flex items-center gap-3 w-full">
+                          <span className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>
+                            {ticketPrice ? `£${ticketPrice}` : 'Not set'}
+                          </span>
+                          <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                            🔒 Locked — tournament started
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1 flex-shrink-0" style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
+                            <span style={{ color: 'var(--text-muted)', userSelect: 'none' }}>£</span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              placeholder="0.00"
+                              value={ticketPrice}
+                              onChange={e => setTicketPrice(e.target.value)}
+                              onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
+                              style={{ background: 'transparent', border: 'none', outline: 'none', width: '5rem', color: 'var(--text-primary)', fontSize: '0.875rem' }}
+                            />
+                          </div>
+                          <button
+                            onClick={handleSaveTicketPrice}
+                            disabled={loading}
+                            className="font-bold px-5 py-2 rounded-lg transition-colors flex-shrink-0"
+                            style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                          >
+                            {priceSaved ? 'Saved ✓' : 'Save'}
+                          </button>
+                        </>
+                      )}
+                      <p className="w-full text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
+                        Sets prize amounts shown on the draw page (48 tickets × price × split).
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 {/* Max teams per person */}
                 <div className="mt-4 pt-4 flex flex-wrap gap-2 items-end" style={{ borderTop: '1px solid var(--border)' }}>

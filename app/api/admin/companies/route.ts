@@ -3,6 +3,7 @@ import { listCompanies, createCompany, deleteCompany, setCompanyTicketPrice, set
 import { requireAdmin } from '@/lib/auth';
 import { writeAudit } from '@/lib/audit';
 import { getIp } from '@/lib/rate-limit';
+import { TOURNAMENT_START } from '@/lib/groups';
 
 export async function GET(req: NextRequest) {
   const denied = await requireAdmin(req);
@@ -39,6 +40,9 @@ export async function PATCH(req: NextRequest) {
   };
   if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
   if (ticket_price !== undefined) {
+    if (Date.now() >= TOURNAMENT_START.getTime()) {
+      return NextResponse.json({ error: 'Ticket price is locked after tournament start' }, { status: 403 });
+    }
     const price = ticket_price != null && ticket_price > 0 ? ticket_price : null;
     await setCompanyTicketPrice(id, price);
   }
