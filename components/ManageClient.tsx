@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import type { Company } from '@/lib/db';
 import PasswordInput from './PasswordInput';
-import { GROUPS_2026 } from '@/lib/groups';
+import { GROUPS_2026, TOURNAMENT_START } from '@/lib/groups';
 import Flag from '@/components/Flag';
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -464,32 +464,50 @@ export default function ManageClient({ company: initialCompany }: { company: Com
             <p className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>Setup steps</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
-              {/* Step 1 — always enabled */}
-              <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
-                <div className="flex items-center gap-2.5">
-                  <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
-                    style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>1</span>
-                  <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Set ticket price</h3>
-                </div>
-                <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
-                  Used to calculate prize amounts on the sweep page.
-                </p>
-                <div className="flex items-center justify-center mt-1">
-                  <div className="flex items-center gap-1"
-                    style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
-                    <span style={{ color: 'var(--text-muted)', userSelect: 'none', fontSize: '1rem' }}>£</span>
-                    <input type="number" min="0" max="999" step="0.01" placeholder="0.00" value={ticketPrice}
-                      onChange={e => { const v = parseFloat(e.target.value); setTicketPrice(v > 999 ? '999' : e.target.value); }}
-                      onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
-                      style={{ background: 'transparent', border: 'none', outline: 'none', width: '4rem', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, textAlign: 'center' }} />
+              {/* Step 1 — locked after tournament start */}
+              {(() => {
+                const locked = Date.now() >= TOURNAMENT_START.getTime();
+                return (
+                  <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex items-center justify-center w-6 h-6 rounded-full font-black text-xs flex-shrink-0"
+                        style={{ background: '#4D10C8', color: '#fff', lineHeight: 1 }}>1</span>
+                      <h3 className="font-black text-sm" style={{ color: 'var(--text-primary)' }}>Set ticket price</h3>
+                    </div>
+                    <p className="text-xs leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>
+                      Used to calculate prize amounts on the sweep page.
+                    </p>
+                    {locked ? (
+                      <div className="flex flex-col items-center gap-1.5 mt-1">
+                        <span className="font-black text-2xl" style={{ color: 'var(--text-primary)' }}>
+                          {company.ticket_price != null ? `£${company.ticket_price}` : 'Not set'}
+                        </span>
+                        <span className="text-xs font-semibold px-2 py-1 rounded-md" style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                          🔒 Locked
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-center mt-1">
+                          <div className="flex items-center gap-1"
+                            style={{ ...smallInputStyle, padding: '0.5rem 0.75rem', width: 'auto' }}>
+                            <span style={{ color: 'var(--text-muted)', userSelect: 'none', fontSize: '1rem' }}>£</span>
+                            <input type="number" min="0" max="999" step="0.01" placeholder="0.00" value={ticketPrice}
+                              onChange={e => { const v = parseFloat(e.target.value); setTicketPrice(v > 999 ? '999' : e.target.value); }}
+                              onKeyDown={e => e.key === 'Enter' && handleSaveTicketPrice()}
+                              style={{ background: 'transparent', border: 'none', outline: 'none', width: '4rem', color: 'var(--text-primary)', fontSize: '1rem', fontWeight: 700, textAlign: 'center' }} />
+                          </div>
+                        </div>
+                        <button onClick={handleSaveTicketPrice} disabled={loading}
+                          className="font-bold px-4 py-2 rounded-lg text-sm transition-colors w-full mt-1"
+                          style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1 }}>
+                          {priceSaved ? 'Saved ✓' : 'Set price'}
+                        </button>
+                      </>
+                    )}
                   </div>
-                </div>
-                <button onClick={handleSaveTicketPrice} disabled={loading}
-                  className="font-bold px-4 py-2 rounded-lg text-sm transition-colors w-full mt-1"
-                  style={{ background: priceSaved ? '#f0fdf4' : 'var(--green)', color: priceSaved ? '#166534' : '#fff', opacity: loading ? 0.5 : 1 }}>
-                  {priceSaved ? 'Saved ✓' : 'Set price'}
-                </button>
-              </div>
+                );
+              })()}
 
               {/* Step 2 — always enabled (QR codes auto-generated) */}
               <div className="rounded-xl p-4 flex flex-col gap-2" style={{ background: 'var(--card)', border: '1px solid var(--border)' }}>

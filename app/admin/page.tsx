@@ -362,7 +362,8 @@ export default function AdminPage() {
   }
 
   async function handleResetStats() {
-    if (!confirm('Clear all tournament stats, scores, and standings? This cannot be undone.')) return;
+    if (!confirm('Reset all tournament stats?\n\nThis will clear all match scores, standings, cards, goals, and Golden Boot data for every company. This cannot be undone.')) return;
+    if (!confirm('Are you absolutely sure? Type OK to confirm — all live tournament data will be permanently deleted.')) return;
     setLoading(true);
     setStatus(null);
     try {
@@ -674,14 +675,6 @@ export default function AdminPage() {
                 title="Fetch squad photos for all teams that don't have them yet"
               >
                 {loading ? 'Pre-warming…' : 'Pre-warm Squad Photos'}
-              </button>
-              <button
-                onClick={handleResetStats}
-                disabled={loading}
-                className="font-bold px-5 py-2 rounded-lg transition-opacity"
-                style={{ background: '#fee2e2', color: '#991b1b', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
-              >
-                Reset Tournament Stats
               </button>
             </div>
           </div>
@@ -1103,6 +1096,30 @@ export default function AdminPage() {
               </div>
             </>
           )}
+
+          {/* Danger Zone */}
+          <div className="rounded-xl p-5" style={{ background: '#fff5f5', border: '1.5px solid #fecaca' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#991b1b' }}>Danger Zone</p>
+            <p className="text-xs mb-4" style={{ color: '#b91c1c' }}>
+              These actions are irreversible and affect all companies globally.
+            </p>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-sm font-bold" style={{ color: '#991b1b' }}>Reset Tournament Stats</p>
+                <p className="text-xs mt-0.5" style={{ color: '#b91c1c' }}>
+                  Clears all scores, standings, cards, goals, and Golden Boot data.
+                </p>
+              </div>
+              <button
+                onClick={handleResetStats}
+                disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity flex-shrink-0"
+                style={{ background: '#dc2626', color: '#fff', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+              >
+                Reset Tournament Stats
+              </button>
+            </div>
+          </div>
 
         </div>
       </div>
