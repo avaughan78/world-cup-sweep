@@ -328,9 +328,9 @@ export async function upsertTeamStats(stats: {
       ${stats.goals_conceded}, ${stats.is_eliminated}, ${eliminatedAt}, NOW()
     )
     ON CONFLICT (team_name) DO UPDATE SET
-      yellow_cards        = ${stats.yellow_cards},
-      red_cards           = ${stats.red_cards},
-      own_goals_against   = ${stats.own_goals_against},
+      yellow_cards        = GREATEST(team_stats.yellow_cards, ${stats.yellow_cards}),
+      red_cards           = GREATEST(team_stats.red_cards, ${stats.red_cards}),
+      own_goals_against   = GREATEST(team_stats.own_goals_against, ${stats.own_goals_against}),
       goals_conceded      = ${stats.goals_conceded},
       is_eliminated       = ${stats.is_eliminated},
       eliminated_at = CASE

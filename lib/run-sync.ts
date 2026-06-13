@@ -45,11 +45,12 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
 
       // Cards + own goals: fetch events for recently active fixtures
-      // Only fetch for: live matches + matches finished within the last 2 days
-      const twoDaysAgo = Date.now() - 2 * 24 * 60 * 60 * 1000;
+      // Only fetch for: live matches + matches finished within the last 7 days
+      // (2 days was too short — cards from earlier matches were lost on re-sync)
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
       const needEvents = activeFixtures.filter(f =>
         LIVE_STATUSES.has(f.statusShort) ||
-        (DONE_STATUSES.has(f.statusShort) && new Date(f.date).getTime() > twoDaysAgo)
+        (DONE_STATUSES.has(f.statusShort) && new Date(f.date).getTime() > sevenDaysAgo)
       );
 
       const cards = new Map<string, { yellow: number; red: number }>();
