@@ -378,6 +378,7 @@ export async function setPlayerGoals(scorers: PlayerGoal[]): Promise<void> {
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (player_name, team_name)
   )`;
+  if (scorers.length === 0) return;
   await sql`TRUNCATE player_goals`;
   for (const s of scorers) {
     await sql`

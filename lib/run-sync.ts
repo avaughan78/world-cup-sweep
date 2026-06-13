@@ -1,3 +1,4 @@
+import { revalidateTag } from 'next/cache';
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from './football-api';
 import {
   getAllWCFixtures, getFixtureEvents, getWCTopScorers, mapRound,
@@ -100,19 +101,33 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${needEvents.length} event fetches`);
 
-      // Top scorer (prize card) — try API first, fall back to events-derived data
+      // Merge API top scorers (tournament history, but lags hours) with event-derived scorers
+      // (fresh, last 2 days). Players who scored in a recent match but aren't in the API list yet
+      // (e.g. first goals of the tournament) are added from events. For players in both, take the
+      // higher goal count since event totals only cover the 2-day window.
       const apiScorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
-      const eventScorers = [...playerGoalMap.values()].sort((a, b) => b.goals - a.goals);
-      // Use API scorers if they have goals; otherwise use events. Always strip zero-goal entries.
-      const scorerSource = (apiScorers.length > 0 && apiScorers[0].goals > 0
-        ? apiScorers.map(s => ({
-            player_name: s.playerName,
-            team_name: normaliseTeamName(s.teamName),
-            goals: s.goals,
-            nationality: s.nationality,
-          }))
-        : eventScorers
-      ).filter(s => s.goals > 0);
+      const eventScorers = [...playerGoalMap.values()];
+
+      const mergedScorerMap = new Map<string, PlayerGoal>();
+      for (const s of apiScorers) {
+        const team = normaliseTeamName(s.teamName);
+        mergedScorerMap.set(`${s.playerName}|||${team}`, {
+          player_name: s.playerName, team_name: team, goals: s.goals, nationality: s.nationality,
+        });
+      }
+      for (const e of eventScorers) {
+        const key = `${e.player_name}|||${e.team_name}`;
+        const existing = mergedScorerMap.get(key);
+        if (!existing) {
+          mergedScorerMap.set(key, e);
+        } else if (e.goals > existing.goals) {
+          mergedScorerMap.set(key, { ...existing, goals: e.goals });
+        }
+      }
+
+      const scorerSource = [...mergedScorerMap.values()]
+        .filter(s => s.goals > 0)
+        .sort((a, b) => b.goals - a.goals);
 
       if (scorerSource.length > 0) {
         const top = scorerSource[0];
@@ -140,6 +155,8 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       statNotes.push(`standings: ${computedStandings.length} rows (computed)`);
 
+      revalidateTag('team-stats', {});
+      revalidateTag('group-standings', {});
       await logSync('stats', 'success', statNotes.join(', '));
       results.stats = `ok (${statNotes.join(' · ')})`;
 
@@ -206,6 +223,8 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         }
       }
 
+      revalidateTag('team-stats', {});
+      revalidateTag('group-standings', {});
       await logSync('stats', 'success', `fallback: ${matches.length} finished matches`);
       results.stats = `ok (fallback, ${matches.length} matches)`;
     }
