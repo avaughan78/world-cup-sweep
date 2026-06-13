@@ -221,6 +221,9 @@ export default function HighlightsView() {
           onClose={() => setActiveVideo(null)}
         />
       )}
+      <p className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>
+        Highlights from the competition
+      </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {highlights.map(h => (
           <HighlightCard key={h.id} h={h} onVideoClick={setActiveVideo} />
