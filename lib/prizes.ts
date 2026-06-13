@@ -137,7 +137,7 @@ export async function computePrizes(
       current_participant: participant(topScorerTeam),
       value_label: topScorer?.player_name
         ? topScorerTeam
-          ? (topScorer.player_name.split(' ').pop() ?? topScorer.player_name)
+          ? `${topScorer.player_name.split(' ').pop() ?? topScorer.player_name} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
           : `${topScorer.player_name} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
         : null,
       is_manual: false,
