@@ -99,6 +99,7 @@ export default function AdminPage() {
   const [hlOrder, setHlOrder] = useState('0');
   const [hlSaving, setHlSaving] = useState(false);
   const [hlUploading, setHlUploading] = useState(false);
+  const [hlFetching, setHlFetching] = useState(false);
   const [hlEditingId, setHlEditingId] = useState<number | null>(null);
   const hlFileRef = useRef<HTMLInputElement>(null);
   const hlFormRef = useRef<HTMLDivElement>(null);
@@ -316,6 +317,28 @@ export default function AdminPage() {
       else setStatus({ ok: false, message: d.error ?? 'Upload failed' });
     } catch { setStatus({ ok: false, message: 'Upload failed' }); }
     setHlUploading(false);
+  }
+
+  async function handleFetchPreview() {
+    if (!hlUrl.trim()) return;
+    setHlFetching(true);
+    try {
+      const res = await fetch('/api/admin/link-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url: hlUrl.trim() }),
+      });
+      const d = await res.json() as { title?: string | null; description?: string | null; image_url?: string | null; source?: string | null; type?: string; error?: string };
+      if (d.error) { setStatus({ ok: false, message: d.error }); }
+      else {
+        if (d.title && !hlTitle.trim()) setHlTitle(d.title);
+        if (d.description && !hlDesc.trim()) setHlDesc(d.description);
+        if (d.image_url && !hlImage.trim()) setHlImage(d.image_url);
+        if (d.source && !hlSource.trim()) setHlSource(d.source);
+        if (d.type) setHlType(d.type as 'article' | 'video');
+      }
+    } catch { setStatus({ ok: false, message: 'Fetch failed' }); }
+    setHlFetching(false);
   }
 
   async function handleLogin() {
@@ -927,8 +950,20 @@ export default function AdminPage() {
                 </div>
                 <div>
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>URL *</label>
-                  <input value={hlUrl} onChange={e => setHlUrl(e.target.value)} placeholder="https://…" maxLength={500}
-                    style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                  <div className="flex gap-2">
+                    <input value={hlUrl} onChange={e => setHlUrl(e.target.value)} placeholder="https://…" maxLength={500}
+                      onKeyDown={e => e.key === 'Enter' && handleFetchPreview()}
+                      style={{ flex: 1, minWidth: 0, padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
+                    <button
+                      type="button"
+                      onClick={handleFetchPreview}
+                      disabled={hlFetching || !hlUrl.trim()}
+                      className="font-bold px-3 py-1.5 rounded-lg flex-shrink-0 transition-opacity"
+                      style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-primary)', fontSize: '0.8rem', opacity: (hlFetching || !hlUrl.trim()) ? 0.4 : 1, whiteSpace: 'nowrap' }}
+                    >
+                      {hlFetching ? 'Fetching…' : '✨ Auto-fill'}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Thumbnail</label>
