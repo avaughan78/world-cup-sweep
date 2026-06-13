@@ -116,7 +116,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         </div>
 
         <div className="flex-1 relative">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between" style={{ minHeight: '2.125rem' }}>
             {prize.slug === 'most_own_goals'
               ? <VideoEasterEgg icon="😬" label="OG" videoSrc={process.env.NEXT_PUBLIC_VIDEO_OWN_GOAL || '/haiti-own-goal.mp4'} fontSize="1.5rem" />
               : prize.slug === 'bicycle'
@@ -149,7 +149,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
       style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
     >
       <div className="flex-1">
-        <div className="flex items-start justify-between">
+        <div className="flex items-start justify-between" style={{ minHeight: '2.125rem' }}>
           {prize.slug === 'longest_shot'
             ? <VideoEasterEgg icon="🚀" label="The Thunderbastard" videoSrc={process.env.NEXT_PUBLIC_VIDEO_THUNDERBASTARD || '/van-bronckhorst.mp4'} fontSize="1.5rem" />
             : prize.slug === 'most_cards'
