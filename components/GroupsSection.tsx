@@ -6,9 +6,24 @@ import type { GroupStanding, TeamStats } from '@/lib/db';
 import GroupsGrid from './GroupsGrid';
 import FixturesList from './FixturesList';
 import StatsView from './StatsView';
+import HighlightsView from './HighlightsView';
 
-type View = 'standings' | 'fixtures' | 'stats';
+type View = 'standings' | 'fixtures' | 'stats' | 'highlights';
 
+const TABS: { id: View; label: string; disabled?: boolean }[] = [
+  { id: 'standings',  label: 'Tables' },
+  { id: 'fixtures',   label: 'Fixtures / Results' },
+  { id: 'stats',      label: 'Stats' },
+  { id: 'highlights', label: 'Highlights', disabled: true },
+];
+
+const STORAGE_KEY = 'wcsweep-tab';
+
+function readStoredView(): View {
+  if (typeof window === 'undefined') return 'standings';
+  const v = localStorage.getItem(STORAGE_KEY);
+  return (v === 'standings' || v === 'fixtures' || v === 'stats') ? v : 'standings';
+}
 
 export default function GroupsSection({
   participantMap,
@@ -27,10 +42,15 @@ export default function GroupsSection({
   teamCount: number;
   inRunning: number;
 }) {
-  const [view, setView] = useState<View>('standings');
+  const [view, setView] = useState<View>(readStoredView);
 
-  const labelText = view === 'fixtures' ? 'Fixtures' : view === 'stats' ? 'Stats' : 'WC26 Sweep';
-  const labelNote = view === 'fixtures' ? 'all matches' : view === 'stats' ? 'tournament data' : 'forty-eight teams';
+  function handleSetView(v: View) {
+    setView(v);
+    localStorage.setItem(STORAGE_KEY, v);
+  }
+
+  const labelText = view === 'fixtures' ? 'Fixtures' : view === 'stats' ? 'Stats' : view === 'highlights' ? 'Highlights' : 'WC26 Sweep';
+  const labelNote = view === 'fixtures' ? 'all matches' : view === 'stats' ? 'tournament data' : view === 'highlights' ? 'news & clips' : 'forty-eight teams';
 
   return (
     <section>
@@ -43,24 +63,25 @@ export default function GroupsSection({
             The Groups · {teamCount} Teams
           </p>
           <div className="flex rounded-lg overflow-hidden flex-shrink-0" style={{ border: '1px solid var(--border)' }}>
-            {(['standings', 'fixtures', 'stats'] as View[]).map((v, i) => (
+            {TABS.map((tab, i) => (
               <button
-                key={v}
-                onClick={() => setView(v)}
+                key={tab.id}
+                onClick={() => !tab.disabled && handleSetView(tab.id)}
+                disabled={tab.disabled}
                 style={{
                   padding: '0.2rem 0.55rem',
                   fontSize: '0.65rem',
                   fontWeight: 700,
                   letterSpacing: '0.06em',
                   textTransform: 'uppercase',
-                  background: view === v ? 'var(--green)' : 'var(--card)',
-                  color: view === v ? '#fff' : 'var(--text-muted)',
+                  background: view === tab.id ? 'var(--green)' : 'var(--card)',
+                  color: tab.disabled ? 'var(--border)' : view === tab.id ? '#fff' : 'var(--text-muted)',
                   borderLeft: i > 0 ? '1px solid var(--border)' : 'none',
-                  cursor: 'pointer',
+                  cursor: tab.disabled ? 'default' : 'pointer',
                   whiteSpace: 'nowrap',
                 }}
               >
-                {v === 'standings' ? 'Tables' : v === 'fixtures' ? 'Fixtures' : 'Stats'}
+                {tab.label}
               </button>
             ))}
           </div>
@@ -95,6 +116,9 @@ export default function GroupsSection({
           teamStats={teamStats}
           participantMap={participantMap}
         />
+      )}
+      {view === 'highlights' && (
+        <HighlightsView />
       )}
     </section>
   );
