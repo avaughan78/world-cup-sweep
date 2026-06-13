@@ -247,7 +247,7 @@ function GoldenBootLeaderboard({
 }
 
 export default function StatsView({
-  teamStats,
+  teamStats: initialTeamStats,
   participantMap,
 }: {
   teamStats: TeamStats[];
@@ -255,6 +255,7 @@ export default function StatsView({
 }) {
   const [fixtures, setFixtures] = useState<MatchFixture[] | null>(null);
   const [scorers, setScorers] = useState<TopScorerEntry[] | null>(null);
+  const [teamStats, setTeamStats] = useState<TeamStats[]>(initialTeamStats);
 
   useEffect(() => {
     let cancelled = false;
@@ -277,13 +278,23 @@ export default function StatsView({
         .catch(() => { if (!cancelled) setScorers([]); });
     }
 
+    function loadTeamStats() {
+      fetch('/api/teamstats')
+        .then(r => r.json())
+        .then((d: { teamStats?: TeamStats[] }) => {
+          if (!cancelled) setTeamStats(d.teamStats ?? []);
+        })
+        .catch(() => {});
+    }
+
     loadFixtures();
     loadScorers();
+    loadTeamStats();
 
     const id = setInterval(() => {
       setFixtures(prev => {
         const hasLive = prev?.some(f => f.status === 'IN_PLAY' || f.status === 'PAUSED');
-        if (hasLive) { loadFixtures(); loadScorers(); }
+        if (hasLive) { loadFixtures(); loadScorers(); loadTeamStats(); }
         return prev;
       });
     }, 60_000);
