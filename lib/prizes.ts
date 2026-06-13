@@ -137,11 +137,7 @@ export async function computePrizes(
       icon: '👟',
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
-      player_name: topScorer?.player_name
-        ? (topScorerTeam
-            ? (topScorer.player_name.split(' ').pop() ?? topScorer.player_name)
-            : topScorer.player_name)
-        : null,
+      player_name: topScorer?.player_name ?? null,
       value_label: topScorer?.goals
         ? `${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
         : null,
