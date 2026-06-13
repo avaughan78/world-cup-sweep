@@ -60,8 +60,10 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
     );
   }
 
-  const playerMode = prize.slug === 'bicycle' || prize.slug === 'top_scorer_team';
-  const displayName = playerMode ? (prize.value_label ?? prize.current_team) : prize.current_team;
+  const playerMode = prize.slug === 'bicycle';
+  const displayName = playerMode
+    ? (prize.value_label ?? prize.current_team)
+    : (prize.player_name ?? prize.current_team);
   const nameEl = prize.video_url
     ? <PrizeVideoModal name={displayName} team={prize.current_team} videoUrl={prize.video_url} prizeName={prize.name} />
     : <span>{displayName}</span>;

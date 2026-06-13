@@ -10,6 +10,7 @@ export interface Prize {
   current_team: string | null;
   current_participant: string | null;
   value_label: string | null;
+  player_name?: string | null;
   is_manual: boolean;
   mystery?: boolean;
   hidden?: boolean;
@@ -135,10 +136,13 @@ export async function computePrizes(
       icon: '👟',
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
-      value_label: topScorer?.player_name
-        ? topScorerTeam
-          ? `${topScorer.player_name.split(' ').pop() ?? topScorer.player_name} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
-          : `${topScorer.player_name} · ${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
+      player_name: topScorer?.player_name
+        ? (topScorerTeam
+            ? (topScorer.player_name.split(' ').pop() ?? topScorer.player_name)
+            : topScorer.player_name)
+        : null,
+      value_label: topScorer?.goals
+        ? `${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
         : null,
       is_manual: false,
     },
