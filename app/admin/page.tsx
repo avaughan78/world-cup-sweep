@@ -8,6 +8,12 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 interface Company { id: number; code: string; name: string; ticket_price: number | null; max_teams_per_person: number; }
 
+function resolveImageUrl(url: string): string {
+  const m = url.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+  if (m) return `https://drive.google.com/thumbnail?id=${m[1]}&sz=w1280`;
+  return url;
+}
+
 async function parseResponse(res: Response): Promise<{ ok: boolean; data: unknown; raw: string }> {
   const raw = await res.text();
   try {
@@ -948,7 +954,7 @@ export default function AdminPage() {
                   </div>
                   {hlImage && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={hlImage} alt="preview" style={{ marginTop: '0.5rem', height: '4rem', borderRadius: '0.375rem', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                    <img src={resolveImageUrl(hlImage)} alt="preview" style={{ marginTop: '0.5rem', height: '4rem', borderRadius: '0.375rem', objectFit: 'cover', border: '1px solid var(--border)' }} />
                   )}
                 </div>
                 <div>
@@ -993,7 +999,7 @@ export default function AdminPage() {
                   <div key={h.id} className="flex items-start gap-3 rounded-lg px-3 py-2.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
                     {h.image_url && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={h.image_url} alt="" style={{ width: '3.5rem', height: '2.5rem', objectFit: 'cover', borderRadius: '0.375rem', flexShrink: 0 }} />
+                      <img src={resolveImageUrl(h.image_url!)} alt="" style={{ width: '3.5rem', height: '2.5rem', objectFit: 'cover', borderRadius: '0.375rem', flexShrink: 0 }} />
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{h.title}</p>
