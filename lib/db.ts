@@ -666,6 +666,18 @@ export async function updateHighlightOrder(id: number, display_order: number): P
   await sql`UPDATE highlights SET display_order = ${display_order} WHERE id = ${id}`;
 }
 
+export async function updateHighlight(id: number, h: Omit<Highlight, 'id' | 'created_at'>): Promise<Highlight> {
+  const rows = await sql`
+    UPDATE highlights
+    SET title = ${h.title}, url = ${h.url}, image_url = ${h.image_url ?? null},
+        description = ${h.description ?? null}, source = ${h.source ?? null},
+        type = ${h.type}, display_order = ${h.display_order}
+    WHERE id = ${id}
+    RETURNING *
+  `;
+  return rows[0] as Highlight;
+}
+
 export async function listAuditLogs(limit = 200): Promise<AuditEntry[]> {
   const rows = await sql`
     SELECT a.id, a.event, a.actor, a.company_id, c.name AS company_name, a.details, a.ip, a.created_at

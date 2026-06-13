@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getHighlights, createHighlight, deleteHighlight, updateHighlightOrder } from '@/lib/db';
+import { getHighlights, createHighlight, deleteHighlight, updateHighlightOrder, updateHighlight } from '@/lib/db';
 import { requireAdmin } from '@/lib/auth';
 
 function safeUrl(val: string | undefined): string | null {
@@ -51,8 +51,32 @@ export async function DELETE(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const denied = await requireAdmin(req);
   if (denied) return denied;
-  const { id, display_order } = await req.json() as { id?: number; display_order?: number };
-  if (!id || display_order == null) return NextResponse.json({ error: 'id and display_order required' }, { status: 400 });
-  await updateHighlightOrder(id, display_order);
+  const body = await req.json() as {
+    id?: number; display_order?: number;
+    title?: string; url?: string; image_url?: string; description?: string;
+    source?: string; type?: string;
+  };
+  if (!body.id) return NextResponse.json({ error: 'id required' }, { status: 400 });
+
+  // Full update when title is present
+  if (body.title !== undefined) {
+    if (!body.title?.trim()) return NextResponse.json({ error: 'title required' }, { status: 400 });
+    const url = safeUrl(body.url);
+    if (!url) return NextResponse.json({ error: 'valid url required' }, { status: 400 });
+    const highlight = await updateHighlight(body.id, {
+      title: body.title.trim(),
+      url,
+      image_url: safeUrl(body.image_url),
+      description: body.description?.trim() || null,
+      source: body.source?.trim() || null,
+      type: body.type === 'video' ? 'video' : 'article',
+      display_order: typeof body.display_order === 'number' ? body.display_order : 0,
+    });
+    return NextResponse.json({ ok: true, highlight });
+  }
+
+  // Order-only update
+  if (body.display_order == null) return NextResponse.json({ error: 'display_order required' }, { status: 400 });
+  await updateHighlightOrder(body.id, body.display_order);
   return NextResponse.json({ ok: true });
 }

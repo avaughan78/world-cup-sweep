@@ -93,6 +93,7 @@ export default function AdminPage() {
   const [hlOrder, setHlOrder] = useState('0');
   const [hlSaving, setHlSaving] = useState(false);
   const [hlUploading, setHlUploading] = useState(false);
+  const [hlEditingId, setHlEditingId] = useState<number | null>(null);
   const hlFileRef = useRef<HTMLInputElement>(null);
 
   const selectedCompany = companies.find(c => c.id === selectedCompanyId) ?? null;
@@ -236,24 +237,56 @@ export default function AdminPage() {
       .catch(() => {});
   }, [authed]);
 
+  function handleEditHighlight(h: HighlightRow) {
+    setHlEditingId(h.id);
+    setHlTitle(h.title);
+    setHlUrl(h.url);
+    setHlImage(h.image_url ?? '');
+    setHlDesc(h.description ?? '');
+    setHlSource(h.source ?? '');
+    setHlType(h.type as 'article' | 'video');
+    setHlOrder(String(h.display_order));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleCancelEdit() {
+    setHlEditingId(null);
+    setHlTitle(''); setHlUrl(''); setHlImage(''); setHlDesc(''); setHlSource(''); setHlOrder('0'); setHlType('article');
+  }
+
   async function handleAddHighlight() {
     if (!hlTitle.trim() || !hlUrl.trim()) return;
     setHlSaving(true);
     try {
-      const res = await fetch('/api/admin/highlights', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: hlTitle.trim(), url: hlUrl.trim(),
-          image_url: hlImage.trim() || null, description: hlDesc.trim() || null,
-          source: hlSource.trim() || null, type: hlType,
-          display_order: parseInt(hlOrder) || 0,
-        }),
-      });
-      const d = await res.json() as { ok?: boolean; highlight?: HighlightRow };
-      if (d.ok && d.highlight) {
-        setHighlights(prev => [...prev, d.highlight!].sort((a, b) => a.display_order - b.display_order || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
-        setHlTitle(''); setHlUrl(''); setHlImage(''); setHlDesc(''); setHlSource(''); setHlOrder('0');
+      const payload = {
+        title: hlTitle.trim(), url: hlUrl.trim(),
+        image_url: hlImage.trim() || null, description: hlDesc.trim() || null,
+        source: hlSource.trim() || null, type: hlType,
+        display_order: parseInt(hlOrder) || 0,
+      };
+
+      if (hlEditingId !== null) {
+        const res = await fetch('/api/admin/highlights', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: hlEditingId, ...payload }),
+        });
+        const d = await res.json() as { ok?: boolean; highlight?: HighlightRow };
+        if (d.ok && d.highlight) {
+          setHighlights(prev => prev.map(h => h.id === hlEditingId ? d.highlight! : h).sort((a, b) => a.display_order - b.display_order || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+          handleCancelEdit();
+        }
+      } else {
+        const res = await fetch('/api/admin/highlights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const d = await res.json() as { ok?: boolean; highlight?: HighlightRow };
+        if (d.ok && d.highlight) {
+          setHighlights(prev => [...prev, d.highlight!].sort((a, b) => a.display_order - b.display_order || new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
+          setHlTitle(''); setHlUrl(''); setHlImage(''); setHlDesc(''); setHlSource(''); setHlOrder('0');
+        }
       }
     } catch { /* ignore */ }
     setHlSaving(false);
@@ -868,7 +901,17 @@ export default function AdminPage() {
 
             {/* Add form */}
             <div className="rounded-xl p-4 mb-4" style={{ background: 'var(--bg)', border: '1px solid var(--border)' }}>
-              <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: 'var(--text-muted)' }}>Add highlight</p>
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-bold uppercase tracking-widest" style={{ color: hlEditingId ? '#1d4ed8' : 'var(--text-muted)' }}>
+                  {hlEditingId ? '✏️ Edit highlight' : 'Add highlight'}
+                </p>
+                {hlEditingId && (
+                  <button onClick={handleCancelEdit} className="text-xs font-semibold px-2 py-1 rounded"
+                    style={{ background: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+                    Cancel
+                  </button>
+                )}
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
                 <div>
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Title *</label>
@@ -935,7 +978,7 @@ export default function AdminPage() {
                 <button onClick={handleAddHighlight} disabled={hlSaving || !hlTitle.trim() || !hlUrl.trim()}
                   className="font-bold px-5 py-2 rounded-lg transition-opacity ml-auto"
                   style={{ background: 'var(--green)', color: '#fff', opacity: hlSaving || !hlTitle.trim() || !hlUrl.trim() ? 0.5 : 1, fontSize: '0.9rem' }}>
-                  {hlSaving ? 'Adding…' : 'Add highlight'}
+                  {hlSaving ? (hlEditingId ? 'Saving…' : 'Adding…') : (hlEditingId ? 'Update highlight' : 'Add highlight')}
                 </button>
               </div>
             </div>
@@ -957,6 +1000,11 @@ export default function AdminPage() {
                         {h.type === 'video' ? '🎬' : '📰'} {h.source ?? ''} · #{h.display_order} · {h.url}
                       </p>
                     </div>
+                    <button onClick={() => handleEditHighlight(h)}
+                      className="text-xs font-bold px-2 py-1 rounded flex-shrink-0"
+                      style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe' }}>
+                      Edit
+                    </button>
                     <button onClick={() => handleDeleteHighlight(h.id)}
                       className="text-xs font-bold px-2 py-1 rounded flex-shrink-0"
                       style={{ background: '#fee2e2', color: '#991b1b', border: '1px solid #fecaca' }}>
