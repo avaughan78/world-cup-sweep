@@ -4,7 +4,7 @@ import {
   getAllWCFixtures, getFixtureEvents, getWCTopScorers, mapRound,
 } from './api-football';
 import type { WCFixture } from './api-football';
-import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding, setPlayerGoals } from './db';
+import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding, setPlayerGoals, getProcessedFixtureIds, markFixtureProcessed } from './db';
 import type { GroupStanding, PlayerGoal } from './db';
 import { GROUPS_2026 } from './groups';
 import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeEliminations } from './prizes';
@@ -44,13 +44,13 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         if (f.awayGoals != null) goalsConceded.set(home, (goalsConceded.get(home) ?? 0) + f.awayGoals);
       }
 
-      // Cards + own goals: fetch events for recently active fixtures
-      // Only fetch for: live matches + matches finished within the last 7 days
-      // (2 days was too short — cards from earlier matches were lost on re-sync)
-      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+      // Cards + own goals: fetch events for live matches + any finished match
+      // not yet recorded in processed_fixtures. Each finished match is fetched
+      // exactly once — the DB protects against resets via GREATEST.
+      const processedIds = await getProcessedFixtureIds();
       const needEvents = activeFixtures.filter(f =>
         LIVE_STATUSES.has(f.statusShort) ||
-        (DONE_STATUSES.has(f.statusShort) && new Date(f.date).getTime() > sevenDaysAgo)
+        (DONE_STATUSES.has(f.statusShort) && !processedIds.has(f.id))
       );
 
       const cards = new Map<string, { yellow: number; red: number }>();
@@ -79,8 +79,13 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
               }
             }
           }
+          // Mark finished matches as done — won't be re-fetched on future syncs
+          if (DONE_STATUSES.has(f.statusShort)) {
+            await markFixtureProcessed(f.id);
+          }
         } catch (err) {
           statNotes.push(`events error fixture ${f.id}: ${err instanceof Error ? err.message : err}`);
+          // Do NOT mark as processed if fetch failed — retry next sync
         }
       }
 

@@ -678,6 +678,31 @@ export async function updateHighlight(id: number, h: Omit<Highlight, 'id' | 'cre
   return rows[0] as Highlight;
 }
 
+// ── Processed fixtures ────────────────────────────────────────────────────────
+
+async function ensureProcessedFixturesTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS processed_fixtures (
+      fixture_id  INTEGER PRIMARY KEY,
+      processed_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getProcessedFixtureIds(): Promise<Set<number>> {
+  await ensureProcessedFixturesTable();
+  const rows = await sql`SELECT fixture_id FROM processed_fixtures`;
+  return new Set((rows as { fixture_id: number }[]).map(r => r.fixture_id));
+}
+
+export async function markFixtureProcessed(fixtureId: number): Promise<void> {
+  await sql`
+    INSERT INTO processed_fixtures (fixture_id)
+    VALUES (${fixtureId})
+    ON CONFLICT (fixture_id) DO NOTHING
+  `;
+}
+
 export async function listAuditLogs(limit = 200): Promise<AuditEntry[]> {
   const rows = await sql`
     SELECT a.id, a.event, a.actor, a.company_id, c.name AS company_name, a.details, a.ip, a.created_at
