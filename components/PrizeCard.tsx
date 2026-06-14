@@ -99,8 +99,8 @@ function ParticipantStrip({ name }: { name: string | null }) {
 
 export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   if (prize.mystery) {
-    const textPrimary = 'rgba(255,255,255,0.92)';
-    const textMuted = 'rgba(255,255,255,0.45)';
+    const textPrimary = '#ffffff';
+    const textMuted = 'rgba(255,255,255,0.75)';
 
     // Inline leader section — needs light text on dark background
     let leader: React.ReactNode;
