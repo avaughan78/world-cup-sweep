@@ -12,6 +12,99 @@ import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeElimin
 const LIVE_STATUSES = new Set(['1H', 'HT', '2H', 'ET', 'P', 'LIVE', 'BT', 'SUSP', 'INT']);
 const DONE_STATUSES = new Set(['FT', 'AET', 'PEN']);
 
+// ── NBC Sports golden boot scraper ───────────────────────────────────────────
+
+const NBC_SCORER_URL = 'https://www.nbcsports.com/soccer/news/2026-world-cup-top-goalscorers-full-list-latest-on-race-for-the-golden-boot';
+
+// Country names as written by NBC Sports → our canonical team names
+const NBC_COUNTRY_MAP: Record<string, string> = {
+  'usa': 'United States',
+  'united states': 'United States',
+  'south korea': 'South Korea',
+  'korea': 'South Korea',
+  'czechia': 'Czechia',
+  'czech republic': 'Czechia',
+  'bosnia & herzegovina': 'Bosnia and Herzegovina',
+  'bosnia and herzegovina': 'Bosnia and Herzegovina',
+  'curacao': 'Curaçao',
+  "côte d'ivoire": 'Ivory Coast',
+  'ivory coast': 'Ivory Coast',
+  'dr congo': 'DR Congo',
+  'democratic republic of congo': 'DR Congo',
+  'cape verde': 'Cape Verde',
+  'new zealand': 'New Zealand',
+  'saudi arabia': 'Saudi Arabia',
+  'türkiye': 'Türkiye',
+  'turkey': 'Türkiye',
+};
+
+const ALL_TEAM_NAMES = Object.values(GROUPS_2026).flat();
+
+function nbcCountryToTeam(country: string): string | null {
+  const lower = country.toLowerCase().trim();
+  if (NBC_COUNTRY_MAP[lower]) return NBC_COUNTRY_MAP[lower];
+  const direct = ALL_TEAM_NAMES.find(t => t.toLowerCase() === lower);
+  return direct ?? null;
+}
+
+function parseNBCSportsScorers(html: string): Array<{ playerName: string; teamName: string; goals: number }> {
+  // Strip scripts/styles then convert block-level tags to newlines
+  const text = html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<(?:h[1-6]|p|li|tr|div|br)[^>]*>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
+
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  const scorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
+  let currentGoals = 0;
+
+  for (const line of lines) {
+    // Section header: "X goals" or "(X goals each)"
+    const headerGoals = line.match(/\b(\d+)\s+goals?\b(?:\s+each)?/i);
+    if (headerGoals && !line.match(/\([^)]+\)\s*$/)) {
+      currentGoals = parseInt(headerGoals[1]);
+      continue;
+    }
+
+    // Inline format: "Player Name (Country) - 2 goals"
+    const inlineMatch = line.match(/^(.+?)\s*\(([^)]+)\)\s*[-–—]\s*(\d+)\s+goals?/i);
+    if (inlineMatch) {
+      const teamName = nbcCountryToTeam(inlineMatch[2]);
+      if (teamName) scorers.push({ playerName: inlineMatch[1].trim(), teamName, goals: parseInt(inlineMatch[3]) });
+      continue;
+    }
+
+    // Player under a goal-count section: "Player Name (Country)"
+    if (currentGoals > 0) {
+      const playerMatch = line.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
+      if (playerMatch) {
+        const teamName = nbcCountryToTeam(playerMatch[2]);
+        if (teamName) scorers.push({ playerName: playerMatch[1].trim(), teamName, goals: currentGoals });
+      }
+    }
+  }
+
+  return scorers;
+}
+
+async function fetchNBCSportsScorers(): Promise<Array<{ playerName: string; teamName: string; goals: number }>> {
+  const res = await fetch(NBC_SCORER_URL, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+    signal: AbortSignal.timeout(12000),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+  return parseNBCSportsScorers(html);
+}
+
 export async function runSync(): Promise<{ ok: boolean; results: Record<string, string> }> {
   const results: Record<string, string> = {};
 
@@ -107,20 +200,37 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${needEvents.length} event fetches`);
 
-      // Three-way merge for goal scorers:
+      // Four-way merge for goal scorers:
       // 1. DB values — accumulated from all previously processed matches (baseline)
-      // 2. API top scorers — authoritative historical data but can lag hours
-      // 3. Event scorers from this sync — freshest, covers live + newly processed matches
-      // For each player, take the highest goal count seen across all three sources.
+      // 2. NBC Sports scraped list — human-curated, updated throughout tournament
+      // 3. API top scorers — authoritative historical data but can lag hours
+      // 4. Event scorers from this sync — freshest, covers live + newly processed matches
+      // For each player, take the highest goal count seen across all four sources.
       const dbScorers = await getPlayerGoals();
       const apiScorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
       const eventScorers = [...playerGoalMap.values()];
+
+      let nbcScorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
+      try {
+        nbcScorers = await fetchNBCSportsScorers();
+        statNotes.push(`NBC Sports: ${nbcScorers.length} scorers`);
+      } catch (err) {
+        statNotes.push(`NBC Sports fetch failed: ${err instanceof Error ? err.message : err}`);
+      }
 
       const mergedScorerMap = new Map<string, PlayerGoal>();
 
       // Seed from DB (preserves goals from matches not fetched in this sync)
       for (const s of dbScorers) {
         mergedScorerMap.set(`${s.player_name}|||${s.team_name}`, s);
+      }
+      // Merge NBC Sports scraped list (taking the higher count)
+      for (const s of nbcScorers) {
+        const key = `${s.playerName}|||${s.teamName}`;
+        const existing = mergedScorerMap.get(key);
+        if (!existing || s.goals > existing.goals) {
+          mergedScorerMap.set(key, existing ? { ...existing, goals: s.goals } : { player_name: s.playerName, team_name: s.teamName, goals: s.goals, nationality: null });
+        }
       }
       // Override with API scorers (taking the higher count)
       for (const s of apiScorers) {
