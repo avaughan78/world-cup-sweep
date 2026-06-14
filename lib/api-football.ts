@@ -29,6 +29,8 @@ export interface WCFixture {
   awayTeam: string;
   homeGoals: number | null;
   awayGoals: number | null;
+  penaltyHome: number | null;
+  penaltyAway: number | null;
 }
 
 export interface FixtureEvent {
@@ -75,6 +77,8 @@ export async function getAllWCFixtures(): Promise<WCFixture[]> {
     awayTeam: f.teams.away.name,
     homeGoals: f.goals.home,
     awayGoals: f.goals.away,
+    penaltyHome: f.score?.penalty?.home ?? null,
+    penaltyAway: f.score?.penalty?.away ?? null,
   }));
 }
 

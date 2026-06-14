@@ -443,8 +443,15 @@ function computeEliminationsFromFixtures(fixtures: WCFixture[]): Set<string> {
     if (f.homeGoals == null || f.awayGoals == null) continue;
     const home = normaliseTeamName(f.homeTeam);
     const away = normaliseTeamName(f.awayTeam);
-    if (f.homeGoals < f.awayGoals) eliminated.add(home);
-    else if (f.awayGoals < f.homeGoals) eliminated.add(away);
+    if (f.homeGoals < f.awayGoals) {
+      eliminated.add(home);
+    } else if (f.awayGoals < f.homeGoals) {
+      eliminated.add(away);
+    } else if (f.statusShort === 'PEN' && f.penaltyHome != null && f.penaltyAway != null) {
+      // Penalty shootout — goals are level after AET, use penalty score to find loser
+      if (f.penaltyHome < f.penaltyAway) eliminated.add(home);
+      else if (f.penaltyAway < f.penaltyHome) eliminated.add(away);
+    }
   }
 
   return eliminated;
