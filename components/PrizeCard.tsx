@@ -99,17 +99,51 @@ function ParticipantStrip({ name }: { name: string | null }) {
 
 export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeAmount?: string | null }) {
   if (prize.mystery) {
+    const textPrimary = 'rgba(255,255,255,0.92)';
+    const textMuted = 'rgba(255,255,255,0.45)';
+
+    // Inline leader section — needs light text on dark background
+    let leader: React.ReactNode;
+    if (prize.current_team) {
+      const displayName = prize.slug === 'bicycle'
+        ? (prize.value_label ?? prize.current_team)
+        : (prize.player_name ?? prize.current_team);
+      const nameEl = prize.video_url
+        ? <PrizeVideoModal name={displayName} team={prize.current_team} videoUrl={prize.video_url} prizeName={prize.name} />
+        : <span>{displayName}</span>;
+      leader = (
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Flag team={prize.current_team} height="1.1rem" />
+          <span className="font-semibold text-sm truncate" style={{ color: textPrimary }}>{nameEl}</span>
+        </div>
+      );
+    } else {
+      leader = <p className="text-sm" style={{ color: textMuted }}>Awaiting some magic...</p>;
+    }
+
     return (
       <div
         className="prize-card rounded-xl p-4 flex flex-col h-full relative overflow-hidden"
-        style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+        style={{
+          background: 'linear-gradient(135deg, #1e0948 0%, #2d1060 60%, #1a0838 100%)',
+          border: '1px solid rgba(130, 80, 230, 0.45)',
+          boxShadow: '0 0 28px rgba(100, 50, 200, 0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}
       >
         <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', userSelect: 'none' }}>
+          {/* Large central focal point */}
+          <span style={{
+            position: 'absolute', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            fontSize: '8rem', fontWeight: 900, opacity: 0.06,
+            color: '#ffffff', lineHeight: 1,
+          }}>?</span>
+          {/* Scattered smaller marks */}
           {MYSTERY_QS.map((q, i) => (
             <span key={i} style={{
               position: 'absolute', top: q.top, left: q.left,
-              fontSize: q.size, opacity: q.opacity, fontWeight: 900,
-              color: 'var(--text-primary)', lineHeight: 1,
+              fontSize: q.size, opacity: q.opacity * 2, fontWeight: 900,
+              color: '#ffffff', lineHeight: 1,
               transform: `rotate(${q.rotate})`,
             }}>?</span>
           ))}
@@ -125,18 +159,18 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
             }
             <TicketBadge amount="?" />
           </div>
-          <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
+          <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: textPrimary, minHeight: '2.5rem' }}>
             {prize.name}
           </p>
-          <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+          <p className="prize-description text-sm mt-0.5" style={{ color: textMuted }}>
             {prize.description}
           </p>
         </div>
 
-        <hr className="my-3 relative" style={{ borderColor: 'var(--border)' }} />
+        <hr className="my-3 relative" style={{ borderColor: 'rgba(255,255,255,0.1)' }} />
 
         <div className="relative min-h-[2rem]">
-          <LeaderSection prize={prize} empty="Awaiting some magic..." />
+          {leader}
         </div>
         <ParticipantStrip name={prize.current_participant} />
       </div>
