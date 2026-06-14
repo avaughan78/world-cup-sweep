@@ -487,8 +487,9 @@ export default function AdminPage() {
     let fetched = 0;
     let lastTeam = '';
     const skipped = new Set<string>();
+    let iters = 0;
     try {
-      while (remaining > 0) {
+      while (remaining > 0 && iters++ < 200) {
         const res = await fetch('/api/admin/prewarm-squads', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

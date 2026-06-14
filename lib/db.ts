@@ -462,7 +462,11 @@ export async function resetTournamentStats() {
   await sql`DELETE FROM team_stats`;
   await sql`DELETE FROM group_standings`;
   await sql`DELETE FROM top_scorer WHERE id = 1`;
+  await sql`DELETE FROM player_goals`;
   await sql`DELETE FROM prize_overrides WHERE category IN ('longest_shot', 'most_own_goals', 'bicycle')`;
+  // Clear processed_fixtures so the next sync re-fetches all match events from scratch
+  await ensureProcessedFixturesTable();
+  await sql`TRUNCATE processed_fixtures`;
 }
 
 // ── Squad cache (shared) ──────────────────────────────────────────────────────
