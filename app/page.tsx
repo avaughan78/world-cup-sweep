@@ -176,14 +176,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
                 return <PrizeCard key={prize.slug} prize={prize} prizeAmount={amount} />;
               })}
             </div>
-            {/* Mystery prizes — flex row, truly centred */}
-            <div className="flex justify-center gap-3 flex-wrap">
-              {prizes.filter(p => p.mystery && !p.hidden).map(prize => (
-                <div key={prize.slug} className="w-[calc(50%-0.375rem)] sm:w-[calc(20%-0.6rem)]">
-                  <PrizeCard prize={prize} prizeAmount={null} />
+
+            {/* Mystery prizes — labelled band */}
+            {prizes.some(p => p.mystery && !p.hidden) && (
+              <div className="rounded-xl p-4" style={{ background: 'var(--bg)', border: '1px dashed var(--border)' }}>
+                <p className="text-xs font-bold uppercase tracking-widest text-center mb-3" style={{ color: 'var(--text-muted)' }}>
+                  Mystery Prizes
+                </p>
+                <div className="flex justify-center gap-3">
+                  {prizes.filter(p => p.mystery && !p.hidden).map(prize => (
+                    <div key={prize.slug} className="w-[calc(50%-0.375rem)] sm:w-[calc(20%-0.6rem)]">
+                      <PrizeCard prize={prize} prizeAmount={null} />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </section>
 
           {/* Names hidden notice */}
