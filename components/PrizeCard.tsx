@@ -125,9 +125,9 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
       <div
         className="prize-card rounded-xl p-4 flex flex-col h-full relative overflow-hidden"
         style={{
-          background: 'linear-gradient(135deg, #1e0948 0%, #2d1060 60%, #1a0838 100%)',
-          border: '1px solid rgba(130, 80, 230, 0.45)',
-          boxShadow: '0 0 28px rgba(100, 50, 200, 0.18), inset 0 1px 0 rgba(255,255,255,0.06)',
+          background: 'linear-gradient(135deg, #3a1878 0%, #5530a8 60%, #301268 100%)',
+          border: '1px solid rgba(150, 110, 240, 0.5)',
+          boxShadow: '0 0 28px rgba(130, 80, 220, 0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
         }}
       >
         <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', userSelect: 'none' }}>
