@@ -450,6 +450,36 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function handleFullResync() {
+    if (!confirm('Clear the processed-fixtures log and re-fetch ALL match events from scratch?\n\nThis will rebuild player goals, cards, and own goals from every processed match. Use this to recover missing data (e.g. Golden Boot).')) return;
+    setLoading(true);
+    setStatus({ ok: true, message: 'Clearing processed fixtures…' });
+    try {
+      const clearRes = await fetch('/api/admin/clear-processed-fixtures', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const { ok: clearOk, data: clearData } = await parseResponse(clearRes);
+      if (!clearOk) {
+        const d = clearData as Record<string, unknown> | null;
+        setStatus({ ok: false, message: `Clear failed: ${d?.message ?? clearRes.status}` });
+        setLoading(false);
+        return;
+      }
+      setStatus({ ok: true, message: 'Cleared — running full sync…' });
+      const syncRes = await fetch('/api/admin/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const { ok, data, raw } = await parseResponse(syncRes);
+      const d = data as Record<string, unknown> | null;
+      setStatus({ ok, message: d ? JSON.stringify(d.results ?? d, null, 2) : raw });
+    } catch (e) {
+      setStatus({ ok: false, message: String(e) });
+    }
+    setLoading(false);
+  }
+
   async function handlePrewarmSquads() {
     setLoading(true);
     setStatus({ ok: true, message: 'Starting squad photo pre-warm…' });
@@ -796,6 +826,15 @@ export default function AdminPage() {
                 style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
               >
                 {loading ? 'Working…' : 'Sync Now'}
+              </button>
+              <button
+                onClick={handleFullResync}
+                disabled={loading}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                style={{ background: 'var(--card)', color: 'var(--text-primary)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1, fontSize: '0.9rem' }}
+                title="Clear processed-fixtures log and re-fetch all match events — use to recover missing player goals / cards"
+              >
+                {loading ? 'Working…' : 'Full Re-sync'}
               </button>
               <button
                 onClick={handlePrewarmSquads}

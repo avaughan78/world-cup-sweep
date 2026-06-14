@@ -379,13 +379,14 @@ export async function setPlayerGoals(scorers: PlayerGoal[]): Promise<void> {
     PRIMARY KEY (player_name, team_name)
   )`;
   if (scorers.length === 0) return;
-  await sql`TRUNCATE player_goals`;
   for (const s of scorers) {
     await sql`
       INSERT INTO player_goals (player_name, team_name, goals, nationality, updated_at)
-      VALUES (${s.player_name}, ${s.team_name}, ${s.goals}, ${s.nationality}, NOW())
+      VALUES (${s.player_name}, ${s.team_name}, ${s.goals}, ${s.nationality ?? null}, NOW())
       ON CONFLICT (player_name, team_name) DO UPDATE SET
-        goals = ${s.goals}, updated_at = NOW()
+        goals       = GREATEST(player_goals.goals, ${s.goals}),
+        nationality = COALESCE(${s.nationality ?? null}, player_goals.nationality),
+        updated_at  = NOW()
     `;
   }
 }
@@ -701,6 +702,11 @@ export async function markFixtureProcessed(fixtureId: number): Promise<void> {
     VALUES (${fixtureId})
     ON CONFLICT (fixture_id) DO NOTHING
   `;
+}
+
+export async function clearProcessedFixtures(): Promise<void> {
+  await ensureProcessedFixturesTable();
+  await sql`TRUNCATE processed_fixtures`;
 }
 
 export async function listAuditLogs(limit = 200): Promise<AuditEntry[]> {
