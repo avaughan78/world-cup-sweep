@@ -4,7 +4,7 @@ import {
   getAllWCFixtures, getFixtureEvents, getWCTopScorers, mapRound,
 } from './api-football';
 import type { WCFixture } from './api-football';
-import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding, setPlayerGoals, getProcessedFixtureIds, markFixtureProcessed } from './db';
+import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding, setPlayerGoals, getPlayerGoals, getProcessedFixtureIds, markFixtureProcessed } from './db';
 import type { GroupStanding, PlayerGoal } from './db';
 import { GROUPS_2026 } from './groups';
 import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeEliminations } from './prizes';
@@ -107,27 +107,36 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${needEvents.length} event fetches`);
 
-      // Merge API top scorers (tournament history, but lags hours) with event-derived scorers
-      // (fresh, last 2 days). Players who scored in a recent match but aren't in the API list yet
-      // (e.g. first goals of the tournament) are added from events. For players in both, take the
-      // higher goal count since event totals only cover the 2-day window.
+      // Three-way merge for goal scorers:
+      // 1. DB values — accumulated from all previously processed matches (baseline)
+      // 2. API top scorers — authoritative historical data but can lag hours
+      // 3. Event scorers from this sync — freshest, covers live + newly processed matches
+      // For each player, take the highest goal count seen across all three sources.
+      const dbScorers = await getPlayerGoals();
       const apiScorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
       const eventScorers = [...playerGoalMap.values()];
 
       const mergedScorerMap = new Map<string, PlayerGoal>();
+
+      // Seed from DB (preserves goals from matches not fetched in this sync)
+      for (const s of dbScorers) {
+        mergedScorerMap.set(`${s.player_name}|||${s.team_name}`, s);
+      }
+      // Override with API scorers (taking the higher count)
       for (const s of apiScorers) {
         const team = normaliseTeamName(s.teamName);
-        mergedScorerMap.set(`${s.playerName}|||${team}`, {
-          player_name: s.playerName, team_name: team, goals: s.goals, nationality: s.nationality,
-        });
+        const key = `${s.playerName}|||${team}`;
+        const existing = mergedScorerMap.get(key);
+        if (!existing || s.goals >= existing.goals) {
+          mergedScorerMap.set(key, { player_name: s.playerName, team_name: team, goals: s.goals, nationality: s.nationality });
+        }
       }
+      // Override with fresh event scorers from this sync (taking the higher count)
       for (const e of eventScorers) {
         const key = `${e.player_name}|||${e.team_name}`;
         const existing = mergedScorerMap.get(key);
-        if (!existing) {
-          mergedScorerMap.set(key, e);
-        } else if (e.goals > existing.goals) {
-          mergedScorerMap.set(key, { ...existing, goals: e.goals });
+        if (!existing || e.goals > existing.goals) {
+          mergedScorerMap.set(key, existing ? { ...existing, goals: e.goals } : e);
         }
       }
 
