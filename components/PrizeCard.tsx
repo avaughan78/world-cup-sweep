@@ -43,19 +43,18 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
     const [playerName, yards] = raw.includes('|') ? raw.split('|') : [raw || prize.current_team, null];
     const nameEl = prize.video_url
       ? <PrizeVideoModal name={playerName} team={prize.current_team} videoUrl={prize.video_url} prizeName={prize.name} />
-      : <span className="font-semibold">{playerName}</span>;
+      : <span>{playerName}</span>;
     return (
       <div className="flex items-center gap-1.5 min-w-0">
         <Flag team={prize.current_team} height="1.1rem" />
-        <span className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
-          {nameEl}
-        </span>
-        {yards && (
-          <span className="text-xs font-bold flex-shrink-0 px-1.5 py-0.5 rounded-md"
-            style={{ color: 'var(--text-muted)', background: 'var(--bg)', border: '1px solid var(--border)' }}>
-            {yards} yds
+        <div className="min-w-0">
+          <span className="font-semibold text-sm truncate block" style={{ color: 'var(--text-primary)', lineHeight: 1.2 }}>
+            {nameEl}
           </span>
-        )}
+          {yards && (
+            <span className="text-xs block" style={{ color: 'var(--text-muted)' }}>{yards} yds</span>
+          )}
+        </div>
       </div>
     );
   }
