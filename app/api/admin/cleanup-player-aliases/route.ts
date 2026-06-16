@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   if (denied) return denied;
 
   for (const name of ALIASES) {
-    await sql`DELETE FROM player_goals WHERE player_name = ${name}`;
+    await sql`DELETE FROM player_goals WHERE LOWER(player_name) = LOWER(${name})`;
   }
 
   return NextResponse.json({ ok: true, deleted: ALIASES });

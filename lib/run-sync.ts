@@ -12,13 +12,14 @@ import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeElimin
 const LIVE_STATUSES = new Set(['1H', 'HT', '2H', 'ET', 'P', 'LIVE', 'BT', 'SUSP', 'INT']);
 const DONE_STATUSES = new Set(['FT', 'AET', 'PEN']);
 
-// Maps non-canonical player name variants (e.g. abbreviated) to their canonical form
+// Maps non-canonical player name variants (e.g. abbreviated) to their canonical form.
+// Keys are matched case-insensitively.
 const PLAYER_NAME_ALIASES: Record<string, string> = {
-  'e. Just': 'Elijah Just',
+  'e. just': 'Elijah Just',
 };
 
 function normalisePlayerName(name: string): string {
-  return PLAYER_NAME_ALIASES[name] ?? name;
+  return PLAYER_NAME_ALIASES[name.toLowerCase()] ?? name;
 }
 
 // ── NBC Sports golden boot scraper ───────────────────────────────────────────
@@ -269,7 +270,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
       // Remove stale alias rows from DB so they don't persist alongside canonical names
       for (const aliasName of Object.keys(PLAYER_NAME_ALIASES)) {
-        await sql`DELETE FROM player_goals WHERE player_name = ${aliasName}`;
+        await sql`DELETE FROM player_goals WHERE LOWER(player_name) = ${aliasName}`;
       }
 
       const scorerSource = [...mergedScorerMap.values()]
