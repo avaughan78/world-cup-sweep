@@ -12,6 +12,15 @@ import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeElimin
 const LIVE_STATUSES = new Set(['1H', 'HT', '2H', 'ET', 'P', 'LIVE', 'BT', 'SUSP', 'INT']);
 const DONE_STATUSES = new Set(['FT', 'AET', 'PEN']);
 
+// Maps non-canonical player name variants (e.g. abbreviated) to their canonical form
+const PLAYER_NAME_ALIASES: Record<string, string> = {
+  'e. Just': 'Elijah Just',
+};
+
+function normalisePlayerName(name: string): string {
+  return PLAYER_NAME_ALIASES[name] ?? name;
+}
+
 // ── NBC Sports golden boot scraper ───────────────────────────────────────────
 
 const NBC_SCORER_URL = 'https://www.nbcsports.com/soccer/news/2026-world-cup-top-goalscorers-full-list-latest-on-race-for-the-golden-boot';
@@ -222,32 +231,45 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
       // Seed from DB (preserves goals from matches not fetched in this sync)
       for (const s of dbScorers) {
-        mergedScorerMap.set(`${s.player_name}|||${s.team_name}`, s);
+        const canonicalName = normalisePlayerName(s.player_name);
+        const key = `${canonicalName}|||${s.team_name}`;
+        const existing = mergedScorerMap.get(key);
+        if (!existing || s.goals > existing.goals) {
+          mergedScorerMap.set(key, { ...s, player_name: canonicalName });
+        }
       }
       // Merge NBC Sports scraped list (taking the higher count)
       for (const s of nbcScorers) {
-        const key = `${s.playerName}|||${s.teamName}`;
+        const canonicalName = normalisePlayerName(s.playerName);
+        const key = `${canonicalName}|||${s.teamName}`;
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals > existing.goals) {
-          mergedScorerMap.set(key, existing ? { ...existing, goals: s.goals } : { player_name: s.playerName, team_name: s.teamName, goals: s.goals, nationality: null });
+          mergedScorerMap.set(key, existing ? { ...existing, goals: s.goals } : { player_name: canonicalName, team_name: s.teamName, goals: s.goals, nationality: null });
         }
       }
       // Override with API scorers (taking the higher count)
       for (const s of apiScorers) {
         const team = normaliseTeamName(s.teamName);
-        const key = `${s.playerName}|||${team}`;
+        const canonicalName = normalisePlayerName(s.playerName);
+        const key = `${canonicalName}|||${team}`;
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals >= existing.goals) {
-          mergedScorerMap.set(key, { player_name: s.playerName, team_name: team, goals: s.goals, nationality: s.nationality });
+          mergedScorerMap.set(key, { player_name: canonicalName, team_name: team, goals: s.goals, nationality: s.nationality });
         }
       }
       // Override with fresh event scorers from this sync (taking the higher count)
       for (const e of eventScorers) {
-        const key = `${e.player_name}|||${e.team_name}`;
+        const canonicalName = normalisePlayerName(e.player_name);
+        const key = `${canonicalName}|||${e.team_name}`;
         const existing = mergedScorerMap.get(key);
         if (!existing || e.goals > existing.goals) {
-          mergedScorerMap.set(key, existing ? { ...existing, goals: e.goals } : e);
+          mergedScorerMap.set(key, existing ? { ...existing, goals: e.goals } : { ...e, player_name: canonicalName });
         }
+      }
+
+      // Remove stale alias rows from DB so they don't persist alongside canonical names
+      for (const aliasName of Object.keys(PLAYER_NAME_ALIASES)) {
+        await sql`DELETE FROM player_goals WHERE player_name = ${aliasName}`;
       }
 
       const scorerSource = [...mergedScorerMap.values()]
