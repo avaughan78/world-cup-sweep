@@ -186,7 +186,8 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${needEvents.length} event fetches`);
 
       // Goal scorers: NBC Sports is the single source of truth.
-      // GREATEST upsert in setPlayerGoals means existing data is preserved if NBC is down.
+      // If NBC returns data we delete all existing rows first (clean replace).
+      // If NBC fails the old rows are left untouched.
       let nbcScorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
       try {
         nbcScorers = await fetchNBCSportsScorers();
@@ -201,6 +202,9 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         .map(s => ({ player_name: s.playerName, team_name: s.teamName, goals: s.goals, nationality: null }));
 
       if (scorerSource.length > 0) {
+        // Truncate stale rows before writing — NBC is the single source so
+        // we want a clean replace, not an accumulating upsert.
+        await sql`DELETE FROM player_goals`;
         const top = scorerSource[0];
         const tiedCount = scorerSource.filter(s => s.goals === top.goals).length;
         const tied = tiedCount > 1;
