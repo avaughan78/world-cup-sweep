@@ -18,8 +18,28 @@ const PLAYER_NAME_ALIASES: Record<string, string> = {
   'e. just': 'Elijah Just',
 };
 
+function stripDiacritics(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// Returns the canonical display name — resolves explicit aliases, otherwise returns as-is
 function normalisePlayerName(name: string): string {
   return PLAYER_NAME_ALIASES[name.toLowerCase()] ?? name;
+}
+
+// Key used for deduplication — accent-stripped + lowercased so "Mbappé" and "Mbappe" merge
+function playerKey(playerName: string, teamName: string): string {
+  return `${stripDiacritics(playerName).toLowerCase().trim()}|||${teamName}`;
+}
+
+// Prefer names with diacritics (more correct); fall back to longer name
+function chooseName(current: string | undefined, candidate: string): string {
+  if (!current) return candidate;
+  const currentHasAccent = current !== stripDiacritics(current);
+  const candidateHasAccent = candidate !== stripDiacritics(candidate);
+  if (currentHasAccent && !candidateHasAccent) return current;
+  if (candidateHasAccent && !currentHasAccent) return candidate;
+  return current.length >= candidate.length ? current : candidate;
 }
 
 // ── NBC Sports golden boot scraper ───────────────────────────────────────────
@@ -232,39 +252,43 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
       // Seed from DB (preserves goals from matches not fetched in this sync)
       for (const s of dbScorers) {
-        const canonicalName = normalisePlayerName(s.player_name);
-        const key = `${canonicalName}|||${s.team_name}`;
+        const displayName = normalisePlayerName(s.player_name);
+        const key = playerKey(displayName, s.team_name);
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals > existing.goals) {
-          mergedScorerMap.set(key, { ...s, player_name: canonicalName });
+          mergedScorerMap.set(key, { ...s, player_name: chooseName(existing?.player_name, displayName) });
         }
       }
-      // Merge NBC Sports scraped list (taking the higher count)
+      // Merge NBC Sports scraped list (taking the higher count; NBC has full accented names)
       for (const s of nbcScorers) {
-        const canonicalName = normalisePlayerName(s.playerName);
-        const key = `${canonicalName}|||${s.teamName}`;
+        const displayName = normalisePlayerName(s.playerName);
+        const key = playerKey(displayName, s.teamName);
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals > existing.goals) {
-          mergedScorerMap.set(key, existing ? { ...existing, goals: s.goals } : { player_name: canonicalName, team_name: s.teamName, goals: s.goals, nationality: null });
+          mergedScorerMap.set(key, existing
+            ? { ...existing, goals: s.goals, player_name: chooseName(existing.player_name, displayName) }
+            : { player_name: displayName, team_name: s.teamName, goals: s.goals, nationality: null });
         }
       }
       // Override with API scorers (taking the higher count)
       for (const s of apiScorers) {
         const team = normaliseTeamName(s.teamName);
-        const canonicalName = normalisePlayerName(s.playerName);
-        const key = `${canonicalName}|||${team}`;
+        const displayName = normalisePlayerName(s.playerName);
+        const key = playerKey(displayName, team);
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals >= existing.goals) {
-          mergedScorerMap.set(key, { player_name: canonicalName, team_name: team, goals: s.goals, nationality: s.nationality });
+          mergedScorerMap.set(key, { player_name: chooseName(existing?.player_name, displayName), team_name: team, goals: s.goals, nationality: s.nationality });
         }
       }
       // Override with fresh event scorers from this sync (taking the higher count)
       for (const e of eventScorers) {
-        const canonicalName = normalisePlayerName(e.player_name);
-        const key = `${canonicalName}|||${e.team_name}`;
+        const displayName = normalisePlayerName(e.player_name);
+        const key = playerKey(displayName, e.team_name);
         const existing = mergedScorerMap.get(key);
         if (!existing || e.goals > existing.goals) {
-          mergedScorerMap.set(key, existing ? { ...existing, goals: e.goals } : { ...e, player_name: canonicalName });
+          mergedScorerMap.set(key, existing
+            ? { ...existing, goals: e.goals, player_name: chooseName(existing.player_name, displayName) }
+            : { ...e, player_name: displayName });
         }
       }
 
