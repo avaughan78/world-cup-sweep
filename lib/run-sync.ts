@@ -58,15 +58,21 @@ function parseNBCSportsScorers(html: string): Array<{ playerName: string; teamNa
     .replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
 
+  const WORD_NUMS: Record<string, number> = {
+    one: 1, two: 2, three: 3, four: 4, five: 5,
+    six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
+  };
+
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
   const scorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
   let currentGoals = 0;
 
   for (const line of lines) {
-    // Section header: "X goals" or "(X goals each)"
-    const headerGoals = line.match(/\b(\d+)\s+goals?\b(?:\s+each)?/i);
+    // Section header: "X goals", "Three goals", "(X goals each)" etc.
+    const headerGoals = line.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+goals?\b(?:\s+each)?/i);
     if (headerGoals && !line.match(/\([^)]+\)\s*$/)) {
-      currentGoals = parseInt(headerGoals[1]);
+      const raw = headerGoals[1].toLowerCase();
+      currentGoals = WORD_NUMS[raw] ?? parseInt(raw);
       continue;
     }
 
