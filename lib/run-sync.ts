@@ -1,86 +1,16 @@
 import { revalidateTag } from 'next/cache';
 import { getFinishedMatches, getTopScorers, getStandings, normaliseTeamName } from './football-api';
 import {
-  getAllWCFixtures, getFixtureEvents, getWCTopScorers, mapRound,
+  getAllWCFixtures, getFixtureEvents, mapRound,
 } from './api-football';
 import type { WCFixture } from './api-football';
-import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding, setPlayerGoals, getPlayerGoals, getProcessedFixtureIds, markFixtureProcessed } from './db';
+import sql, { upsertTeamStats, setTopScorer, logSync, upsertGroupStanding, setPlayerGoals, getProcessedFixtureIds, markFixtureProcessed } from './db';
 import type { GroupStanding, PlayerGoal } from './db';
 import { GROUPS_2026 } from './groups';
 import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeEliminations } from './prizes';
 
 const LIVE_STATUSES = new Set(['1H', 'HT', '2H', 'ET', 'P', 'LIVE', 'BT', 'SUSP', 'INT']);
 const DONE_STATUSES = new Set(['FT', 'AET', 'PEN']);
-
-// Maps non-canonical player name variants (e.g. abbreviated) to their canonical form.
-// Keys are matched case-insensitively.
-function stripDiacritics(s: string): string {
-  return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
-}
-
-// Key used for deduplication — accent-stripped + lowercased so "Mbappé" and "Mbappe" merge
-function playerKey(playerName: string, teamName: string): string {
-  return `${stripDiacritics(playerName).toLowerCase().trim()}|||${teamName}`;
-}
-
-// Prefer names with diacritics (more correct); fall back to longer name
-function chooseName(current: string | undefined, candidate: string): string {
-  if (!current) return candidate;
-  const currentHasAccent = current !== stripDiacritics(current);
-  const candidateHasAccent = candidate !== stripDiacritics(candidate);
-  if (currentHasAccent && !candidateHasAccent) return current;
-  if (candidateHasAccent && !currentHasAccent) return candidate;
-  return current.length >= candidate.length ? current : candidate;
-}
-
-// Returns true if `short` is an abbreviated form of `full` on the same team.
-// Matches patterns like "E. Just" → "Elijah Just": single initial + dot, same surname.
-function isAbbreviationOf(short: string, full: string): boolean {
-  const sp = short.trim().split(/\s+/);
-  const fp = full.trim().split(/\s+/);
-  if (sp.length < 2 || fp.length < 2) return false;
-  if (!/^[A-Za-zÀ-ÿ]\.$/.test(sp[0])) return false;
-  const initial = stripDiacritics(sp[0][0]).toLowerCase();
-  const fullInitial = stripDiacritics(fp[0][0]).toLowerCase();
-  if (initial !== fullInitial) return false;
-  const shortSurname = stripDiacritics(sp[sp.length - 1]).toLowerCase();
-  const fullSurname = stripDiacritics(fp[fp.length - 1]).toLowerCase();
-  return shortSurname === fullSurname;
-}
-
-// After the four-way merge, collapse abbreviated names into their full-name counterparts.
-// Returns the abbreviated names that were merged (for DB cleanup).
-function deduplicateAbbreviations(map: Map<string, PlayerGoal>): string[] {
-  const byTeam = new Map<string, string[]>();
-  for (const [key, entry] of map) {
-    const list = byTeam.get(entry.team_name) ?? [];
-    list.push(key);
-    byTeam.set(entry.team_name, list);
-  }
-
-  const removed: string[] = [];
-  for (const keys of byTeam.values()) {
-    for (const shortKey of [...keys]) {
-      const shortEntry = map.get(shortKey);
-      if (!shortEntry) continue;
-      for (const fullKey of keys) {
-        if (shortKey === fullKey) continue;
-        const fullEntry = map.get(fullKey);
-        if (!fullEntry) continue;
-        if (isAbbreviationOf(shortEntry.player_name, fullEntry.player_name)) {
-          // Merge goals into the full-name entry (keep the higher count)
-          if (shortEntry.goals > fullEntry.goals) {
-            map.set(fullKey, { ...fullEntry, goals: shortEntry.goals });
-          }
-          removed.push(shortEntry.player_name);
-          map.delete(shortKey);
-          break;
-        }
-      }
-    }
-  }
-  return removed;
-}
 
 // ── NBC Sports golden boot scraper ───────────────────────────────────────────
 
@@ -186,13 +116,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
     if (process.env.API_FOOTBALL_KEY) {
       // ── Primary path: api-football.com ──────────────────────────────────────
-      const [fixturesResult, scorersResult] = await Promise.allSettled([
-        getAllWCFixtures(),
-        getWCTopScorers(),
-      ]);
-
-      if (fixturesResult.status === 'rejected') throw new Error(`fixtures: ${fixturesResult.reason}`);
-      const allFixtures = fixturesResult.value;
+      const allFixtures = await getAllWCFixtures();
 
       const activeFixtures = allFixtures.filter(
         f => LIVE_STATUSES.has(f.statusShort) || DONE_STATUSES.has(f.statusShort)
@@ -218,7 +142,6 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
       const cards = new Map<string, { yellow: number; red: number }>();
       const ownGoals = new Map<string, number>();
-      const playerGoalMap = new Map<string, PlayerGoal>();
 
       for (const f of needEvents) {
         try {
@@ -232,14 +155,6 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
               cards.set(team, c);
             } else if (ev.type === 'Goal' && ev.detail === 'Own Goal') {
               ownGoals.set(team, (ownGoals.get(team) ?? 0) + 1);
-            } else if (ev.type === 'Goal' && ev.player) {
-              const key = `${ev.player}|||${team}`;
-              const existing = playerGoalMap.get(key);
-              if (existing) {
-                existing.goals++;
-              } else {
-                playerGoalMap.set(key, { player_name: ev.player, team_name: team, goals: 1, nationality: null });
-              }
             }
           }
           // Mark finished matches as done — won't be re-fetched on future syncs
@@ -270,16 +185,8 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${needEvents.length} event fetches`);
 
-      // Four-way merge for goal scorers:
-      // 1. DB values — accumulated from all previously processed matches (baseline)
-      // 2. NBC Sports scraped list — human-curated, updated throughout tournament
-      // 3. API top scorers — authoritative historical data but can lag hours
-      // 4. Event scorers from this sync — freshest, covers live + newly processed matches
-      // For each player, take the highest goal count seen across all four sources.
-      const dbScorers = await getPlayerGoals();
-      const apiScorers = scorersResult.status === 'fulfilled' ? scorersResult.value : [];
-      const eventScorers = [...playerGoalMap.values()];
-
+      // Goal scorers: NBC Sports is the single source of truth.
+      // GREATEST upsert in setPlayerGoals means existing data is preserved if NBC is down.
       let nbcScorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
       try {
         nbcScorers = await fetchNBCSportsScorers();
@@ -288,61 +195,10 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         statNotes.push(`NBC Sports fetch failed: ${err instanceof Error ? err.message : err}`);
       }
 
-      const mergedScorerMap = new Map<string, PlayerGoal>();
-
-      // Seed from DB (preserves goals from matches not fetched in this sync)
-      for (const s of dbScorers) {
-        const displayName = s.player_name;
-        const key = playerKey(displayName, s.team_name);
-        const existing = mergedScorerMap.get(key);
-        if (!existing || s.goals > existing.goals) {
-          mergedScorerMap.set(key, { ...s, player_name: chooseName(existing?.player_name, displayName) });
-        }
-      }
-      // Merge NBC Sports scraped list (taking the higher count; NBC has full accented names)
-      for (const s of nbcScorers) {
-        const displayName = s.playerName;
-        const key = playerKey(displayName, s.teamName);
-        const existing = mergedScorerMap.get(key);
-        if (!existing || s.goals > existing.goals) {
-          mergedScorerMap.set(key, existing
-            ? { ...existing, goals: s.goals, player_name: chooseName(existing.player_name, displayName) }
-            : { player_name: displayName, team_name: s.teamName, goals: s.goals, nationality: null });
-        }
-      }
-      // Override with API scorers (taking the higher count)
-      for (const s of apiScorers) {
-        const team = normaliseTeamName(s.teamName);
-        const displayName = s.playerName;
-        const key = playerKey(displayName, team);
-        const existing = mergedScorerMap.get(key);
-        if (!existing || s.goals >= existing.goals) {
-          mergedScorerMap.set(key, { player_name: chooseName(existing?.player_name, displayName), team_name: team, goals: s.goals, nationality: s.nationality });
-        }
-      }
-      // Override with fresh event scorers from this sync (taking the higher count)
-      for (const e of eventScorers) {
-        const displayName = e.player_name;
-        const key = playerKey(displayName, e.team_name);
-        const existing = mergedScorerMap.get(key);
-        if (!existing || e.goals > existing.goals) {
-          mergedScorerMap.set(key, existing
-            ? { ...existing, goals: e.goals, player_name: chooseName(existing.player_name, displayName) }
-            : { ...e, player_name: displayName });
-        }
-      }
-
-      // Collapse abbreviated names into full names (e.g. "E. Just" → "Elijah Just")
-      // Works for any player automatically — no hardcoding needed
-      const mergedAliases = deduplicateAbbreviations(mergedScorerMap);
-      for (const aliasName of mergedAliases) {
-        await sql`DELETE FROM player_goals WHERE LOWER(player_name) = ${aliasName.toLowerCase()}`;
-      }
-      if (mergedAliases.length > 0) statNotes.push(`deduped: ${mergedAliases.join(', ')}`);
-
-      const scorerSource = [...mergedScorerMap.values()]
+      const scorerSource: PlayerGoal[] = nbcScorers
         .filter(s => s.goals > 0)
-        .sort((a, b) => b.goals - a.goals);
+        .sort((a, b) => b.goals - a.goals)
+        .map(s => ({ player_name: s.playerName, team_name: s.teamName, goals: s.goals, nationality: null }));
 
       if (scorerSource.length > 0) {
         const top = scorerSource[0];
