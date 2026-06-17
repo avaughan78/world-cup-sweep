@@ -14,17 +14,8 @@ const DONE_STATUSES = new Set(['FT', 'AET', 'PEN']);
 
 // Maps non-canonical player name variants (e.g. abbreviated) to their canonical form.
 // Keys are matched case-insensitively.
-const PLAYER_NAME_ALIASES: Record<string, string> = {
-  'e. just': 'Elijah Just',
-};
-
 function stripDiacritics(s: string): string {
   return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
-}
-
-// Returns the canonical display name — resolves explicit aliases, otherwise returns as-is
-function normalisePlayerName(name: string): string {
-  return PLAYER_NAME_ALIASES[name.toLowerCase()] ?? name;
 }
 
 // Key used for deduplication — accent-stripped + lowercased so "Mbappé" and "Mbappe" merge
@@ -40,6 +31,55 @@ function chooseName(current: string | undefined, candidate: string): string {
   if (currentHasAccent && !candidateHasAccent) return current;
   if (candidateHasAccent && !currentHasAccent) return candidate;
   return current.length >= candidate.length ? current : candidate;
+}
+
+// Returns true if `short` is an abbreviated form of `full` on the same team.
+// Matches patterns like "E. Just" → "Elijah Just": single initial + dot, same surname.
+function isAbbreviationOf(short: string, full: string): boolean {
+  const sp = short.trim().split(/\s+/);
+  const fp = full.trim().split(/\s+/);
+  if (sp.length < 2 || fp.length < 2) return false;
+  if (!/^[A-Za-zÀ-ÿ]\.$/.test(sp[0])) return false;
+  const initial = stripDiacritics(sp[0][0]).toLowerCase();
+  const fullInitial = stripDiacritics(fp[0][0]).toLowerCase();
+  if (initial !== fullInitial) return false;
+  const shortSurname = stripDiacritics(sp[sp.length - 1]).toLowerCase();
+  const fullSurname = stripDiacritics(fp[fp.length - 1]).toLowerCase();
+  return shortSurname === fullSurname;
+}
+
+// After the four-way merge, collapse abbreviated names into their full-name counterparts.
+// Returns the abbreviated names that were merged (for DB cleanup).
+function deduplicateAbbreviations(map: Map<string, PlayerGoal>): string[] {
+  const byTeam = new Map<string, string[]>();
+  for (const [key, entry] of map) {
+    const list = byTeam.get(entry.team_name) ?? [];
+    list.push(key);
+    byTeam.set(entry.team_name, list);
+  }
+
+  const removed: string[] = [];
+  for (const keys of byTeam.values()) {
+    for (const shortKey of [...keys]) {
+      const shortEntry = map.get(shortKey);
+      if (!shortEntry) continue;
+      for (const fullKey of keys) {
+        if (shortKey === fullKey) continue;
+        const fullEntry = map.get(fullKey);
+        if (!fullEntry) continue;
+        if (isAbbreviationOf(shortEntry.player_name, fullEntry.player_name)) {
+          // Merge goals into the full-name entry (keep the higher count)
+          if (shortEntry.goals > fullEntry.goals) {
+            map.set(fullKey, { ...fullEntry, goals: shortEntry.goals });
+          }
+          removed.push(shortEntry.player_name);
+          map.delete(shortKey);
+          break;
+        }
+      }
+    }
+  }
+  return removed;
 }
 
 // ── NBC Sports golden boot scraper ───────────────────────────────────────────
@@ -252,7 +292,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
 
       // Seed from DB (preserves goals from matches not fetched in this sync)
       for (const s of dbScorers) {
-        const displayName = normalisePlayerName(s.player_name);
+        const displayName = s.player_name;
         const key = playerKey(displayName, s.team_name);
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals > existing.goals) {
@@ -261,7 +301,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       // Merge NBC Sports scraped list (taking the higher count; NBC has full accented names)
       for (const s of nbcScorers) {
-        const displayName = normalisePlayerName(s.playerName);
+        const displayName = s.playerName;
         const key = playerKey(displayName, s.teamName);
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals > existing.goals) {
@@ -273,7 +313,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       // Override with API scorers (taking the higher count)
       for (const s of apiScorers) {
         const team = normaliseTeamName(s.teamName);
-        const displayName = normalisePlayerName(s.playerName);
+        const displayName = s.playerName;
         const key = playerKey(displayName, team);
         const existing = mergedScorerMap.get(key);
         if (!existing || s.goals >= existing.goals) {
@@ -282,7 +322,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       // Override with fresh event scorers from this sync (taking the higher count)
       for (const e of eventScorers) {
-        const displayName = normalisePlayerName(e.player_name);
+        const displayName = e.player_name;
         const key = playerKey(displayName, e.team_name);
         const existing = mergedScorerMap.get(key);
         if (!existing || e.goals > existing.goals) {
@@ -292,10 +332,13 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         }
       }
 
-      // Remove stale alias rows from DB so they don't persist alongside canonical names
-      for (const aliasName of Object.keys(PLAYER_NAME_ALIASES)) {
-        await sql`DELETE FROM player_goals WHERE LOWER(player_name) = ${aliasName}`;
+      // Collapse abbreviated names into full names (e.g. "E. Just" → "Elijah Just")
+      // Works for any player automatically — no hardcoding needed
+      const mergedAliases = deduplicateAbbreviations(mergedScorerMap);
+      for (const aliasName of mergedAliases) {
+        await sql`DELETE FROM player_goals WHERE LOWER(player_name) = ${aliasName.toLowerCase()}`;
       }
+      if (mergedAliases.length > 0) statNotes.push(`deduped: ${mergedAliases.join(', ')}`);
 
       const scorerSource = [...mergedScorerMap.values()]
         .filter(s => s.goals > 0)
