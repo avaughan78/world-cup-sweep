@@ -341,7 +341,7 @@ export default function StatsView({
   const loading = fixtures === null;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-start">
       <GoldenBootLeaderboard
         scorers={scorers}
         participantMap={participantMap}
