@@ -711,6 +711,9 @@ export async function markFixtureProcessed(fixtureId: number): Promise<void> {
 export async function clearProcessedFixtures(): Promise<void> {
   await ensureProcessedFixturesTable();
   await sql`TRUNCATE processed_fixtures`;
+  // Zero card columns so they accumulate correctly from scratch on the next sync.
+  // Without this, the read-then-add approach would double-count cards from re-fetched matches.
+  await sql`UPDATE team_stats SET yellow_cards = 0, red_cards = 0, own_goals_against = 0`;
 }
 
 export async function listAuditLogs(limit = 200): Promise<AuditEntry[]> {
