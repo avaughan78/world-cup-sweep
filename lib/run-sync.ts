@@ -137,36 +137,33 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         if (f.awayGoals != null) goalsConceded.set(home, (goalsConceded.get(home) ?? 0) + f.awayGoals);
       }
 
-      // Cards + own goals: fetch events for live matches + any finished match
-      // not yet recorded in processed_fixtures. Each finished match is fetched
-      // exactly once — the DB protects against resets via GREATEST.
+      // Cards + own goals: only fetch events for newly-finished matches (fetch-once).
+      // Live match cards are excluded — they'd be double-counted on every sync since
+      // they're not yet in processed_fixtures. Cards update shortly after the final whistle.
       const processedIds = await getProcessedFixtureIds();
-      const needEvents = activeFixtures.filter(f =>
-        LIVE_STATUSES.has(f.statusShort) ||
-        (DONE_STATUSES.has(f.statusShort) && !processedIds.has(f.id))
+      const newlyDone = activeFixtures.filter(f =>
+        DONE_STATUSES.has(f.statusShort) && !processedIds.has(f.id)
       );
 
-      const cards = new Map<string, { yellow: number; red: number }>();
-      const ownGoals = new Map<string, number>();
+      // Delta from newly-finished matches only
+      const deltaCards = new Map<string, { yellow: number; red: number }>();
+      const deltaOG = new Map<string, number>();
 
-      for (const f of needEvents) {
+      for (const f of newlyDone) {
         try {
           const events = await getFixtureEvents(f.id);
           for (const ev of events) {
             const team = normaliseTeamName(ev.team);
             if (ev.type === 'Card') {
-              const c = cards.get(team) ?? { yellow: 0, red: 0 };
+              const c = deltaCards.get(team) ?? { yellow: 0, red: 0 };
               if (ev.detail === 'Yellow Card') c.yellow++;
               else if (ev.detail === 'Red Card' || ev.detail === 'Second Yellow card') c.red++;
-              cards.set(team, c);
+              deltaCards.set(team, c);
             } else if (ev.type === 'Goal' && ev.detail === 'Own Goal') {
-              ownGoals.set(team, (ownGoals.get(team) ?? 0) + 1);
+              deltaOG.set(team, (deltaOG.get(team) ?? 0) + 1);
             }
           }
-          // Mark finished matches as done — won't be re-fetched on future syncs
-          if (DONE_STATUSES.has(f.statusShort)) {
-            await markFixtureProcessed(f.id);
-          }
+          await markFixtureProcessed(f.id);
         } catch (err) {
           statNotes.push(`events error fixture ${f.id}: ${err instanceof Error ? err.message : err}`);
           // Do NOT mark as processed if fetch failed — retry next sync
@@ -176,20 +173,30 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       // Eliminations: compute from fixtures (standings API lags)
       const eliminated = computeEliminationsFromFixtures(allFixtures);
 
-      // Upsert team_stats for all known teams
+      // Read current accumulated card totals from DB, then add the newly-done delta.
+      // This is correct because each finished match's events are fetched exactly once
+      // (processed_fixtures guard), so we accumulate correctly across syncs.
+      const existingStats = await sql`SELECT team_name, yellow_cards, red_cards, own_goals_against FROM team_stats`;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const dbCards = new Map(existingStats.map((r: any) => [
+        r.team_name as string,
+        { yellow: (r.yellow_cards as number) ?? 0, red: (r.red_cards as number) ?? 0, og: (r.own_goals_against as number) ?? 0 },
+      ]));
+
       const allTeams = new Set(Object.values(GROUPS_2026).flat());
       for (const teamName of allTeams) {
-        const c = cards.get(teamName) ?? { yellow: 0, red: 0 };
+        const db = dbCards.get(teamName) ?? { yellow: 0, red: 0, og: 0 };
+        const delta = deltaCards.get(teamName) ?? { yellow: 0, red: 0 };
         await upsertTeamStats({
           team_name: teamName,
-          yellow_cards: c.yellow,
-          red_cards: c.red,
-          own_goals_against: ownGoals.get(teamName) ?? 0,
+          yellow_cards: db.yellow + delta.yellow,
+          red_cards: db.red + delta.red,
+          own_goals_against: db.og + (deltaOG.get(teamName) ?? 0),
           goals_conceded: goalsConceded.get(teamName) ?? 0,
           is_eliminated: eliminated.has(teamName),
         });
       }
-      statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${needEvents.length} event fetches`);
+      statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${newlyDone.length} event fetches`);
 
       // Goal scorers: NBC Sports is the single source of truth.
       // If NBC returns data we delete all existing rows first (clean replace).
