@@ -1,4 +1,4 @@
-import { getAllTeamStats, getTopScorer, getPrizeOverride, TeamStats, GroupStanding } from './db';
+import { getAllTeamStats, getTopScorer, getPlayerGoals, getPrizeOverride, TeamStats, GroupStanding } from './db';
 import type { ApiMatch, ApiStanding } from './football-api';
 import { normaliseTeamName } from './football-api';
 
@@ -9,6 +9,7 @@ export interface Prize {
   icon: string;
   current_team: string | null;
   current_participant: string | null;
+  tied_teams?: string[] | null;
   value_label: string | null;
   player_name?: string | null;
   is_manual: boolean;
@@ -22,9 +23,10 @@ export async function computePrizes(
   companyId: number,
   groupStandings: GroupStanding[] = []
 ): Promise<Prize[]> {
-  const [allStats, topScorer, shotOverride, bicycleOverride, ownGoalOverride] = await Promise.all([
+  const [allStats, topScorer, playerGoals, shotOverride, bicycleOverride, ownGoalOverride] = await Promise.all([
     getAllTeamStats(),
     getTopScorer(),
+    getPlayerGoals(),
     getPrizeOverride(companyId, 'longest_shot'),
     getPrizeOverride(companyId, 'bicycle'),
     getPrizeOverride(companyId, 'most_own_goals'),
@@ -60,8 +62,15 @@ export async function computePrizes(
     if (!topOGs || t.own_goals_against > topOGs.own_goals_against) topOGs = t;
   }
 
-  // 5. Top scorer's team
+  // 5. Top scorer's team — detect tie via player_goals
   const topScorerTeam = topScorer?.team_name ?? null;
+  const goldenBootTiedTeams: string[] | null = (() => {
+    if (!topScorer?.goals) return null;
+    const topGoal = topScorer.goals;
+    const tied = playerGoals.filter(p => p.goals === topGoal);
+    if (tied.length <= 1) return null;
+    return [...new Set(tied.map(p => p.team_name))];
+  })();
 
   // 6. Most goals conceded (The Sieve); tie-break: worst goal difference, then fewest goals scored
   let topSieve: TeamStats | null = null;
@@ -137,6 +146,7 @@ export async function computePrizes(
       icon: '👟',
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
+      tied_teams: goldenBootTiedTeams,
       player_name: topScorer?.player_name ?? null,
       value_label: topScorer?.goals
         ? `${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
