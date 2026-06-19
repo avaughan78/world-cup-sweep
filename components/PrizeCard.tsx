@@ -31,19 +31,20 @@ const headerStrip: React.CSSProperties = {
 // Renders team/player info only — strip is rendered separately at card level
 function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   if (!prize.current_team) {
-    if (prize.tied_teams && prize.tied_teams.length > 1) {
+    if (prize.tied_players && prize.tied_players.length > 1) {
       return (
-        <div>
-          <div className="flex items-center gap-1 flex-wrap">
-            {prize.tied_teams.map(team => (
-              <Flag key={team} team={team} height="1.1rem" />
-            ))}
-          </div>
-          {prize.value_label && (
-            <span className="text-xs block mt-0.5" style={{ color: 'var(--text-muted)' }}>
-              {prize.value_label} each
-            </span>
-          )}
+        <div className="flex flex-col gap-0.5">
+          {prize.tied_players.map(p => {
+            const surname = p.player_name.split(' ').pop() ?? p.player_name;
+            return (
+              <div key={`${p.player_name}-${p.team_name}`} className="flex items-center gap-1 min-w-0">
+                <Flag team={p.team_name} height="0.75rem" width="1.1rem" />
+                <span className="truncate" style={{ color: 'var(--text-primary)', fontSize: '0.72rem', fontWeight: 600 }}>
+                  {surname}
+                </span>
+              </div>
+            );
+          })}
         </div>
       );
     }

@@ -9,7 +9,7 @@ export interface Prize {
   icon: string;
   current_team: string | null;
   current_participant: string | null;
-  tied_teams?: string[] | null;
+  tied_players?: { player_name: string; team_name: string }[] | null;
   value_label: string | null;
   player_name?: string | null;
   is_manual: boolean;
@@ -64,12 +64,12 @@ export async function computePrizes(
 
   // 5. Top scorer's team — detect tie via player_goals
   const topScorerTeam = topScorer?.team_name ?? null;
-  const goldenBootTiedTeams: string[] | null = (() => {
+  const goldenBootTiedPlayers: { player_name: string; team_name: string }[] | null = (() => {
     if (!topScorer?.goals) return null;
     const topGoal = topScorer.goals;
     const tied = playerGoals.filter(p => p.goals === topGoal);
     if (tied.length <= 1) return null;
-    return [...new Set(tied.map(p => p.team_name))];
+    return tied.map(p => ({ player_name: p.player_name, team_name: p.team_name }));
   })();
 
   // 6. Most goals conceded (The Sieve); tie-break: worst goal difference, then fewest goals scored
@@ -146,7 +146,7 @@ export async function computePrizes(
       icon: '👟',
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
-      tied_teams: goldenBootTiedTeams,
+      tied_players: goldenBootTiedPlayers,
       player_name: topScorer?.player_name ?? null,
       value_label: topScorer?.goals
         ? `${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
