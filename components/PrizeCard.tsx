@@ -33,18 +33,25 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   if (!prize.current_team) {
     if (prize.tied_players && prize.tied_players.length > 1) {
       return (
-        <div className="flex flex-col gap-0.5">
-          {prize.tied_players.map(p => {
-            const surname = p.player_name.split(' ').pop() ?? p.player_name;
-            return (
-              <div key={`${p.player_name}-${p.team_name}`} className="flex items-center gap-1 min-w-0">
-                <Flag team={p.team_name} height="0.75rem" width="1.1rem" />
-                <span className="truncate" style={{ color: 'var(--text-primary)', fontSize: '0.72rem', fontWeight: 600 }}>
-                  {surname}
-                </span>
-              </div>
-            );
-          })}
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex flex-col gap-0.5 min-w-0">
+            {prize.tied_players.map(p => {
+              const surname = p.player_name.split(' ').pop() ?? p.player_name;
+              return (
+                <div key={`${p.player_name}-${p.team_name}`} className="flex items-center gap-1 min-w-0">
+                  <Flag team={p.team_name} height="0.75rem" width="1.1rem" />
+                  <span className="truncate" style={{ color: 'var(--text-primary)', fontSize: '0.72rem', fontWeight: 600 }}>
+                    {surname}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          {prize.value_label && (
+            <span className="shrink-0" style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>
+              {prize.value_label}
+            </span>
+          )}
         </div>
       );
     }
