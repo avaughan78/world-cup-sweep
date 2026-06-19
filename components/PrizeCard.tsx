@@ -33,7 +33,7 @@ function LeaderSection({ prize, empty }: { prize: Prize; empty: string }) {
   if (!prize.current_team) {
     if (prize.tied_players && prize.tied_players.length > 1) {
       return (
-        <div className="flex items-center gap-2.5 min-w-0">
+        <div className="flex items-center justify-between gap-2.5 w-full">
           <div className="flex flex-col gap-0.5 min-w-0">
             {prize.tied_players.map(p => {
               const surname = p.player_name.split(' ').pop() ?? p.player_name;
