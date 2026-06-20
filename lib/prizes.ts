@@ -112,7 +112,7 @@ export async function computePrizes(
     },
     {
       slug: 'first_eliminated',
-      name: 'Early Bath',
+      name: 'Early Bath :(',
       description: 'The first team eliminated',
       icon: '✈️',
       current_team: firstOut?.team_name ?? null,
