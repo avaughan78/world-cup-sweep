@@ -222,7 +222,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
               >{prize.icon}</span>
             )
           }
-          {prizeAmount && <TicketBadge amount={prizeAmount} />}
+          {prizeAmount && <TicketBadge amount={prizeAmount} confirmed={prize.confirmed} />}
         </div>
         <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
           {prize.slug === 'most_cards' ? <SimunicModal /> : prize.slug === 'sieve' ? <DerbyModal /> : prize.name}
