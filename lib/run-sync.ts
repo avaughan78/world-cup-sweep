@@ -194,9 +194,10 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
           own_goals_against: db.og + (deltaOG.get(teamName) ?? 0),
           goals_conceded: goalsConceded.get(teamName) ?? 0,
           is_eliminated: eliminated.has(teamName),
+          eliminated_at: eliminated.get(teamName),
         });
       }
-      statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${newlyDone.length} event fetches`);
+      statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${newlyDone.length} event fetches, ${eliminated.size} eliminated`);
 
       // Goal scorers: NBC Sports is the single source of truth.
       // If NBC returns data we delete all existing rows first (clean replace).
@@ -379,26 +380,83 @@ function computeStandingsFromFixtures(fixtures: WCFixture[]): GroupStanding[] {
   return result;
 }
 
-// Determine eliminated teams from fixture results (no standings API needed).
-function computeEliminationsFromFixtures(fixtures: WCFixture[]): Set<string> {
-  const eliminated = new Set<string>();
+// Determine eliminated teams from fixture results, returning each team's elimination
+// timestamp so the Early Bath prize reflects the actual match time.
+// Detects mathematical 4th-place elimination (can't avoid finishing last even with
+// a win) as well as definitive elimination after all 3 group games are played.
+function computeEliminationsFromFixtures(fixtures: WCFixture[]): Map<string, string> {
+  const eliminated = new Map<string, string>(); // team → ISO eliminated_at
 
-  // Group stage: compute standings then eliminate 4th-place teams in completed groups
-  const standings = computeStandingsFromFixtures(fixtures);
-  const byGroup = new Map<string, GroupStanding[]>();
-  for (const row of standings) {
-    const g = byGroup.get(row.group_name) ?? [];
-    g.push(row);
-    byGroup.set(row.group_name, g);
-  }
-  for (const [, rows] of byGroup) {
-    const allPlayed3 = rows.every(r => r.played >= 3);
-    if (!allPlayed3) continue;
-    const last = [...rows].sort((a, b) => a.position - b.position).at(-1);
-    if (last) eliminated.add(last.team_name);
+  const teamToGroup = new Map<string, string>();
+  for (const [letter, teams] of Object.entries(GROUPS_2026)) {
+    for (const team of teams) teamToGroup.set(team, letter);
   }
 
-  // Knockout rounds: losers are eliminated
+  // Running per-team group-stage stats (accumulated in match order)
+  type Stat = { played: number; points: number; gf: number; ga: number };
+  const runningStats = new Map<string, Stat>();
+  for (const teams of Object.values(GROUPS_2026)) {
+    for (const team of teams) runningStats.set(team, { played: 0, points: 0, gf: 0, ga: 0 });
+  }
+
+  // Process group matches chronologically — update running totals, then check elimination
+  const groupDone = fixtures
+    .filter(f => DONE_STATUSES.has(f.statusShort) && mapRound(f.round) === 'GROUP_STAGE'
+              && f.homeGoals != null && f.awayGoals != null)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  for (const f of groupDone) {
+    const home = normaliseTeamName(f.homeTeam);
+    const away = normaliseTeamName(f.awayTeam);
+    const h = runningStats.get(home);
+    const a = runningStats.get(away);
+    if (!h || !a) continue;
+
+    h.played++; a.played++;
+    h.gf += f.homeGoals!; h.ga += f.awayGoals!;
+    a.gf += f.awayGoals!; a.ga += f.homeGoals!;
+    if      (f.homeGoals! > f.awayGoals!) { h.points += 3; }
+    else if (f.awayGoals! > f.homeGoals!) { a.points += 3; }
+    else                                  { h.points++;  a.points++; }
+
+    // Check both groups touched by this match
+    const affectedGroups = new Set(
+      [teamToGroup.get(home), teamToGroup.get(away)].filter(Boolean) as string[]
+    );
+    for (const letter of affectedGroups) {
+      const groupTeams = GROUPS_2026[letter] ?? [];
+
+      for (const team of groupTeams) {
+        if (eliminated.has(team)) continue;
+        const s = runningStats.get(team)!;
+        const remaining = 3 - s.played;
+        const maxPossible = s.points + 3 * remaining;
+
+        // Mathematical elimination: 3 other teams each already have more points
+        // than this team can ever achieve — they're locked into 4th.
+        const teamsAbove = groupTeams.filter(t => t !== team && runningStats.get(t)!.points > maxPossible).length;
+        if (teamsAbove >= 3) {
+          eliminated.set(team, f.date);
+          continue;
+        }
+
+        // Definitive: all 4 teams finished, last in group by points/GD/GF
+        const allPlayed3 = groupTeams.every(t => (runningStats.get(t)?.played ?? 0) >= 3);
+        if (allPlayed3) {
+          const sorted = [...groupTeams].sort((ta, tb) => {
+            const sa = runningStats.get(ta)!;
+            const sb = runningStats.get(tb)!;
+            return (sb.points - sa.points) || ((sb.gf - sb.ga) - (sa.gf - sa.ga)) || (sb.gf - sa.gf);
+          });
+          if (sorted[sorted.length - 1] === team) {
+            eliminated.set(team, f.date);
+          }
+        }
+      }
+    }
+  }
+
+  // Knockout rounds: loser eliminated at match time
   for (const f of fixtures) {
     if (!DONE_STATUSES.has(f.statusShort)) continue;
     const stage = mapRound(f.round);
@@ -407,13 +465,12 @@ function computeEliminationsFromFixtures(fixtures: WCFixture[]): Set<string> {
     const home = normaliseTeamName(f.homeTeam);
     const away = normaliseTeamName(f.awayTeam);
     if (f.homeGoals < f.awayGoals) {
-      eliminated.add(home);
+      if (!eliminated.has(home)) eliminated.set(home, f.date);
     } else if (f.awayGoals < f.homeGoals) {
-      eliminated.add(away);
+      if (!eliminated.has(away)) eliminated.set(away, f.date);
     } else if (f.statusShort === 'PEN' && f.penaltyHome != null && f.penaltyAway != null) {
-      // Penalty shootout — goals are level after AET, use penalty score to find loser
-      if (f.penaltyHome < f.penaltyAway) eliminated.add(home);
-      else if (f.penaltyAway < f.penaltyHome) eliminated.add(away);
+      if (f.penaltyHome < f.penaltyAway  && !eliminated.has(home)) eliminated.set(home, f.date);
+      else if (f.penaltyAway < f.penaltyHome && !eliminated.has(away)) eliminated.set(away, f.date);
     }
   }
 
