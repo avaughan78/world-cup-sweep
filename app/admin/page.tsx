@@ -79,6 +79,10 @@ export default function AdminPage() {
   const [bicycleSaved, setBicycleSaved] = useState(false);
   const [globalRemoved, setGlobalRemoved] = useState<Set<string>>(new Set());
 
+  // Early Bath elimination
+  const [elimTeam, setElimTeam] = useState('');
+  const [elimSaved, setElimSaved] = useState(false);
+
   // Track last-persisted values so auto-save doesn't fire on initial load
   const lastShot     = useRef({ team: '', player: '', url: '' });
   const lastOwnGoal  = useRef({ team: '', player: '', url: '' });
@@ -561,6 +565,28 @@ export default function AdminPage() {
     setLoading(false);
   }
 
+  async function handleEliminate() {
+    if (!elimTeam) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/eliminate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ team_name: elimTeam }),
+      });
+      const { ok, data } = await parseResponse(res);
+      const d = data as Record<string, unknown> | null;
+      if (ok && d?.ok) {
+        setElimSaved(true);
+        setTimeout(() => setElimSaved(false), 3000);
+        setElimTeam('');
+      } else {
+        setStatus({ ok: false, message: 'Eliminate failed' });
+      }
+    } catch (e) { setStatus({ ok: false, message: String(e) }); }
+    setLoading(false);
+  }
+
   async function clearPrize(endpoint: string, resetFns: Array<() => void>, label: string) {
     if (!confirm(`Clear ${label}? This cannot be undone.`)) return;
     setLoading(true);
@@ -872,7 +898,7 @@ export default function AdminPage() {
               const cardStyle: React.CSSProperties = { background: '#ffffff', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem' };
               const labelStyle: React.CSSProperties = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' };
               return (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4">
 
                   {/* Thunderbastard */}
                   <div style={cardStyle}>
@@ -942,6 +968,28 @@ export default function AdminPage() {
                       ], 'Bicycle data')} disabled={loading} className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
                         style={{ background: 'transparent', color: 'var(--text-muted)', border: '1px solid var(--border)', opacity: loading ? 0.5 : 1 }}>
                         Clear
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Early Bath */}
+                  <div style={cardStyle}>
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>✈️ Early Bath</span>
+                      {elimSaved && <span style={{ color: '#22c55e', fontSize: '0.75rem', fontWeight: 700 }}>Saved ✓</span>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <div><label style={labelStyle}>Team eliminated</label>{teamSelect(elimTeam, setElimTeam)}</div>
+                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                        Sets eliminated_at to now. Call for each team in order — earliest call wins Early Bath.
+                      </p>
+                      <button
+                        onClick={handleEliminate}
+                        disabled={loading || !elimTeam}
+                        className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
+                        style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: (loading || !elimTeam) ? 0.5 : 1 }}
+                      >
+                        Mark Eliminated
                       </button>
                     </div>
                   </div>

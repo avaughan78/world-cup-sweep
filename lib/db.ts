@@ -332,13 +332,25 @@ export async function upsertTeamStats(stats: {
       red_cards           = ${stats.red_cards},
       own_goals_against   = ${stats.own_goals_against},
       goals_conceded      = ${stats.goals_conceded},
-      is_eliminated       = ${stats.is_eliminated},
+      is_eliminated       = (team_stats.is_eliminated OR ${stats.is_eliminated}),
       eliminated_at = CASE
+        WHEN team_stats.eliminated_at IS NOT NULL THEN team_stats.eliminated_at
         WHEN ${eliminatedAt}::timestamptz IS NOT NULL THEN ${eliminatedAt}::timestamptz
-        WHEN ${stats.is_eliminated} AND team_stats.eliminated_at IS NULL THEN NOW()
-        WHEN NOT ${stats.is_eliminated} THEN NULL
-        ELSE team_stats.eliminated_at
+        WHEN ${stats.is_eliminated} THEN NOW()
+        ELSE NULL
       END,
+      updated_at = NOW()
+  `;
+}
+
+export async function markTeamEliminated(teamName: string, eliminatedAt?: string): Promise<void> {
+  const ts = eliminatedAt ?? new Date().toISOString();
+  await sql`
+    INSERT INTO team_stats (team_name, yellow_cards, red_cards, own_goals_against, goals_conceded, is_eliminated, eliminated_at, updated_at)
+    VALUES (${teamName}, 0, 0, 0, 0, true, ${ts}::timestamptz, NOW())
+    ON CONFLICT (team_name) DO UPDATE SET
+      is_eliminated = true,
+      eliminated_at = COALESCE(team_stats.eliminated_at, ${ts}::timestamptz),
       updated_at = NOW()
   `;
 }
