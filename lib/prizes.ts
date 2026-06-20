@@ -16,7 +16,11 @@ export interface Prize {
   mystery?: boolean;
   hidden?: boolean;
   video_url?: string | null;
+  confirmed?: boolean;
 }
+
+// 20:00 BST on 19 Jul 2026 = 19:00 UTC
+const TOURNAMENT_END = new Date('2026-07-19T19:00:00Z');
 
 export async function computePrizes(
   participantMap: Map<string, string | null>,
@@ -89,6 +93,9 @@ export async function computePrizes(
     }
   }
 
+  const now = new Date();
+  const tournamentOver = now >= TOURNAMENT_END;
+
   return [
     {
       slug: 'most_cards',
@@ -101,6 +108,7 @@ export async function computePrizes(
         ? `${topCards!.yellow_cards}Y · ${topCards!.red_cards}R`
         : null,
       is_manual: false,
+      confirmed: tournamentOver && topCardsTotal > 0,
     },
     {
       slug: 'first_eliminated',
@@ -113,6 +121,7 @@ export async function computePrizes(
         ? `Eliminated · ${new Date(firstOut.eliminated_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`
         : null,
       is_manual: false,
+      confirmed: !!firstOut,
     },
     {
       slug: 'longest_shot',
@@ -124,6 +133,7 @@ export async function computePrizes(
       value_label: shotOverride?.value_label ?? null,
       is_manual: true,
       video_url: shotOverride?.notes ?? null,
+      confirmed: tournamentOver && !!shotOverride?.team_name,
     },
     {
       slug: 'most_own_goals',
@@ -138,6 +148,7 @@ export async function computePrizes(
       mystery: true,
       hidden: ownGoalOverride?.team_name === '__hidden__',
       video_url: ownGoalOverride?.team_name !== '__hidden__' ? (ownGoalOverride?.notes ?? null) : null,
+      confirmed: tournamentOver && !!(ownGoalOverride?.team_name && ownGoalOverride.team_name !== '__hidden__'),
     },
     {
       slug: 'top_scorer_team',
@@ -152,6 +163,7 @@ export async function computePrizes(
         ? `${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
         : null,
       is_manual: false,
+      confirmed: tournamentOver && !!topScorerTeam && !goldenBootTiedPlayers,
     },
     {
       slug: 'bicycle',
@@ -165,6 +177,7 @@ export async function computePrizes(
       mystery: true,
       hidden: bicycleOverride?.team_name === '__hidden__',
       video_url: bicycleOverride?.team_name !== '__hidden__' ? (bicycleOverride?.notes ?? null) : null,
+      confirmed: tournamentOver && !!(bicycleOverride?.team_name && bicycleOverride.team_name !== '__hidden__'),
     },
     {
       slug: 'sieve',
@@ -177,6 +190,7 @@ export async function computePrizes(
         ? `${topSieve!.goals_conceded} conceded`
         : null,
       is_manual: false,
+      confirmed: tournamentOver && (topSieve?.goals_conceded ?? 0) > 0,
     },
   ];
 }

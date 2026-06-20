@@ -203,7 +203,11 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
   return (
     <div
       className="prize-card rounded-xl p-4 flex flex-col h-full"
-      style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
+      style={{
+        background: 'var(--card)',
+        border: prize.confirmed ? '1.5px solid #c9a227' : '1px solid var(--border)',
+        boxShadow: prize.confirmed ? '0 0 10px rgba(201, 162, 39, 0.25)' : undefined,
+      }}
     >
       <div className="flex-1">
         <div className="flex items-start justify-between" style={{ minHeight: '2.125rem' }}>
