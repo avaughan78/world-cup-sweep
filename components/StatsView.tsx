@@ -237,7 +237,7 @@ function GoldenBootLeaderboard({
               </div>
               <div className="text-right">
                 <span className="font-bold tabular-nums block" style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                  {s.goals}g
+                  {s.goals}
                 </span>
                 {s.assists > 0 && (
                   <span className="tabular-nums block" style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>
