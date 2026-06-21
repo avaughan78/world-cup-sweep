@@ -12,103 +12,53 @@ import { computeCardTotals, computeOwnGoals, computeGoalsConceded, computeElimin
 const LIVE_STATUSES = new Set(['1H', 'HT', '2H', 'ET', 'P', 'LIVE', 'BT', 'SUSP', 'INT']);
 const DONE_STATUSES = new Set(['FT', 'AET', 'PEN']);
 
-// ── NBC Sports golden boot scraper ───────────────────────────────────────────
+// ── FIFA API golden boot ──────────────────────────────────────────────────────
 
-const NBC_SCORER_URL = 'https://www.nbcsports.com/soccer/news/2026-world-cup-top-goalscorers-full-list-latest-on-race-for-the-golden-boot';
+const FIFA_TOPSCORERS_URL = 'https://api.fifa.com/api/v3/topscorers?idCompetition=17&idSeason=285023&count=100';
 
-// Country names as written by NBC Sports → our canonical team names
-const NBC_COUNTRY_MAP: Record<string, string> = {
-  'usa': 'United States',
-  'united states': 'United States',
-  'south korea': 'South Korea',
-  'korea': 'South Korea',
-  'czechia': 'Czechia',
-  'czech republic': 'Czechia',
-  'bosnia & herzegovina': 'Bosnia and Herzegovina',
-  'bosnia and herzegovina': 'Bosnia and Herzegovina',
-  'curacao': 'Curaçao',
-  "côte d'ivoire": 'Ivory Coast',
-  'ivory coast': 'Ivory Coast',
-  'dr congo': 'DR Congo',
-  'democratic republic of congo': 'DR Congo',
-  'cape verde': 'Cape Verde',
-  'new zealand': 'New Zealand',
-  'saudi arabia': 'Saudi Arabia',
-  'türkiye': 'Türkiye',
-  'turkey': 'Türkiye',
+// FIFA 3-letter country codes → canonical team names
+const FIFA_COUNTRY_MAP: Record<string, string> = {
+  MEX: 'Mexico',       RSA: 'South Africa',         KOR: 'South Korea',  CZE: 'Czechia',
+  CAN: 'Canada',       BIH: 'Bosnia and Herzegovina', QAT: 'Qatar',       SUI: 'Switzerland',
+  BRA: 'Brazil',       MAR: 'Morocco',               HAI: 'Haiti',        SCO: 'Scotland',
+  USA: 'United States', PAR: 'Paraguay',              AUS: 'Australia',   TUR: 'Türkiye',
+  GER: 'Germany',      CUW: 'Curaçao',               CIV: 'Ivory Coast',  ECU: 'Ecuador',
+  NED: 'Netherlands',  JPN: 'Japan',                 SWE: 'Sweden',       TUN: 'Tunisia',
+  BEL: 'Belgium',      EGY: 'Egypt',                 IRN: 'Iran',         NZL: 'New Zealand',
+  ESP: 'Spain',        CPV: 'Cape Verde',             KSA: 'Saudi Arabia', URU: 'Uruguay',
+  FRA: 'France',       SEN: 'Senegal',               IRQ: 'Iraq',         NOR: 'Norway',
+  ARG: 'Argentina',    ALG: 'Algeria',               AUT: 'Austria',      JOR: 'Jordan',
+  POR: 'Portugal',     COD: 'DR Congo',              UZB: 'Uzbekistan',   COL: 'Colombia',
+  ENG: 'England',      CRO: 'Croatia',               GHA: 'Ghana',        PAN: 'Panama',
 };
 
-const ALL_TEAM_NAMES = Object.values(GROUPS_2026).flat();
-
-function nbcCountryToTeam(country: string): string | null {
-  const lower = country.toLowerCase().trim();
-  if (NBC_COUNTRY_MAP[lower]) return NBC_COUNTRY_MAP[lower];
-  const direct = ALL_TEAM_NAMES.find(t => t.toLowerCase() === lower);
-  return direct ?? null;
+function toTitleCase(s: string): string {
+  return s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 }
 
-function parseNBCSportsScorers(html: string): Array<{ playerName: string; teamName: string; goals: number }> {
-  // Strip scripts/styles then convert block-level tags to newlines
-  const text = html
-    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-    .replace(/<(?:h[1-6]|p|li|tr|div|br)[^>]*>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
-    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)));
-
-  const WORD_NUMS: Record<string, number> = {
-    one: 1, two: 2, three: 3, four: 4, five: 5,
-    six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  };
-
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-  const scorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
-  let currentGoals = 0;
-
-  for (const line of lines) {
-    // Section header: "X goals", "Three goals", "(X goals each)" etc.
-    const headerGoals = line.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+goals?\b(?:\s+each)?/i);
-    if (headerGoals && !line.match(/\([^)]+\)\s*$/)) {
-      const raw = headerGoals[1].toLowerCase();
-      currentGoals = WORD_NUMS[raw] ?? parseInt(raw);
-      continue;
-    }
-
-    // Inline format: "Player Name (Country) - 2 goals"
-    const inlineMatch = line.match(/^(.+?)\s*\(([^)]+)\)\s*[-–—]\s*(\d+)\s+goals?/i);
-    if (inlineMatch) {
-      const teamName = nbcCountryToTeam(inlineMatch[2]);
-      if (teamName) scorers.push({ playerName: inlineMatch[1].trim(), teamName, goals: parseInt(inlineMatch[3]) });
-      continue;
-    }
-
-    // Player under a goal-count section: "Player Name (Country)"
-    if (currentGoals > 0) {
-      const playerMatch = line.match(/^(.+?)\s*\(([^)]+)\)\s*$/);
-      if (playerMatch) {
-        const teamName = nbcCountryToTeam(playerMatch[2]);
-        if (teamName) scorers.push({ playerName: playerMatch[1].trim(), teamName, goals: currentGoals });
-      }
-    }
-  }
-
-  return scorers;
-}
-
-async function fetchNBCSportsScorers(): Promise<Array<{ playerName: string; teamName: string; goals: number }>> {
-  const res = await fetch(NBC_SCORER_URL, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.9',
-    },
-    signal: AbortSignal.timeout(12000),
+async function fetchFIFAScorers(): Promise<Array<{ playerName: string; teamName: string; goals: number }>> {
+  const res = await fetch(FIFA_TOPSCORERS_URL, {
+    headers: { 'Accept': 'application/json', 'Origin': 'https://www.fifa.com' },
+    signal: AbortSignal.timeout(10000),
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const html = await res.text();
-  return parseNBCSportsScorers(html);
+  if (!res.ok) throw new Error(`FIFA API HTTP ${res.status}`);
+  const data = await res.json() as {
+    Results?: Array<{
+      PlayerName: Array<{ Locale: string; Description: string }>;
+      IdCountry: string;
+      Goals: number;
+    }>;
+  };
+  const scorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
+  for (const r of data.Results ?? []) {
+    if (!r.Goals) continue;
+    const teamName = FIFA_COUNTRY_MAP[r.IdCountry];
+    if (!teamName) continue;
+    const rawName = r.PlayerName.find(n => n.Locale === 'en-GB')?.Description
+      ?? r.PlayerName[0]?.Description ?? '';
+    scorers.push({ playerName: toTitleCase(rawName), teamName, goals: r.Goals });
+  }
+  return scorers;
 }
 
 export async function runSync(): Promise<{ ok: boolean; results: Record<string, string> }> {
@@ -199,18 +149,18 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       }
       statNotes.push(`${activeFixtures.length} active fixtures, ${allTeams.size} teams, ${newlyDone.length} event fetches, ${eliminated.size} eliminated`);
 
-      // Goal scorers: NBC Sports is the single source of truth.
-      // If NBC returns data we delete all existing rows first (clean replace).
-      // If NBC fails the old rows are left untouched.
-      let nbcScorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
+      // Goal scorers: FIFA API is the single source of truth.
+      // If FIFA returns data we delete all existing rows first (clean replace).
+      // If FIFA fails the old rows are left untouched.
+      let fifaScorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
       try {
-        nbcScorers = await fetchNBCSportsScorers();
-        statNotes.push(`NBC Sports: ${nbcScorers.length} scorers`);
+        fifaScorers = await fetchFIFAScorers();
+        statNotes.push(`FIFA API: ${fifaScorers.length} scorers`);
       } catch (err) {
-        statNotes.push(`NBC Sports fetch failed: ${err instanceof Error ? err.message : err}`);
+        statNotes.push(`FIFA API fetch failed: ${err instanceof Error ? err.message : err}`);
       }
 
-      const scorerSource: PlayerGoal[] = nbcScorers
+      const scorerSource: PlayerGoal[] = fifaScorers
         .filter(s => s.goals > 0)
         .sort((a, b) => b.goals - a.goals)
         .map(s => ({ player_name: s.playerName, team_name: s.teamName, goals: s.goals, nationality: null }));
