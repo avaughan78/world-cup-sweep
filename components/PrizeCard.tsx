@@ -185,7 +185,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
           <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: textPrimary, minHeight: '2.5rem' }}>
             {prize.name}
           </p>
-          <p className="prize-description text-sm mt-0.5" style={{ color: textMuted }}>
+          <p className="prize-description text-sm mt-0.5" style={{ color: textMuted, whiteSpace: 'pre-line' }}>
             {prize.description}
           </p>
         </div>
@@ -227,7 +227,7 @@ export default function PrizeCard({ prize, prizeAmount }: { prize: Prize; prizeA
         <p className="prize-name font-bold text-base mt-2 leading-tight" style={{ color: 'var(--text-primary)', minHeight: '2.5rem' }}>
           {prize.slug === 'most_cards' ? <SimunicModal /> : prize.slug === 'sieve' ? <DerbyModal /> : prize.name}
         </p>
-        <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+        <p className="prize-description text-sm mt-0.5" style={{ color: 'var(--text-muted)', whiteSpace: 'pre-line' }}>
           {prize.description}
         </p>
       </div>

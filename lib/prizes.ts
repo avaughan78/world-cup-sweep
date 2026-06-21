@@ -106,7 +106,7 @@ export async function computePrizes(
     {
       slug: 'most_cards',
       name: 'The Josip Simunic Team Award',
-      description: 'Filthiest team (yellow + red cards)',
+      description: 'Filthiest team\n(yellow & red cards)',
       icon: '🟨',
       current_team: topCardsTotal > 0 ? topCards!.team_name : null,
       current_participant: topCardsTotal > 0 ? participant(topCards!.team_name) : null,
