@@ -5,6 +5,7 @@ export interface TopScorerEntry {
   playerName: string;
   teamName: string;
   goals: number;
+  assists: number;
   nationality: string | null;
 }
 
@@ -15,6 +16,7 @@ export async function GET() {
       playerName: r.player_name,
       teamName: r.team_name,
       goals: r.goals,
+      assists: r.assists,
       nationality: r.nationality,
     }));
     return NextResponse.json({ scorers }, {

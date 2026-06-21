@@ -36,7 +36,7 @@ function toTitleCase(s: string): string {
   return s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
 }
 
-async function fetchFIFAScorers(): Promise<Array<{ playerName: string; teamName: string; goals: number }>> {
+async function fetchFIFAScorers(): Promise<Array<{ playerName: string; teamName: string; goals: number; assists: number }>> {
   const res = await fetch(FIFA_TOPSCORERS_URL, {
     headers: { 'Accept': 'application/json', 'Origin': 'https://www.fifa.com' },
     signal: AbortSignal.timeout(10000),
@@ -47,16 +47,17 @@ async function fetchFIFAScorers(): Promise<Array<{ playerName: string; teamName:
       PlayerName: Array<{ Locale: string; Description: string }>;
       IdCountry: string;
       Goals: number;
+      Assists: number | null;
     }>;
   };
-  const scorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
+  const scorers: Array<{ playerName: string; teamName: string; goals: number; assists: number }> = [];
   for (const r of data.Results ?? []) {
     if (!r.Goals) continue;
     const teamName = FIFA_COUNTRY_MAP[r.IdCountry];
     if (!teamName) continue;
     const rawName = r.PlayerName.find(n => n.Locale === 'en-GB')?.Description
       ?? r.PlayerName[0]?.Description ?? '';
-    scorers.push({ playerName: toTitleCase(rawName), teamName, goals: r.Goals });
+    scorers.push({ playerName: toTitleCase(rawName), teamName, goals: r.Goals, assists: r.Assists ?? 0 });
   }
   return scorers;
 }
@@ -160,25 +161,31 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
         statNotes.push(`FIFA API fetch failed: ${err instanceof Error ? err.message : err}`);
       }
 
+      // Sort by goals DESC, then assists DESC (FIFA golden boot tiebreaker)
       const scorerSource: PlayerGoal[] = fifaScorers
         .filter(s => s.goals > 0)
-        .sort((a, b) => b.goals - a.goals)
-        .map(s => ({ player_name: s.playerName, team_name: s.teamName, goals: s.goals, nationality: null }));
+        .sort((a, b) => b.goals - a.goals || b.assists - a.assists)
+        .map(s => ({ player_name: s.playerName, team_name: s.teamName, goals: s.goals, assists: s.assists, nationality: null }));
 
       if (scorerSource.length > 0) {
-        // Truncate stale rows before writing — NBC is the single source so
+        // Truncate stale rows before writing — FIFA is the single source so
         // we want a clean replace, not an accumulating upsert.
         await sql`DELETE FROM player_goals`;
         const top = scorerSource[0];
-        const tiedCount = scorerSource.filter(s => s.goals === top.goals).length;
-        const tied = tiedCount > 1;
+        // True tie requires same goals AND same assists
+        const goalTied = scorerSource.filter(s => s.goals === top.goals);
+        const trueTiedCount = goalTied.filter(s => s.assists === top.assists).length;
+        const tied = trueTiedCount > 1;
         await setTopScorer({
-          player_name: tied ? `${tiedCount} players tied` : top.player_name,
+          player_name: tied ? `${trueTiedCount} players tied` : top.player_name,
           team_name: tied ? null : top.team_name,
           goals: top.goals,
-          nationality: tied ? null : top.nationality ?? null,
+          nationality: null,
         });
-        statNotes.push(`top scorer: ${tied ? `${tiedCount} tied on ${top.goals}` : `${top.player_name} (${top.goals})`}`);
+        const note = tied
+          ? `${trueTiedCount} tied on ${top.goals}g/${top.assists}a`
+          : `${top.player_name} (${top.goals}g ${top.assists}a)`;
+        statNotes.push(`top scorer: ${note}`);
       } else {
         statNotes.push('scorers: none yet');
       }

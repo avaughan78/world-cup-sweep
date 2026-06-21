@@ -175,7 +175,8 @@ const GOLDEN_BOOT_TIEBREAKER: TiebreakerDef = {
   title: 'Golden Boot',
   criteria: [
     'Most goals scored',
-    'Prize shared if tied',
+    'Most assists (as determined by the FIFA Technical Study Group)',
+    'Prize shared if still tied',
   ],
 };
 
@@ -234,9 +235,16 @@ function GoldenBootLeaderboard({
                   {s.teamName}{participant ? ` · ${participant}` : ''}
                 </span>
               </div>
-              <span className="font-bold tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
-                {s.goals}
-              </span>
+              <div className="text-right">
+                <span className="font-bold tabular-nums block" style={{ color: 'var(--text-primary)', fontSize: '0.9rem' }}>
+                  {s.goals}g
+                </span>
+                {s.assists > 0 && (
+                  <span className="tabular-nums block" style={{ color: 'var(--text-muted)', fontSize: '0.72rem' }}>
+                    {s.assists}a
+                  </span>
+                )}
+              </div>
             </div>
           );
         })

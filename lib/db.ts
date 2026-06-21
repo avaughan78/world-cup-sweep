@@ -378,6 +378,7 @@ export interface PlayerGoal {
   player_name: string;
   team_name: string;
   goals: number;
+  assists: number;
   nationality: string | null;
 }
 
@@ -386,17 +387,20 @@ export async function setPlayerGoals(scorers: PlayerGoal[]): Promise<void> {
     player_name TEXT NOT NULL,
     team_name   TEXT NOT NULL,
     goals       INTEGER NOT NULL DEFAULT 0,
+    assists     INTEGER NOT NULL DEFAULT 0,
     nationality TEXT,
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     PRIMARY KEY (player_name, team_name)
   )`;
+  await sql`ALTER TABLE player_goals ADD COLUMN IF NOT EXISTS assists INTEGER NOT NULL DEFAULT 0`;
   if (scorers.length === 0) return;
   for (const s of scorers) {
     await sql`
-      INSERT INTO player_goals (player_name, team_name, goals, nationality, updated_at)
-      VALUES (${s.player_name}, ${s.team_name}, ${s.goals}, ${s.nationality ?? null}, NOW())
+      INSERT INTO player_goals (player_name, team_name, goals, assists, nationality, updated_at)
+      VALUES (${s.player_name}, ${s.team_name}, ${s.goals}, ${s.assists}, ${s.nationality ?? null}, NOW())
       ON CONFLICT (player_name, team_name) DO UPDATE SET
         goals       = GREATEST(player_goals.goals, ${s.goals}),
+        assists     = ${s.assists},
         nationality = COALESCE(${s.nationality ?? null}, player_goals.nationality),
         updated_at  = NOW()
     `;
@@ -405,7 +409,7 @@ export async function setPlayerGoals(scorers: PlayerGoal[]): Promise<void> {
 
 export async function getPlayerGoals(): Promise<PlayerGoal[]> {
   try {
-    const rows = await sql`SELECT player_name, team_name, goals, nationality FROM player_goals WHERE goals > 0 ORDER BY goals DESC`;
+    const rows = await sql`SELECT player_name, team_name, goals, assists, nationality FROM player_goals WHERE goals > 0 ORDER BY goals DESC, assists DESC`;
     return rows as PlayerGoal[];
   } catch {
     return [];

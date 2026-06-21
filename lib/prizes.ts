@@ -66,15 +66,21 @@ export async function computePrizes(
     if (!topOGs || t.own_goals_against > topOGs.own_goals_against) topOGs = t;
   }
 
-  // 5. Top scorer's team — detect tie via player_goals
-  const topScorerTeam = topScorer?.team_name ?? null;
-  const goldenBootTiedPlayers: { player_name: string; team_name: string }[] | null = (() => {
-    if (!topScorer?.goals) return null;
-    const topGoal = topScorer.goals;
-    const tied = playerGoals.filter(p => p.goals === topGoal);
-    if (tied.length <= 1) return null;
-    return tied.map(p => ({ player_name: p.player_name, team_name: p.team_name }));
+  // 5. Top scorer — apply FIFA golden boot tiebreaker: goals first, then assists
+  const goldenBootResult = (() => {
+    if (!playerGoals.length) return null;
+    const maxGoals = playerGoals[0].goals; // sorted by goals DESC, assists DESC
+    const goalTied = playerGoals.filter(p => p.goals === maxGoals);
+    const maxAssists = Math.max(...goalTied.map(p => p.assists ?? 0));
+    const trueTied = goalTied.filter(p => (p.assists ?? 0) === maxAssists);
+    return {
+      winner: trueTied.length === 1 ? trueTied[0] : null,
+      tiedPlayers: trueTied.length > 1 ? trueTied.map(p => ({ player_name: p.player_name, team_name: p.team_name })) : null,
+    };
   })();
+  const topScorerTeam = goldenBootResult?.winner?.team_name ?? topScorer?.team_name ?? null;
+  const goldenBootPlayerName = goldenBootResult?.winner?.player_name ?? topScorer?.player_name ?? null;
+  const goldenBootTiedPlayers = goldenBootResult?.tiedPlayers ?? null;
 
   // 6. Most goals conceded (The Sieve); tie-break: worst goal difference, then fewest goals scored
   let topSieve: TeamStats | null = null;
@@ -158,7 +164,7 @@ export async function computePrizes(
       current_team: topScorerTeam,
       current_participant: participant(topScorerTeam),
       tied_players: goldenBootTiedPlayers,
-      player_name: topScorer?.player_name ?? null,
+      player_name: goldenBootPlayerName,
       value_label: topScorer?.goals
         ? `${topScorer.goals} goal${topScorer.goals !== 1 ? 's' : ''}`
         : null,
