@@ -114,7 +114,7 @@ export default function GroupsGrid({
                     className={`team-row w-full text-left transition-colors${wonPrizes.length ? ' has-prize' : ''}`}
                     style={{
                       borderBottom: isLast ? 'none' : '1px solid var(--border)',
-                      opacity: eliminated ? 0.4 : 1,
+                      opacity: 1,
                       background: 'transparent',
                       display: 'block',
                       cursor: 'pointer',
