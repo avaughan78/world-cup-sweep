@@ -153,7 +153,7 @@ export async function runSync(): Promise<{ ok: boolean; results: Record<string, 
       // Goal scorers: FIFA API is the single source of truth.
       // If FIFA returns data we delete all existing rows first (clean replace).
       // If FIFA fails the old rows are left untouched.
-      let fifaScorers: Array<{ playerName: string; teamName: string; goals: number }> = [];
+      let fifaScorers: Array<{ playerName: string; teamName: string; goals: number; assists: number }> = [];
       try {
         fifaScorers = await fetchFIFAScorers();
         statNotes.push(`FIFA API: ${fifaScorers.length} scorers`);
