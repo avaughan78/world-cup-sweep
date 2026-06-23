@@ -16,6 +16,8 @@ const csp = [
   "media-src 'self'",
   // YouTube/Vimeo iframes for prize video modal and trophy easter egg
   "frame-src https://www.youtube.com https://player.vimeo.com",
+  // canvas-confetti spawns a Web Worker from a blob URL for off-thread rendering
+  "worker-src blob:",
   // All API calls are same-origin
   "connect-src 'self'",
   // Disallow <object>, <embed>, <applet>
