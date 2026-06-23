@@ -8,8 +8,8 @@ interface Particle {
   delay: number;
   duration: number;
   size: number;
-  rotateEnd: number;
   sway: number;
+  tilt: number;
 }
 
 function rand(min: number, max: number) {
@@ -25,10 +25,10 @@ export default function EnglandConfetti({ enabled }: { enabled: boolean }) {
       id: i,
       left: rand(0, 96),
       delay: rand(0, 12),
-      duration: rand(5, 9),
+      duration: rand(6, 10),
       size: Math.round(rand(14, 26)),
-      rotateEnd: (Math.random() > 0.5 ? 1 : -1) * Math.round(rand(180, 540)),
-      sway: Math.round(rand(20, 55)),
+      sway: Math.round(rand(20, 50)),
+      tilt: Math.round(rand(8, 18)),
     })));
   }, [enabled]);
 
@@ -38,16 +38,17 @@ export default function EnglandConfetti({ enabled }: { enabled: boolean }) {
     <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}>
       <style>{`
         @keyframes englandFall {
-          0%   { transform: translateY(-60px) rotate(-15deg); opacity: 0; }
+          0%   { transform: translateY(-60px); opacity: 0; }
           8%   { opacity: 0.95; }
           92%  { opacity: 0.95; }
-          100% { transform: translateY(110vh) rotate(var(--eng-rot)); opacity: 0; }
+          100% { transform: translateY(110vh); opacity: 0; }
         }
-        @keyframes englandSway {
-          0%   { transform: translateX(0px); }
-          30%  { transform: translateX(var(--eng-sway)); }
-          70%  { transform: translateX(calc(-1 * var(--eng-sway))); }
-          100% { transform: translateX(0px); }
+        @keyframes englandDrift {
+          0%   { transform: translateX(0px)              rotate(calc(-1 * var(--eng-tilt))); }
+          25%  { transform: translateX(var(--eng-sway))  rotate(var(--eng-tilt)); }
+          50%  { transform: translateX(0px)              rotate(calc(-0.5 * var(--eng-tilt))); }
+          75%  { transform: translateX(calc(-1 * var(--eng-sway))) rotate(var(--eng-tilt)); }
+          100% { transform: translateX(0px)              rotate(calc(-1 * var(--eng-tilt))); }
         }
       `}</style>
       {particles.map(p => (
@@ -58,12 +59,12 @@ export default function EnglandConfetti({ enabled }: { enabled: boolean }) {
             top: 0,
             left: `${p.left}%`,
             animation: `englandFall ${p.duration}s ${p.delay}s infinite linear`,
-            ['--eng-rot' as string]: `${p.rotateEnd}deg`,
           }}
         >
           <div style={{
-            animation: `englandSway ${p.duration * 0.55}s ${p.delay}s infinite ease-in-out`,
+            animation: `englandDrift ${p.duration * 0.5}s ${p.delay}s infinite ease-in-out`,
             ['--eng-sway' as string]: `${p.sway}px`,
+            ['--eng-tilt' as string]: `${p.tilt}deg`,
           }}>
             <svg
               viewBox="0 0 60 40"
