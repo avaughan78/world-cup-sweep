@@ -1021,17 +1021,11 @@ export default function AdminPage() {
                         onClick={async () => {
                           const next = !confettiEnabled;
                           setConfettiEnabled(next);
-                          try {
-                            const res = await fetch('/api/admin/confetti', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ enabled: next }),
-                            });
-                            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                          } catch (e) {
-                            setConfettiEnabled(!next);
-                            setStatus({ ok: false, message: `Confetti save failed: ${e}` });
-                          }
+                          await fetch('/api/admin/confetti', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ enabled: next }),
+                          });
                         }}
                         className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
                         style={{
