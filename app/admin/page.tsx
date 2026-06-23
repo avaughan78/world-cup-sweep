@@ -890,17 +890,23 @@ export default function AdminPage() {
                 onClick={async () => {
                   const next = !confettiEnabled;
                   setConfettiEnabled(next);
-                  await fetch('/api/admin/confetti', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ enabled: next }),
-                  });
+                  try {
+                    const res = await fetch('/api/admin/confetti', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ enabled: next }),
+                    });
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  } catch (e) {
+                    setConfettiEnabled(!next);
+                    setStatus({ ok: false, message: `Confetti save failed: ${e}` });
+                  }
                 }}
-                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                className="font-bold px-5 py-2 rounded-lg"
                 style={{
-                  background: confettiEnabled ? '#22c55e' : 'var(--card)',
-                  color: confettiEnabled ? '#fff' : 'var(--text-primary)',
-                  border: confettiEnabled ? '1px solid #16a34a' : '1px solid var(--border)',
+                  background: confettiEnabled ? '#22c55e' : '#f5f0e4',
+                  color: confettiEnabled ? '#fff' : '#1a1a17',
+                  border: confettiEnabled ? '1px solid #16a34a' : '1px solid #c8c0ac',
                   fontSize: '0.9rem',
                 }}
                 title="Flutter England flags across all sweep pages"
