@@ -2,85 +2,95 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-function rand(min: number, max: number) {
-  return Math.random() * (max - min) + min;
+const STYLE = `
+  @keyframes engFall {
+    from { transform: translateY(0);      opacity: 1; }
+    90%  {                                opacity: 1; }
+    to   { transform: translateY(110vh); opacity: 0; }
+  }
+  @keyframes engSway {
+    0%   { transform: translateX(0)          rotate(calc(-1 * var(--tilt))); }
+    50%  { transform: translateX(var(--sw))  rotate(var(--tilt)); }
+    100% { transform: translateX(0)          rotate(calc(-1 * var(--tilt))); }
+  }
+`;
+
+function makeFlagSVG(size: number) {
+  const h = Math.round(size * 0.667);
+  return `<svg viewBox="0 0 60 40" width="${size}" height="${h}" style="display:block;border-radius:2px;box-shadow:0 1px 3px rgba(0,0,0,.2)"><rect width="60" height="40" fill="#fff"/><rect x="24" y="0" width="12" height="40" fill="#CC0000"/><rect x="0" y="14" width="60" height="12" fill="#CC0000"/></svg>`;
 }
 
-function EnglandConfettiCanvas({ enabled }: { enabled: boolean }) {
-  const rafRef = useRef<number | null>(null);
+function rand(a: number, b: number) { return a + Math.random() * (b - a); }
 
+export default function EnglandConfetti() {
+  const [enabled, setEnabled] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const spawnRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Poll /api/confetti every 5 s
   useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      try {
+        const r = await fetch('/api/confetti', { cache: 'no-store' });
+        const d = await r.json() as { enabled?: boolean };
+        if (!cancelled) setEnabled(d.enabled ?? false);
+      } catch { /* ignore */ }
+    }
+    check();
+    const t = setInterval(check, 5000);
+    return () => { cancelled = true; clearInterval(t); };
+  }, []);
+
+  // Spawn flags while enabled
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
     if (!enabled) {
-      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+      if (spawnRef.current) { clearInterval(spawnRef.current); spawnRef.current = null; }
+      // clear any remaining flags immediately
+      container.innerHTML = '';
       return;
     }
 
-    let active = true;
+    function spawn() {
+      if (!container) return;
+      const size  = Math.round(rand(14, 26));
+      const left  = rand(0, 95);
+      const fall  = rand(4, 8);
+      const sw    = Math.round(rand(20, 50));
+      const tilt  = Math.round(rand(10, 20));
+      const swDur = rand(fall * 0.25, fall * 0.4);
 
-    import('canvas-confetti').then((mod) => {
-      if (!active) return;
+      const outer = document.createElement('div');
+      outer.style.cssText = `position:absolute;left:${left}%;top:-50px;animation:engFall ${fall}s linear forwards`;
 
-      const confetti = mod.default;
-      const scalar = 3;
-      const flag = confetti.shapeFromText({ text: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', scalar });
+      const inner = document.createElement('div');
+      inner.style.cssText = `animation:engSway ${swDur}s ease-in-out infinite;--sw:${sw}px;--tilt:${tilt}deg`;
+      inner.innerHTML = makeFlagSVG(size);
 
-      let skew = 1;
+      outer.appendChild(inner);
+      container.appendChild(outer);
+      setTimeout(() => outer.remove(), (fall + 0.5) * 1000);
+    }
 
-      function frame() {
-        if (!active) return;
-        skew = Math.max(0.8, skew - 0.001);
+    // Seed a burst so screen isn't empty for the first few seconds
+    for (let i = 0; i < 10; i++) setTimeout(spawn, i * 80);
 
-        confetti({
-          particleCount: 1,
-          startVelocity: 0,
-          ticks: 400,
-          origin: {
-            x: Math.random(),
-            y: (Math.random() * skew) - 0.2,
-          },
-          gravity: rand(0.4, 0.6),
-          scalar,
-          drift: rand(-0.4, 0.4),
-          shapes: [flag],
-          zIndex: 9999,
-        });
-
-        rafRef.current = requestAnimationFrame(frame);
-      }
-
-      rafRef.current = requestAnimationFrame(frame);
-    });
-
+    spawnRef.current = setInterval(spawn, 180);
     return () => {
-      active = false;
-      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
+      if (spawnRef.current) { clearInterval(spawnRef.current); spawnRef.current = null; }
     };
   }, [enabled]);
 
-  return null;
-}
-
-export default function EnglandConfetti({ initialEnabled }: { initialEnabled?: boolean }) {
-  const [enabled, setEnabled] = useState(initialEnabled ?? false);
-
-  // Poll every 5 seconds so toggling in admin is reflected without page reload
-  useEffect(() => {
-    let cancelled = false;
-
-    async function check() {
-      try {
-        const res = await fetch('/api/confetti', { cache: 'no-store' });
-        if (!cancelled) {
-          const data = await res.json() as { enabled?: boolean };
-          setEnabled(data.enabled ?? false);
-        }
-      } catch { /* ignore */ }
-    }
-
-    check();
-    const interval = setInterval(check, 5000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, []);
-
-  return <EnglandConfettiCanvas enabled={enabled} />;
+  return (
+    <>
+      <style>{STYLE}</style>
+      <div
+        ref={containerRef}
+        style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 9999, overflow: 'hidden' }}
+      />
+    </>
+  );
 }

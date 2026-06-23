@@ -5,6 +5,7 @@ import { GROUPS_2026, TOURNAMENT_START } from '@/lib/groups';
 import PasswordInput from '@/components/PasswordInput';
 import Flag from '@/components/Flag';
 import ThemeToggle from '@/components/ThemeToggle';
+import EnglandConfetti from '@/components/EnglandConfetti';
 
 interface Company { id: number; code: string; name: string; ticket_price: number | null; max_teams_per_person: number; }
 
@@ -810,6 +811,7 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
+      <EnglandConfetti />
       {/* Toast */}
       {status && (
         <div
