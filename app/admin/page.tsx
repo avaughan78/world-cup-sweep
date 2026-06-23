@@ -886,6 +886,27 @@ export default function AdminPage() {
               >
                 {loading ? 'Pre-warming…' : 'Pre-warm Squad Photos'}
               </button>
+              <button
+                onClick={async () => {
+                  const next = !confettiEnabled;
+                  setConfettiEnabled(next);
+                  await fetch('/api/admin/confetti', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ enabled: next }),
+                  });
+                }}
+                className="font-bold px-5 py-2 rounded-lg transition-opacity"
+                style={{
+                  background: confettiEnabled ? '#22c55e' : 'var(--card)',
+                  color: confettiEnabled ? '#fff' : 'var(--text-primary)',
+                  border: confettiEnabled ? '1px solid #16a34a' : '1px solid var(--border)',
+                  fontSize: '0.9rem',
+                }}
+                title="Flutter England flags across all sweep pages"
+              >
+                {confettiEnabled ? '🎉 Confetti On' : '🏴󠁧󠁢󠁥󠁮󠁧󠁿 Confetti Off'}
+              </button>
             </div>
           </div>
 
@@ -912,7 +933,7 @@ export default function AdminPage() {
               const cardStyle: React.CSSProperties = { background: '#ffffff', border: '1px solid var(--border)', borderRadius: '0.75rem', padding: '1rem' };
               const labelStyle: React.CSSProperties = { fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' };
               return (
-                <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-4">
 
                   {/* Thunderbastard */}
                   <div style={cardStyle}>
@@ -1004,36 +1025,6 @@ export default function AdminPage() {
                         style={{ background: 'var(--text-primary)', color: 'var(--bg)', opacity: (loading || !elimTeam) ? 0.5 : 1 }}
                       >
                         Mark Eliminated
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* England confetti */}
-                  <div style={cardStyle}>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>🏴󠁧󠁢󠁥󠁮󠁧󠁿 Confetti</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        Flutter England flags across all sweep pages.
-                      </p>
-                      <button
-                        onClick={async () => {
-                          const next = !confettiEnabled;
-                          setConfettiEnabled(next);
-                          await fetch('/api/admin/confetti', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ enabled: next }),
-                          });
-                        }}
-                        className="text-xs font-semibold py-1.5 rounded-lg transition-opacity mt-1"
-                        style={{
-                          background: confettiEnabled ? '#22c55e' : 'var(--text-primary)',
-                          color: confettiEnabled ? '#fff' : 'var(--bg)',
-                        }}
-                      >
-                        {confettiEnabled ? '🎉 On — click to stop' : 'Turn on'}
                       </button>
                     </div>
                   </div>
