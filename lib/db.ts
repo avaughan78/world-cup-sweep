@@ -603,6 +603,37 @@ export async function setCountryCache(teamName: string, data: CountryCache): Pro
   }
 }
 
+// ── Global settings ───────────────────────────────────────────────────────────
+
+async function ensureGlobalSettingsTable() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS global_settings (
+      key        TEXT PRIMARY KEY,
+      value      TEXT NOT NULL,
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `;
+}
+
+export async function getGlobalSetting(key: string): Promise<string | null> {
+  try {
+    await ensureGlobalSettingsTable();
+    const rows = await sql`SELECT value FROM global_settings WHERE key = ${key}`;
+    return (rows[0]?.value as string) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function setGlobalSetting(key: string, value: string): Promise<void> {
+  await ensureGlobalSettingsTable();
+  await sql`
+    INSERT INTO global_settings (key, value, updated_at)
+    VALUES (${key}, ${value}, NOW())
+    ON CONFLICT (key) DO UPDATE SET value = ${value}, updated_at = NOW()
+  `;
+}
+
 // ── Sync log (shared) ─────────────────────────────────────────────────────────
 
 export async function logSync(syncType: string, status: string, message?: string) {

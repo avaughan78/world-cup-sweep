@@ -1,5 +1,6 @@
-import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings, getCompanyByCode } from '@/lib/db';
+import { getParticipants, getLastSync, getAllTeamStats, getGroupStandings, getCompanyByCode, getGlobalSetting } from '@/lib/db';
 import { computePrizes } from '@/lib/prizes';
+import EnglandConfetti from '@/components/EnglandConfetti';
 import SyncTime from '@/components/SyncTime';
 import TrophyEasterEgg from '@/components/TrophyEasterEgg';
 import PrizeCard from '@/components/PrizeCard';
@@ -36,12 +37,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
   const hdrs = await headers();
   const ip = hdrs.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
 
-  const [participants, lastSync, allTeamStats, groupStandings] = await Promise.all([
+  const [participants, lastSync, allTeamStats, groupStandings, confettiSetting] = await Promise.all([
     getParticipants(company.id),
     getLastSync('stats'),
     getAllTeamStats(),
     getGroupStandings(),
+    getGlobalSetting('confetti_enabled'),
   ]);
+  const confettiEnabled = confettiSetting === 'true';
 
 
   const participantMap = new Map(participants.map(p => [p.team_name, p.participant_name]));
@@ -79,6 +82,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
   return (
     <main className="min-h-screen" style={{ background: 'var(--bg)' }}>
+      <EnglandConfetti enabled={confettiEnabled} />
 
       <div className="max-w-[1080px] mx-auto px-4 sm:px-6 pt-6">
 
