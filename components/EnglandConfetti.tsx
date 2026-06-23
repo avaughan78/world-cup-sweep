@@ -1,18 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 function rand(min: number, max: number) {
   return Math.random() * (max - min) + min;
 }
 
-export default function EnglandConfetti({ enabled }: { enabled: boolean }) {
+function EnglandConfettiCanvas({ enabled }: { enabled: boolean }) {
   const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!enabled) {
       if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-      // Let existing particles finish falling naturally
       return;
     }
 
@@ -29,8 +28,6 @@ export default function EnglandConfetti({ enabled }: { enabled: boolean }) {
 
       function frame() {
         if (!active) return;
-
-        // Gradually skew origin downward as time goes on (matches canvas-confetti snow example)
         skew = Math.max(0.8, skew - 0.001);
 
         confetti({
@@ -61,4 +58,29 @@ export default function EnglandConfetti({ enabled }: { enabled: boolean }) {
   }, [enabled]);
 
   return null;
+}
+
+export default function EnglandConfetti({ initialEnabled }: { initialEnabled?: boolean }) {
+  const [enabled, setEnabled] = useState(initialEnabled ?? false);
+
+  // Poll every 5 seconds so toggling in admin is reflected without page reload
+  useEffect(() => {
+    let cancelled = false;
+
+    async function check() {
+      try {
+        const res = await fetch('/api/confetti', { cache: 'no-store' });
+        if (!cancelled) {
+          const data = await res.json() as { enabled?: boolean };
+          setEnabled(data.enabled ?? false);
+        }
+      } catch { /* ignore */ }
+    }
+
+    check();
+    const interval = setInterval(check, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  return <EnglandConfettiCanvas enabled={enabled} />;
 }
