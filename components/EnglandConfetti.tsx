@@ -26,6 +26,10 @@ function EnglandSnow({ enabled }: { enabled: boolean }) {
 
       const confetti = mod.default;
 
+      // Use main-thread rendering so shapeFromPath custom shapes work
+      // (the default export uses useWorker:true, which can't serialise Path2D)
+      const fire = confetti.create(null as unknown as HTMLCanvasElement, { resize: true, useWorker: false });
+
       // Red St George's Cross — same shape as the England flag cross
       const cross = confetti.shapeFromPath({ path: CROSS_PATH });
 
@@ -36,7 +40,7 @@ function EnglandSnow({ enabled }: { enabled: boolean }) {
 
         skew = Math.max(0.8, skew - 0.001);
 
-        confetti({
+        fire({
           particleCount: 1,
           startVelocity: 0,
           ticks: 400,
