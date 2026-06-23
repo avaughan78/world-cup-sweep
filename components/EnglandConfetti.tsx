@@ -34,13 +34,15 @@ function EnglandSnow({ enabled }: { enabled: boolean }) {
       const cross = confetti.shapeFromPath({ path: CROSS_PATH });
 
       let skew = 1;
+      let frameCount = 0;
 
       function frame() {
         if (!active) return;
 
         skew = Math.max(0.8, skew - 0.001);
+        frameCount++;
 
-        fire({
+        if (frameCount % 2 === 0) fire({
           particleCount: 1,
           startVelocity: 0,
           ticks: 400,
@@ -51,7 +53,7 @@ function EnglandSnow({ enabled }: { enabled: boolean }) {
           colors: ['#CC0000', '#ffffff'],
           shapes: [cross, 'square'],
           gravity: rand(0.4, 0.6),
-          scalar: rand(2, 3),
+          scalar: rand(1.5, 2.2),
           drift: rand(-0.4, 0.4),
           zIndex: 9999,
         });
