@@ -51,7 +51,7 @@ function EnglandSnow({ enabled }: { enabled: boolean }) {
           colors: ['#CC0000', '#ffffff'],
           shapes: [cross, 'square'],
           gravity: rand(0.4, 0.6),
-          scalar: rand(1.5, 2.5),
+          scalar: rand(4.5, 7.5),
           drift: rand(-0.4, 0.4),
           zIndex: 9999,
         });
