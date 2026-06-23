@@ -23,12 +23,12 @@ const pillStyle: React.CSSProperties = {
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<Theme>('default');
-  const [football, setFootball] = useState(true);
+  const [football, setFootball] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem('theme') as Theme | null;
     if (saved && THEMES.includes(saved)) apply(saved);
-    setFootball(localStorage.getItem('football-visible') !== 'false');
+    setFootball(localStorage.getItem('football-visible') === 'true');
   }, []);
 
   function apply(t: Theme) {
