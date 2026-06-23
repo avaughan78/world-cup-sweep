@@ -15,7 +15,7 @@ const WC_HISTORY: Record<string, WCHistory> = {
 
   'Germany':             { titles: 4,  best: 'Winners (1954, 1974, 1990, 2014)',        appearances: 20,
     legends: ['Franz Beckenbauer', 'Gerd Müller'],
-    note: 'Reached at least the semi-finals in 8 World Cups — more than any other nation' },
+    note: 'Reached the final in 8 World Cups — more than any other nation' },
 
   'Italy':               { titles: 4,  best: 'Winners (1934, 1938, 1982, 2006)',        appearances: 18,
     legends: ['Paolo Maldini', 'Roberto Baggio'],
@@ -44,11 +44,11 @@ const WC_HISTORY: Record<string, WCHistory> = {
   // Runners-up / podium finishers
   'Netherlands':         { titles: 0,  best: 'Runner-up (1974, 1978, 2010)',            appearances: 11,
     legends: ['Johan Cruyff', 'Arjen Robben'],
-    note: 'Three World Cup finals, zero wins — Robben missed a penalty that could have won it in 2010' },
+    note: 'Three World Cup finals, zero wins — Robben had a one-on-one with Casillas in extra time in 2010 that could have won it' },
 
   'Croatia':             { titles: 0,  best: 'Runner-up (2018)',                        appearances: 6,
     legends: ['Luka Modrić', 'Davor Šuker'],
-    note: 'A nation of just 4 million people reached two World Cup finals in 20 years (1998 and 2018)' },
+    note: 'A nation of just 4 million people reached the semi-finals in 1998 and the final in 2018 — extraordinary for a country their size' },
 
   'Sweden':              { titles: 0,  best: 'Runner-up (1958)',                        appearances: 12,
     legends: ['Zlatan Ibrahimović', 'Henrik Larsson'],
@@ -72,7 +72,7 @@ const WC_HISTORY: Record<string, WCHistory> = {
 
   'Austria':             { titles: 0,  best: '3rd place (1954)',                        appearances: 7,
     legends: ['Hans Krankl', 'Ernst Happel'],
-    note: "Austria's 1978 team thrashed West Germany 3-2 in a famous result — but that Germany team won the World Cup" },
+    note: "Austria's 1978 team thrashed West Germany 3-2 in the famous 'Miracle of Córdoba' — yet Argentina lifted the trophy that year" },
 
   'Türkiye':             { titles: 0,  best: '3rd place (2002)',                        appearances: 2,
     legends: ['Hakan Şükür', 'Burak Yılmaz'],
@@ -92,12 +92,12 @@ const WC_HISTORY: Record<string, WCHistory> = {
 
   'South Korea':         { titles: 0,  best: '4th place (2002)',                        appearances: 11,
     legends: ['Park Ji-sung', 'Son Heung-min'],
-    note: 'Co-hosts in 2002, they stunned Spain and Germany to reach the semi-finals in one of the greatest underdog runs ever' },
+    note: 'Co-hosts in 2002, they stunned Italy and Spain to reach the semi-finals in one of the greatest underdog runs ever' },
 
   // Regular qualifiers
   'Mexico':              { titles: 0,  best: 'Quarter-finals (1970, 1986)',             appearances: 17,
     legends: ['Hugo Sánchez', 'Javier Hernández'],
-    note: 'Made 16 consecutive World Cups between 1970 and 2022, but have never gone further than the quarter-finals' },
+    note: 'Qualified for every World Cup from 1994 to 2022 — eight in a row — but have never gone further than the quarter-finals' },
 
   'Switzerland':         { titles: 0,  best: 'Quarter-finals (1934, 1938, 1954)',       appearances: 12,
     legends: ['Xherdan Shaqiri', 'Granit Xhaka'],
@@ -145,7 +145,7 @@ const WC_HISTORY: Record<string, WCHistory> = {
 
   'Tunisia':             { titles: 0,  best: 'Group stage',                             appearances: 6,
     legends: ['Wahbi Khazri', 'Hassen'],
-    note: 'In 1978 they became the first African nation to beat a European side at a World Cup, defeating Mexico' },
+    note: 'In 1978 they became the first African nation to win a World Cup match, defeating Mexico 3-1' },
 
   'Ghana':               { titles: 0,  best: 'Quarter-finals (2010)',                   appearances: 4,
     legends: ['Abedi Pelé', 'Asamoah Gyan'],
@@ -173,7 +173,7 @@ const WC_HISTORY: Record<string, WCHistory> = {
 
   'Canada':              { titles: 0,  best: 'Group stage (1986)',                      appearances: 2,
     legends: ['Alphonso Davies', 'Jonathan David'],
-    note: "Didn't score a single goal at their 1986 debut; qualified 40 years later for 2022 as CONCACAF's top team" },
+    note: "Didn't score a single goal at their 1986 debut; qualified 36 years later for 2022 as CONCACAF's top team" },
 
   'New Zealand':         { titles: 0,  best: 'Group stage',                             appearances: 2,
     legends: ['Ryan Nelsen', 'Chris Wood'],
