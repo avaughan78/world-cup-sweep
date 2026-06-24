@@ -25,11 +25,9 @@ export async function POST(req: NextRequest) {
     source?: string; type?: string; display_order?: number;
   };
   if (!body.title?.trim()) return NextResponse.json({ error: 'title required' }, { status: 400 });
-  const url = safeUrl(body.url);
-  if (!url) return NextResponse.json({ error: 'valid url required' }, { status: 400 });
   const highlight = await createHighlight({
     title: body.title.trim(),
-    url,
+    url: safeUrl(body.url),
     image_url: safeUrl(body.image_url),
     description: body.description?.trim() || null,
     source: body.source?.trim() || null,
@@ -61,11 +59,9 @@ export async function PATCH(req: NextRequest) {
   // Full update when title is present
   if (body.title !== undefined) {
     if (!body.title?.trim()) return NextResponse.json({ error: 'title required' }, { status: 400 });
-    const url = safeUrl(body.url);
-    if (!url) return NextResponse.json({ error: 'valid url required' }, { status: 400 });
     const highlight = await updateHighlight(body.id, {
       title: body.title.trim(),
-      url,
+      url: safeUrl(body.url),
       image_url: safeUrl(body.image_url),
       description: body.description?.trim() || null,
       source: body.source?.trim() || null,

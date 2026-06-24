@@ -282,7 +282,7 @@ export default function AdminPage() {
   }
 
   async function handleAddHighlight() {
-    if (!hlTitle.trim() || !hlUrl.trim()) return;
+    if (!hlTitle.trim()) return;
     setHlSaving(true);
     try {
       const payload = {
@@ -1088,7 +1088,7 @@ export default function AdminPage() {
                     style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
                 </div>
                 <div>
-                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>URL *</label>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>URL</label>
                   <div className="flex gap-2">
                     <input value={hlUrl} onChange={e => setHlUrl(e.target.value)} placeholder="https://…" maxLength={500}
                       onKeyDown={e => e.key === 'Enter' && handleFetchPreview()}
@@ -1156,9 +1156,9 @@ export default function AdminPage() {
                   <input type="number" value={hlOrder} onChange={e => setHlOrder(e.target.value)} min="0" max="999"
                     style={{ width: '4rem', padding: '0.35rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem' }} />
                 </div>
-                <button onClick={handleAddHighlight} disabled={hlSaving || !hlTitle.trim() || !hlUrl.trim()}
+                <button onClick={handleAddHighlight} disabled={hlSaving || !hlTitle.trim()}
                   className="font-bold px-5 py-2 rounded-lg transition-opacity ml-auto"
-                  style={{ background: 'var(--green)', color: '#fff', opacity: hlSaving || !hlTitle.trim() || !hlUrl.trim() ? 0.5 : 1, fontSize: '0.9rem' }}>
+                  style={{ background: 'var(--green)', color: '#fff', opacity: hlSaving || !hlTitle.trim() ? 0.5 : 1, fontSize: '0.9rem' }}>
                   {hlSaving ? (hlEditingId ? 'Saving…' : 'Adding…') : (hlEditingId ? 'Update highlight' : 'Add highlight')}
                 </button>
               </div>

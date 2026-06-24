@@ -667,7 +667,7 @@ export interface AuditEntry {
 export interface Highlight {
   id: number;
   title: string;
-  url: string;
+  url: string | null;
   image_url: string | null;
   description: string | null;
   source: string | null;
@@ -681,7 +681,7 @@ async function ensureHighlightsTable() {
     CREATE TABLE IF NOT EXISTS highlights (
       id            SERIAL PRIMARY KEY,
       title         TEXT NOT NULL,
-      url           TEXT NOT NULL,
+      url           TEXT,
       image_url     TEXT,
       description   TEXT,
       source        TEXT,
@@ -690,6 +690,7 @@ async function ensureHighlightsTable() {
       created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
+  await sql`ALTER TABLE highlights ALTER COLUMN url DROP NOT NULL`.catch(() => {});
 }
 
 export async function getHighlights(): Promise<Highlight[]> {
