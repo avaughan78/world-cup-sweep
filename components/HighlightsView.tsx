@@ -155,7 +155,7 @@ function HighlightCard({ h, liked, onLike, onVideoClick }: {
               className="flex items-center gap-1 text-xs font-semibold transition-opacity"
               style={{ color: liked ? '#4D10C8' : 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
-              <svg width="14" height="14" viewBox="0 0 20 20" fill={liked ? '#4D10C8' : 'none'} stroke={liked ? '#4D10C8' : 'currentColor'} strokeWidth="1.5">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill={liked ? '#4D10C8' : 'none'} stroke={liked ? '#4D10C8' : 'currentColor'} strokeWidth="1.5">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
                 <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
               </svg>
