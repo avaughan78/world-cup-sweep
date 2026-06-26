@@ -702,7 +702,7 @@ export async function getHighlights(): Promise<Highlight[]> {
   return rows as Highlight[];
 }
 
-export async function createHighlight(h: Omit<Highlight, 'id' | 'created_at'>): Promise<Highlight> {
+export async function createHighlight(h: Omit<Highlight, 'id' | 'created_at' | 'likes_count'>): Promise<Highlight> {
   await ensureHighlightsTable();
   const rows = await sql`
     INSERT INTO highlights (title, url, image_url, description, source, type, display_order)
@@ -722,7 +722,7 @@ export async function updateHighlightOrder(id: number, display_order: number): P
   await sql`UPDATE highlights SET display_order = ${display_order} WHERE id = ${id}`;
 }
 
-export async function updateHighlight(id: number, h: Omit<Highlight, 'id' | 'created_at'>): Promise<Highlight> {
+export async function updateHighlight(id: number, h: Omit<Highlight, 'id' | 'created_at' | 'likes_count'>): Promise<Highlight> {
   const rows = await sql`
     UPDATE highlights
     SET title = ${h.title}, url = ${h.url}, image_url = ${h.image_url ?? null},
