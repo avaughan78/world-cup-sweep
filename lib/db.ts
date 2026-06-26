@@ -673,6 +673,7 @@ export interface Highlight {
   source: string | null;
   type: 'article' | 'video';
   display_order: number;
+  likes_count: number;
   created_at: string;
 }
 
@@ -687,10 +688,12 @@ async function ensureHighlightsTable() {
       source        TEXT,
       type          TEXT NOT NULL DEFAULT 'article',
       display_order INTEGER NOT NULL DEFAULT 0,
+      likes_count   INTEGER NOT NULL DEFAULT 0,
       created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `;
   await sql`ALTER TABLE highlights ALTER COLUMN url DROP NOT NULL`.catch(() => {});
+  await sql`ALTER TABLE highlights ADD COLUMN IF NOT EXISTS likes_count INTEGER NOT NULL DEFAULT 0`.catch(() => {});
 }
 
 export async function getHighlights(): Promise<Highlight[]> {
@@ -729,6 +732,13 @@ export async function updateHighlight(id: number, h: Omit<Highlight, 'id' | 'cre
     RETURNING *
   `;
   return rows[0] as Highlight;
+}
+
+export async function likeHighlight(id: number): Promise<number> {
+  const rows = await sql`
+    UPDATE highlights SET likes_count = likes_count + 1 WHERE id = ${id} RETURNING likes_count
+  `;
+  return (rows[0] as { likes_count: number }).likes_count;
 }
 
 // ── Processed fixtures ────────────────────────────────────────────────────────

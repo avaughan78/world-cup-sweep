@@ -4,6 +4,18 @@ import { useEffect, useState } from 'react';
 import type { Highlight } from '@/lib/db';
 
 const BRAND_STRIPE = 'linear-gradient(to right, #4D10C8, #D40100, #9DC417)';
+const LIKED_KEY = 'highlight_likes';
+
+function getLikedIds(): Set<number> {
+  try {
+    const raw = localStorage.getItem(LIKED_KEY);
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+
+function saveLikedIds(ids: Set<number>) {
+  try { localStorage.setItem(LIKED_KEY, JSON.stringify([...ids])); } catch { /* ignore */ }
+}
 
 function resolveImageUrl(url: string | null): string | null {
   if (!url) return null;
@@ -89,7 +101,12 @@ function VideoModal({ url, title, onClose }: { url: string; title: string; onClo
   );
 }
 
-function HighlightCard({ h, onVideoClick }: { h: Highlight; onVideoClick: (h: Highlight) => void }) {
+function HighlightCard({ h, liked, onLike, onVideoClick }: {
+  h: Highlight;
+  liked: boolean;
+  onLike: (id: number) => void;
+  onVideoClick: (h: Highlight) => void;
+}) {
   const isVideo = h.type === 'video';
   const resolvedImage = resolveImageUrl(h.image_url);
   const hasThumb = !!resolvedImage;
@@ -131,7 +148,22 @@ function HighlightCard({ h, onVideoClick }: { h: Highlight; onVideoClick: (h: Hi
         {h.description && <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>{h.description}</p>}
         <div className="flex items-center justify-between gap-2 mt-auto pt-2" style={{ borderTop: '1px solid var(--border)' }}>
           {h.source ? <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{h.source}</span> : <span />}
-          <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{new Date(h.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={e => { e.preventDefault(); e.stopPropagation(); onLike(h.id); }}
+              disabled={liked}
+              title={liked ? 'Already liked' : 'Like this'}
+              className="flex items-center gap-1 text-xs font-semibold transition-opacity"
+              style={{ color: liked ? '#4D10C8' : 'var(--text-muted)', opacity: liked ? 1 : undefined, background: 'none', border: 'none', cursor: liked ? 'default' : 'pointer', padding: 0 }}
+            >
+              <svg width="14" height="14" viewBox="0 0 20 20" fill={liked ? '#4D10C8' : 'none'} stroke={liked ? '#4D10C8' : 'currentColor'} strokeWidth="1.5">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
+                <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+              </svg>
+              {h.likes_count > 0 && <span>{h.likes_count}</span>}
+            </button>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{new Date(h.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+          </div>
         </div>
       </div>
     </>
@@ -146,6 +178,11 @@ function HighlightCard({ h, onVideoClick }: { h: Highlight; onVideoClick: (h: Hi
 export default function HighlightsView() {
   const [highlights, setHighlights] = useState<Highlight[] | null>(null);
   const [activeVideo, setActiveVideo] = useState<Highlight | null>(null);
+  const [likedIds, setLikedIds] = useState<Set<number>>(new Set());
+
+  useEffect(() => {
+    setLikedIds(getLikedIds());
+  }, []);
 
   useEffect(() => {
     fetch('/api/highlights')
@@ -153,6 +190,15 @@ export default function HighlightsView() {
       .then((d: { highlights?: Highlight[] }) => setHighlights(d.highlights ?? []))
       .catch(() => setHighlights([]));
   }, []);
+
+  async function handleLike(id: number) {
+    if (likedIds.has(id)) return;
+    const newLiked = new Set(likedIds).add(id);
+    setLikedIds(newLiked);
+    saveLikedIds(newLiked);
+    setHighlights(prev => prev?.map(h => h.id === id ? { ...h, likes_count: h.likes_count + 1 } : h) ?? prev);
+    await fetch(`/api/highlights/${id}/like`, { method: 'POST' }).catch(() => {});
+  }
 
   if (highlights === null) {
     return (
@@ -184,7 +230,7 @@ export default function HighlightsView() {
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {highlights.map(h => (
-          <HighlightCard key={h.id} h={h} onVideoClick={setActiveVideo} />
+          <HighlightCard key={h.id} h={h} liked={likedIds.has(h.id)} onLike={handleLike} onVideoClick={setActiveVideo} />
         ))}
       </div>
     </>
