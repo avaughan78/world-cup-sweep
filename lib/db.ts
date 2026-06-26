@@ -741,6 +741,13 @@ export async function likeHighlight(id: number): Promise<number> {
   return (rows[0] as { likes_count: number }).likes_count;
 }
 
+export async function unlikeHighlight(id: number): Promise<number> {
+  const rows = await sql`
+    UPDATE highlights SET likes_count = GREATEST(likes_count - 1, 0) WHERE id = ${id} RETURNING likes_count
+  `;
+  return (rows[0] as { likes_count: number }).likes_count;
+}
+
 // ── Processed fixtures ────────────────────────────────────────────────────────
 
 async function ensureProcessedFixturesTable() {

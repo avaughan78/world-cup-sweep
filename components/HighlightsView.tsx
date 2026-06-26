@@ -151,10 +151,9 @@ function HighlightCard({ h, liked, onLike, onVideoClick }: {
           <div className="flex items-center gap-3">
             <button
               onClick={e => { e.preventDefault(); e.stopPropagation(); onLike(h.id); }}
-              disabled={liked}
-              title={liked ? 'Already liked' : 'Like this'}
+              title={liked ? 'Unlike' : 'Like this'}
               className="flex items-center gap-1 text-xs font-semibold transition-opacity"
-              style={{ color: liked ? '#4D10C8' : 'var(--text-muted)', opacity: liked ? 1 : undefined, background: 'none', border: 'none', cursor: liked ? 'default' : 'pointer', padding: 0 }}
+              style={{ color: liked ? '#4D10C8' : 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
             >
               <svg width="14" height="14" viewBox="0 0 20 20" fill={liked ? '#4D10C8' : 'none'} stroke={liked ? '#4D10C8' : 'currentColor'} strokeWidth="1.5">
                 <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3H14z" />
@@ -192,12 +191,13 @@ export default function HighlightsView() {
   }, []);
 
   async function handleLike(id: number) {
-    if (likedIds.has(id)) return;
-    const newLiked = new Set(likedIds).add(id);
+    const isLiked = likedIds.has(id);
+    const newLiked = new Set(likedIds);
+    if (isLiked) { newLiked.delete(id); } else { newLiked.add(id); }
     setLikedIds(newLiked);
     saveLikedIds(newLiked);
-    setHighlights(prev => prev?.map(h => h.id === id ? { ...h, likes_count: h.likes_count + 1 } : h) ?? prev);
-    await fetch(`/api/highlights/${id}/like`, { method: 'POST' }).catch(() => {});
+    setHighlights(prev => prev?.map(h => h.id === id ? { ...h, likes_count: h.likes_count + (isLiked ? -1 : 1) } : h) ?? prev);
+    await fetch(`/api/highlights/${id}/like`, { method: isLiked ? 'DELETE' : 'POST' }).catch(() => {});
   }
 
   if (highlights === null) {
