@@ -92,6 +92,8 @@ export default function GroupsGrid({
                   <span style={COL}>W</span>
                   <span style={COL}>D</span>
                   <span style={COL}>L</span>
+                  <span style={COL}>GF</span>
+                  <span style={COL}>GA</span>
                   <span style={{ ...COL, width: '2rem' }}>GD</span>
                   <span style={{ ...COL, width: '2rem' }}>Pts</span>
                 </div>
@@ -172,6 +174,8 @@ export default function GroupsGrid({
                         <span style={COL}>{row.won}</span>
                         <span style={COL}>{row.drawn}</span>
                         <span style={COL}>{row.lost}</span>
+                        <span style={COL}>{anyMatchesPlayed ? row.goals_for : '–'}</span>
+                        <span style={COL}>{anyMatchesPlayed ? row.goals_against : '–'}</span>
                         <span style={{ ...COL, width: '2rem', color: anyMatchesPlayed ? gdColor : 'var(--text-muted)' }}>
                           {anyMatchesPlayed ? gdLabel(gd) : '–'}
                         </span>
