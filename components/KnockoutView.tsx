@@ -7,158 +7,85 @@ import Flag from './Flag';
 
 const KNOWN_TEAMS = new Set(Object.values(GROUPS_2026).flat());
 
-const BRACKET_STAGES = ['ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'FINAL'];
-
-const STAGE_LABEL: Record<string, string> = {
-  ROUND_OF_32: 'Round of 32',
-  ROUND_OF_16: 'Round of 16',
-  QUARTER_FINALS: 'Quarter-finals',
-  SEMI_FINALS: 'Semi-finals',
-  FINAL: 'Final',
+// 3-letter codes for all WC26 teams
+const CODE: Record<string, string> = {
+  'Mexico': 'MEX', 'South Africa': 'RSA', 'South Korea': 'KOR', 'Czechia': 'CZE',
+  'Canada': 'CAN', 'Bosnia and Herzegovina': 'BIH', 'Qatar': 'QAT', 'Switzerland': 'SUI',
+  'Brazil': 'BRA', 'Morocco': 'MAR', 'Haiti': 'HAI', 'Scotland': 'SCO',
+  'United States': 'USA', 'Paraguay': 'PAR', 'Australia': 'AUS', 'Türkiye': 'TUR',
+  'Germany': 'GER', 'Curaçao': 'CUW', 'Ivory Coast': 'CIV', 'Ecuador': 'ECU',
+  'Netherlands': 'NED', 'Japan': 'JPN', 'Sweden': 'SWE', 'Tunisia': 'TUN',
+  'Belgium': 'BEL', 'Egypt': 'EGY', 'Iran': 'IRN', 'New Zealand': 'NZL',
+  'Spain': 'ESP', 'Cape Verde': 'CPV', 'Saudi Arabia': 'KSA', 'Uruguay': 'URU',
+  'France': 'FRA', 'Senegal': 'SEN', 'Iraq': 'IRQ', 'Norway': 'NOR',
+  'Argentina': 'ARG', 'Algeria': 'ALG', 'Austria': 'AUT', 'Jordan': 'JOR',
+  'Portugal': 'POR', 'DR Congo': 'COD', 'Uzbekistan': 'UZB', 'Colombia': 'COL',
+  'England': 'ENG', 'Croatia': 'CRO', 'Ghana': 'GHA', 'Panama': 'PAN',
 };
+function teamCode(name: string) { return CODE[name] ?? name.slice(0, 3).toUpperCase(); }
 
-const MULTIPLIER: Record<string, number> = {
-  ROUND_OF_32: 1,
-  ROUND_OF_16: 2,
-  QUARTER_FINALS: 4,
-  SEMI_FINALS: 8,
-  FINAL: 16,
-};
+// ── Layout ───────────────────────────────────────────────────────────────────
+// 8 R32 matches per side → 8 slots. Symmetric bracket flows inward to center.
+const SLOT   = 100;   // px per R32 slot (8 slots = full bracket height)
+const CARD_W = 96;    // px card width
+const CARD_H = 82;    // px card height
+const CGAP   = 20;    // px connector gap between round columns
+const XGAP   = 48;    // px extra gap either side of center Final column
+const HDR    = 36;    // px stage label header row
 
-// Layout constants
-const SLOT = 88;      // px height per R32 slot
-const DATE_H = 15;    // px date/status header inside each card
-const TEAM_H = 30;    // px per team row
-const DIV_H = 1;      // divider between team rows
-const CARD_H = DATE_H + TEAM_H + DIV_H + TEAM_H; // = 76px
-const COL_W = 182;    // px column width
-const CONN_W = 28;    // px connector gap between columns
-const HEADER_H = 38;  // px stage-label header row
-const TOTAL_H = 16 * SLOT; // = 1408px
+const TOTAL_H = 8 * SLOT;
 
-function fmtDate(utcDate: string): string {
-  return new Date(utcDate).toLocaleDateString('en-GB', {
-    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC',
-  });
+// Column left-edge x positions
+const LR32 = 0;
+const LR16 = LR32 + CARD_W + CGAP;
+const LQF  = LR16 + CARD_W + CGAP;
+const LSF  = LQF  + CARD_W + CGAP;
+const CEN  = LSF  + CARD_W + XGAP;   // Final
+const RSF  = CEN  + CARD_W + XGAP;
+const RQF  = RSF  + CARD_W + CGAP;
+const RR16 = RQF  + CARD_W + CGAP;
+const RR32 = RR16 + CARD_W + CGAP;
+const TOTAL_W = RR32 + CARD_W;
+
+function fmtDate(utcDate: string) {
+  return new Date(utcDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+}
+function fmtTime(utcDate: string) {
+  return new Date(utcDate).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
 }
 
-function fmtTime(utcDate: string): string {
-  return new Date(utcDate).toLocaleTimeString('en-GB', {
-    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London',
-  });
+// Vertical centre of card slot for matchIdx in a given round
+function slotTop(matchIdx: number, mult: number) {
+  return matchIdx * mult * SLOT + (mult * SLOT - CARD_H) / 2;
 }
 
-// ── Card sub-components ───────────────────────────────────────────────────────
+// ── Sub-components ────────────────────────────────────────────────────────────
 
-function CardStatusBar({ match }: { match: MatchFixture }) {
-  const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
-  const finished = match.status === 'FINISHED';
-
-  if (live) {
-    const elapsed = match.status === 'PAUSED' ? 'HT' : match.elapsed ? `${match.elapsed}'` : 'Live';
-    return (
-      <div style={{
-        height: DATE_H,
-        display: 'flex', alignItems: 'center', gap: 5,
-        padding: '0 9px',
-        background: 'rgba(239,68,68,0.1)',
-        borderBottom: '1px solid rgba(239,68,68,0.25)',
-      }}>
-        <span style={{
-          width: 5, height: 5, borderRadius: '50%',
-          background: '#ef4444', flexShrink: 0,
-          boxShadow: '0 0 4px #ef4444',
-        }} />
-        <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          {elapsed}
-        </span>
-      </div>
-    );
-  }
-
-  const dateStr = fmtDate(match.utcDate);
-  const timeStr = !finished ? fmtTime(match.utcDate) : null;
-
-  return (
-    <div style={{
-      height: DATE_H,
-      display: 'flex', alignItems: 'center',
-      padding: '0 9px',
-      background: 'var(--bg)',
-      borderBottom: `1px solid var(--border)`,
-      gap: 4,
-    }}>
-      {finished && (
-        <span style={{
-          fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.1em',
-          color: 'var(--text-muted)', textTransform: 'uppercase',
-          marginRight: 2,
-        }}>
-          FT
-        </span>
-      )}
-      <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>
-        {dateStr}
-        {timeStr && <> · <span style={{ fontWeight: 600 }}>{timeStr}</span></>}
-      </span>
-    </div>
-  );
-}
-
-function TeamRow({
+function TeamCol({
   name, score, wins, loses, known, live,
 }: {
-  name: string;
-  score: number | null | undefined;
-  wins: boolean;
-  loses: boolean;
-  known: boolean;
-  live: boolean;
+  name: string; score: number | null | undefined;
+  wins: boolean; loses: boolean; known: boolean; live: boolean;
 }) {
-  const textColor = wins
-    ? 'var(--text-primary)'
-    : loses
-    ? 'var(--text-muted)'
-    : known
-    ? 'var(--text-secondary)'
-    : 'var(--text-muted)';
-
-  const scoreColor = live ? '#ef4444' : wins ? 'var(--green)' : 'var(--text-muted)';
-  const rowBg = wins ? 'rgba(34,197,94,0.09)' : 'transparent';
+  const code = known ? teamCode(name) : 'TBD';
+  const nameCol = wins ? 'var(--text-primary)' : loses ? 'var(--text-muted)' : known ? 'var(--text-secondary)' : 'var(--text-muted)';
+  const scoreCol = live ? '#ef4444' : wins ? 'var(--green)' : 'var(--text-muted)';
 
   return (
-    <div style={{
-      height: TEAM_H,
-      display: 'flex', alignItems: 'center', gap: 6,
-      padding: '0 9px',
-      background: rowBg,
-    }}>
-      {known ? (
-        <Flag team={name} height="0.68rem" width="0.96rem" />
-      ) : (
-        <div style={{ width: '0.96rem', height: '0.68rem', borderRadius: 2, background: 'var(--border)', flexShrink: 0 }} />
-      )}
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, flex: 1, minWidth: 0 }}>
+      {known
+        ? <Flag team={name} height="0.9rem" width="1.3rem" />
+        : <div style={{ width: '1.3rem', height: '0.9rem', borderRadius: 2, background: 'var(--border)' }} />
+      }
       <span style={{
-        flex: 1, minWidth: 0,
-        fontSize: '0.72rem',
-        fontWeight: wins ? 700 : 500,
-        color: textColor,
-        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-        letterSpacing: '-0.01em',
+        fontSize: '0.62rem', fontWeight: wins ? 700 : 500,
+        color: nameCol, letterSpacing: '0.03em',
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
       }}>
-        {known ? name : 'TBC'}
+        {code}
       </span>
       {score != null && (
-        <span style={{
-          fontSize: '0.8rem',
-          fontWeight: wins ? 800 : 600,
-          color: scoreColor,
-          fontVariantNumeric: 'tabular-nums',
-          flexShrink: 0,
-          minWidth: '1rem',
-          textAlign: 'right',
-          lineHeight: 1,
-        }}>
+        <span style={{ fontSize: '0.82rem', fontWeight: wins ? 800 : 600, color: scoreCol, lineHeight: 1 }}>
           {score}
         </span>
       )}
@@ -166,116 +93,104 @@ function TeamRow({
   );
 }
 
-function BracketCard({ match }: { match: MatchFixture }) {
+function MatchCard({ match }: { match: MatchFixture }) {
   const finished = match.status === 'FINISHED';
   const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
   const hasScore = match.homeScore != null && match.awayScore != null;
-
   const homeWins = finished && hasScore && match.homeScore! > match.awayScore!;
   const awayWins = finished && hasScore && match.awayScore! > match.homeScore!;
   const homeKnown = !!match.homeTeam && KNOWN_TEAMS.has(match.homeTeam);
   const awayKnown = !!match.awayTeam && KNOWN_TEAMS.has(match.awayTeam);
   const showScore = finished || live;
 
+  let dateNode: React.ReactNode;
+  if (live) {
+    const elapsed = match.status === 'PAUSED' ? 'HT' : match.elapsed ? `${match.elapsed}'` : 'Live';
+    dateNode = (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ef4444', flexShrink: 0, boxShadow: '0 0 4px #ef4444' }} />
+        <span style={{ fontSize: '0.56rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          {elapsed}
+        </span>
+      </div>
+    );
+  } else {
+    const t = !finished ? ` · ${fmtTime(match.utcDate)}` : '';
+    dateNode = (
+      <span style={{ fontSize: '0.56rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+        {finished && <span style={{ fontWeight: 700, marginRight: 3 }}>FT</span>}
+        {fmtDate(match.utcDate)}{t}
+      </span>
+    );
+  }
+
   return (
     <div style={{
-      width: COL_W, height: CARD_H,
+      width: CARD_W, height: CARD_H,
       background: 'var(--card)',
       border: `1px solid ${live ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
-      borderRadius: 9,
-      overflow: 'hidden',
+      borderRadius: 9, overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center',
+      gap: 5, padding: '7px 6px 6px',
     }}>
-      <CardStatusBar match={match} />
-      <TeamRow
-        name={match.homeTeam}
-        score={showScore ? (match.homeScore ?? 0) : null}
-        wins={homeWins} loses={awayWins}
-        known={homeKnown} live={live}
-      />
-      <div style={{ height: DIV_H, background: 'var(--border)', opacity: 0.5 }} />
-      <TeamRow
-        name={match.awayTeam}
-        score={showScore ? (match.awayScore ?? 0) : null}
-        wins={awayWins} loses={homeWins}
-        known={awayKnown} live={live}
-      />
+      <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 4 }}>
+        <TeamCol name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null}
+          wins={homeWins} loses={awayWins} known={homeKnown} live={live} />
+        <span style={{ fontSize: '0.5rem', color: 'var(--text-muted)', paddingTop: 10, flexShrink: 0 }}>
+          {showScore ? '–' : 'v'}
+        </span>
+        <TeamCol name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null}
+          wins={awayWins} loses={homeWins} known={awayKnown} live={live} />
+      </div>
+      <div style={{ lineHeight: 1 }}>{dateNode}</div>
     </div>
   );
 }
 
-// ── Bracket connector SVG ─────────────────────────────────────────────────────
-
-function ConnectorSVG({ leftCount, rightCount, leftMult }: { leftCount: number; rightCount: number; leftMult: number }) {
-  const mid = CONN_W / 2;
+// Left-side bracket connector (flows right: outer → inner)
+function ConnL({ innerCount, outerMult }: { innerCount: number; outerMult: number }) {
+  const mid = CGAP / 2;
   return (
-    <svg width={CONN_W} height={TOTAL_H} style={{ display: 'block' }}>
-      {Array.from({ length: rightCount }, (_, i) => {
-        const y1 = (i * 2) * leftMult * SLOT + (leftMult * SLOT) / 2;
-        const hasSecond = i * 2 + 1 < leftCount;
-        const y2 = hasSecond ? (i * 2 + 1) * leftMult * SLOT + (leftMult * SLOT) / 2 : y1;
-        const midY = (y1 + y2) / 2;
-        const d = hasSecond
-          ? `M 0 ${y1} H ${mid} V ${y2} M 0 ${y2} H ${mid} M ${mid} ${midY} H ${CONN_W}`
-          : `M 0 ${y1} H ${CONN_W}`;
+    <svg width={CGAP} height={TOTAL_H} style={{ display: 'block' }}>
+      {Array.from({ length: innerCount }, (_, i) => {
+        const y1 = (i * 2) * outerMult * SLOT + (outerMult * SLOT) / 2;
+        const y2 = (i * 2 + 1) * outerMult * SLOT + (outerMult * SLOT) / 2;
+        const my = (y1 + y2) / 2;
         return (
-          <path key={i} d={d} fill="none" stroke="var(--border)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" />
+          <path key={i}
+            d={`M 0 ${y1} H ${mid} V ${y2} M 0 ${y2} H ${mid} M ${mid} ${my} H ${CGAP}`}
+            fill="none" stroke="var(--border)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"
+          />
         );
       })}
     </svg>
   );
 }
 
-// ── Third-place match (inline card, not in bracket grid) ──────────────────────
-
-function ThirdPlaceCard({ match, participantMap }: { match: MatchFixture; participantMap: Record<string, string | null> }) {
-  const finished = match.status === 'FINISHED';
-  const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
-  const hasScore = match.homeScore != null && match.awayScore != null;
-  const homeWins = finished && hasScore && match.homeScore! > match.awayScore!;
-  const awayWins = finished && hasScore && match.awayScore! > match.homeScore!;
-  const homeKnown = KNOWN_TEAMS.has(match.homeTeam);
-  const awayKnown = KNOWN_TEAMS.has(match.awayTeam);
-  const showScore = finished || live;
-
-  function TeamRowInline({ name, score, wins, loses, known, participant }: {
-    name: string; score: number | null | undefined; wins: boolean; loses: boolean; known: boolean; participant: string | null;
-  }) {
-    return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 9px', height: TEAM_H, background: wins ? 'rgba(34,197,94,0.09)' : 'transparent' }}>
-        {known ? <Flag team={name} height="0.68rem" width="0.96rem" /> : <div style={{ width: '0.96rem', height: '0.68rem', borderRadius: 2, background: 'var(--border)', flexShrink: 0 }} />}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: wins ? 700 : 500, color: wins ? 'var(--text-primary)' : loses ? 'var(--text-muted)' : known ? 'var(--text-secondary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {known ? name : 'TBC'}
-          </span>
-          {participant && known && (
-            <span style={{ display: 'block', fontSize: '0.58rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {participant}
-            </span>
-          )}
-        </div>
-        {score != null && (
-          <span style={{ fontSize: '0.8rem', fontWeight: wins ? 800 : 600, color: live ? '#ef4444' : wins ? 'var(--green)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: '1rem', textAlign: 'right' }}>
-            {score}
-          </span>
-        )}
-      </div>
-    );
-  }
-
+// Right-side bracket connector (flows left: outer → inner, mirrored)
+function ConnR({ innerCount, outerMult }: { innerCount: number; outerMult: number }) {
+  const mid = CGAP / 2;
   return (
-    <div style={{ width: COL_W, borderRadius: 9, overflow: 'hidden', border: `1px solid ${live ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`, background: 'var(--card)' }}>
-      <CardStatusBar match={match} />
-      <TeamRowInline name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null} wins={homeWins} loses={awayWins} known={homeKnown} participant={participantMap[match.homeTeam] ?? null} />
-      <div style={{ height: 1, background: 'var(--border)', opacity: 0.5 }} />
-      <TeamRowInline name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null} wins={awayWins} loses={homeWins} known={awayKnown} participant={participantMap[match.awayTeam] ?? null} />
-    </div>
+    <svg width={CGAP} height={TOTAL_H} style={{ display: 'block' }}>
+      {Array.from({ length: innerCount }, (_, i) => {
+        const y1 = (i * 2) * outerMult * SLOT + (outerMult * SLOT) / 2;
+        const y2 = (i * 2 + 1) * outerMult * SLOT + (outerMult * SLOT) / 2;
+        const my = (y1 + y2) / 2;
+        return (
+          <path key={i}
+            d={`M ${CGAP} ${y1} H ${mid} V ${y2} M ${CGAP} ${y2} H ${mid} M ${mid} ${my} H 0`}
+            fill="none" stroke="var(--border)" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round"
+          />
+        );
+      })}
+    </svg>
   );
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function KnockoutView({ participantMap }: { participantMap: Record<string, string | null> }) {
+export default function KnockoutView({ participantMap: _pm }: { participantMap: Record<string, string | null> }) {
   const [fixtures, setFixtures] = useState<MatchFixture[] | null>(null);
 
   useEffect(() => {
@@ -289,8 +204,7 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
     load();
     const id = setInterval(() => {
       setFixtures(prev => {
-        const hasLive = prev?.some(m => m.status === 'IN_PLAY' || m.status === 'LIVE' || m.status === 'PAUSED');
-        if (hasLive) load();
+        if (prev?.some(m => m.status === 'IN_PLAY' || m.status === 'LIVE' || m.status === 'PAUSED')) load();
         return prev;
       });
     }, 60_000);
@@ -306,9 +220,8 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
     );
   }
 
-  const knockoutFixtures = fixtures.filter(m => m.stage !== 'GROUP_STAGE');
-
-  if (knockoutFixtures.length === 0) {
+  const ko = fixtures.filter(m => m.stage !== 'GROUP_STAGE');
+  if (ko.length === 0) {
     return (
       <div className="rounded-xl p-10 text-center text-sm" style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
         Knockout fixtures will appear here as the group stage concludes.
@@ -317,92 +230,186 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
   }
 
   const byStage = new Map<string, MatchFixture[]>();
-  for (const m of knockoutFixtures) {
+  for (const m of ko) {
     const arr = byStage.get(m.stage) ?? [];
     arr.push(m);
     byStage.set(m.stage, arr);
   }
-  for (const [stage, matches] of byStage) {
-    byStage.set(stage, [...matches].sort((a, b) => a.id - b.id));
-  }
+  for (const [s, ms] of byStage) byStage.set(s, [...ms].sort((a, b) => a.id - b.id));
 
-  const availableStages = BRACKET_STAGES.filter(s => byStage.has(s));
-  const thirdPlace = byStage.get('THIRD_PLACE') ?? [];
-  const totalWidth = availableStages.length * COL_W + (availableStages.length - 1) * CONN_W;
+  const r32 = byStage.get('ROUND_OF_32') ?? [];
+  const r16 = byStage.get('ROUND_OF_16') ?? [];
+  const qf  = byStage.get('QUARTER_FINALS') ?? [];
+  const sf  = byStage.get('SEMI_FINALS') ?? [];
+  const fin = byStage.get('FINAL') ?? [];
+  const tp  = byStage.get('THIRD_PLACE') ?? [];
+
+  // Split each round into left (first half) and right (second half)
+  const h = (arr: MatchFixture[]) => [arr.slice(0, Math.ceil(arr.length / 2)), arr.slice(Math.ceil(arr.length / 2))] as const;
+  const [r32L, r32R] = h(r32);
+  const [r16L, r16R] = h(r16);
+  const [qfL,  qfR]  = h(qf);
+  const sfL = sf[0] ? [sf[0]] : [];
+  const sfR = sf[1] ? [sf[1]] : [];
+
+  const finalMatch = fin[0];
+  const finalDone  = finalMatch?.status === 'FINISHED';
+
+  // SF→Final horizontal connector y position (vertical centre of bracket)
+  const sfConnY = TOTAL_H / 2;
+
+  const STAGE_HEADERS = [
+    { label: 'Round of 32', x: LR32 }, { label: 'Round of 16', x: LR16 },
+    { label: 'Quarter-finals', x: LQF }, { label: 'Semi-finals', x: LSF },
+    { label: 'Final', x: CEN },
+    { label: 'Semi-finals', x: RSF }, { label: 'Quarter-finals', x: RQF },
+    { label: 'Round of 16', x: RR16 }, { label: 'Round of 32', x: RR32 },
+  ];
 
   return (
     <div>
       <div style={{ overflowX: 'auto' }}>
-        <div style={{ position: 'relative', width: totalWidth, height: TOTAL_H + HEADER_H }}>
+        <div style={{ position: 'relative', width: TOTAL_W, height: TOTAL_H + HDR }}>
 
-          {/* Column headers */}
-          {availableStages.map((stage, colIdx) => (
-            <div
-              key={stage}
-              style={{
-                position: 'absolute',
-                left: colIdx * (COL_W + CONN_W),
-                top: 0, width: COL_W, height: HEADER_H,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >
-              <span style={{
-                fontSize: '0.62rem', fontWeight: 800,
-                textTransform: 'uppercase', letterSpacing: '0.09em',
-                color: 'var(--text-muted)',
-              }}>
-                {STAGE_LABEL[stage] ?? stage}
+          {/* Stage headers */}
+          {STAGE_HEADERS.map(({ label, x }, i) => (
+            <div key={i} style={{ position: 'absolute', left: x, top: 0, width: CARD_W, height: HDR, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: '0.56rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', textAlign: 'center' }}>
+                {label}
               </span>
             </div>
           ))}
 
-          {/* Match cards */}
-          {availableStages.map((stage, colIdx) => {
-            const matches = byStage.get(stage)!;
-            const mult = MULTIPLIER[stage] ?? 1;
-            const colX = colIdx * (COL_W + CONN_W);
-            return matches.map((match, matchIdx) => {
-              const top = HEADER_H + matchIdx * mult * SLOT + (mult * SLOT - CARD_H) / 2;
-              return (
-                <div key={match.id} style={{ position: 'absolute', left: colX, top }}>
-                  <BracketCard match={match} />
-                </div>
-              );
-            });
-          })}
+          {/* ── LEFT HALF ── */}
 
-          {/* Connectors */}
-          {availableStages.slice(0, -1).map((leftStage, colIdx) => {
-            const rightStage = availableStages[colIdx + 1];
-            const leftMatches = byStage.get(leftStage)!;
-            const rightMatches = byStage.get(rightStage) ?? [];
-            if (!rightMatches.length) return null;
-            return (
-              <div
-                key={`conn-${colIdx}`}
-                style={{ position: 'absolute', left: colIdx * (COL_W + CONN_W) + COL_W, top: HEADER_H }}
-              >
-                <ConnectorSVG
-                  leftCount={leftMatches.length}
-                  rightCount={rightMatches.length}
-                  leftMult={MULTIPLIER[leftStage] ?? 1}
-                />
-              </div>
-            );
-          })}
+          {r32L.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: LR32, top: HDR + slotTop(i, 1) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {r16L.length > 0 && r32L.length > 0 && (
+            <div style={{ position: 'absolute', left: LR32 + CARD_W, top: HDR }}>
+              <ConnL innerCount={r16L.length} outerMult={1} />
+            </div>
+          )}
+
+          {r16L.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: LR16, top: HDR + slotTop(i, 2) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {qfL.length > 0 && r16L.length > 0 && (
+            <div style={{ position: 'absolute', left: LR16 + CARD_W, top: HDR }}>
+              <ConnL innerCount={qfL.length} outerMult={2} />
+            </div>
+          )}
+
+          {qfL.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: LQF, top: HDR + slotTop(i, 4) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {sfL.length > 0 && qfL.length > 0 && (
+            <div style={{ position: 'absolute', left: LQF + CARD_W, top: HDR }}>
+              <ConnL innerCount={sfL.length} outerMult={4} />
+            </div>
+          )}
+
+          {sfL.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: LSF, top: HDR + slotTop(i, 8) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {/* SF left → Final horizontal line */}
+          {sfL.length > 0 && fin.length > 0 && (
+            <div style={{ position: 'absolute', left: LSF + CARD_W, top: HDR + sfConnY, width: XGAP, height: 1.5, background: 'var(--border)' }} />
+          )}
+
+          {/* ── RIGHT HALF ── */}
+
+          {r32R.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: RR32, top: HDR + slotTop(i, 1) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {r16R.length > 0 && r32R.length > 0 && (
+            <div style={{ position: 'absolute', left: RR16 + CARD_W, top: HDR }}>
+              <ConnR innerCount={r16R.length} outerMult={1} />
+            </div>
+          )}
+
+          {r16R.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: RR16, top: HDR + slotTop(i, 2) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {qfR.length > 0 && r16R.length > 0 && (
+            <div style={{ position: 'absolute', left: RQF + CARD_W, top: HDR }}>
+              <ConnR innerCount={qfR.length} outerMult={2} />
+            </div>
+          )}
+
+          {qfR.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: RQF, top: HDR + slotTop(i, 4) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {sfR.length > 0 && qfR.length > 0 && (
+            <div style={{ position: 'absolute', left: RSF + CARD_W, top: HDR }}>
+              <ConnR innerCount={sfR.length} outerMult={4} />
+            </div>
+          )}
+
+          {sfR.map((m, i) => (
+            <div key={m.id} style={{ position: 'absolute', left: RSF, top: HDR + slotTop(i, 8) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
+
+          {/* Final → SF right horizontal line */}
+          {sfR.length > 0 && fin.length > 0 && (
+            <div style={{ position: 'absolute', left: CEN + CARD_W, top: HDR + sfConnY, width: XGAP, height: 1.5, background: 'var(--border)' }} />
+          )}
+
+          {/* ── CENTER ── */}
+
+          {/* Trophy + champion label above Final card */}
+          <div style={{
+            position: 'absolute', left: CEN, width: CARD_W,
+            top: HDR, height: slotTop(0, 8),
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end',
+            paddingBottom: 10, gap: 3,
+          }}>
+            <span style={{ fontSize: '1.8rem', lineHeight: 1 }}>🏆</span>
+            <span style={{ fontSize: '0.5rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', color: 'var(--text-muted)', textAlign: 'center' }}>
+              {finalDone ? 'Champion' : 'Final'}
+            </span>
+          </div>
+
+          {/* Final card */}
+          {fin.map(m => (
+            <div key={m.id} style={{ position: 'absolute', left: CEN, top: HDR + slotTop(0, 8) }}>
+              <MatchCard match={m} />
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Third place play-off */}
-      {thirdPlace.length > 0 && (
-        <div className="mt-6">
+      {tp.length > 0 && (
+        <div className="mt-5">
           <p className="font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>
             Third Place Play-off
           </p>
-          <div className="flex gap-3 flex-wrap">
-            {thirdPlace.map(m => (
-              <ThirdPlaceCard key={m.id} match={m} participantMap={participantMap} />
-            ))}
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            {tp.map(m => <MatchCard key={m.id} match={m} />)}
           </div>
         </div>
       )}
