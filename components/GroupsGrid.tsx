@@ -100,7 +100,9 @@ export default function GroupsGrid({
               </div>
 
               {/* Team rows */}
-              {rows.map((row, i) => {
+              {(() => {
+                const groupComplete = rows.every(r => r.played >= 3);
+                return rows.map((row, i) => {
                 const team = row.team_name;
                 const participant = participantMap[team] ?? null;
                 const eliminated = eliminatedSet.has(team);
@@ -108,6 +110,8 @@ export default function GroupsGrid({
                 const isLast = i === rows.length - 1;
                 const gd = row.goal_difference;
                 const gdColor = gd > 0 ? 'var(--green)' : gd < 0 ? '#ef4444' : 'var(--text-muted)';
+                const qualified = groupComplete && row.position <= 2;
+                const qualifiedBg = 'rgba(34,197,94,0.06)';
 
                 return (
                   <button
@@ -116,13 +120,14 @@ export default function GroupsGrid({
                     className={`team-row w-full text-left transition-colors${wonPrizes.length ? ' has-prize' : ''}`}
                     style={{
                       borderBottom: isLast ? 'none' : '1px solid var(--border)',
+                      borderLeft: qualified ? '2px solid rgba(34,197,94,0.45)' : '2px solid transparent',
                       opacity: 1,
-                      background: 'transparent',
+                      background: qualified ? qualifiedBg : 'transparent',
                       display: 'block',
                       cursor: 'pointer',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                    onMouseEnter={e => (e.currentTarget.style.background = qualified ? 'rgba(34,197,94,0.11)' : 'var(--border)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = qualified ? qualifiedBg : 'transparent')}
                   >
                     <div className="flex items-center gap-1 px-4 py-2">
                       {/* Position */}
@@ -186,7 +191,7 @@ export default function GroupsGrid({
                     </div>
                   </button>
                 );
-              })}
+              });})()}
             </div>
           );
         })}
