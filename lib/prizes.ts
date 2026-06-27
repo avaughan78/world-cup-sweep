@@ -82,22 +82,19 @@ export async function computePrizes(
   const goldenBootPlayerName = goldenBootResult?.winner?.player_name ?? topScorer?.player_name ?? null;
   const goldenBootTiedPlayers = goldenBootResult?.tiedPlayers ?? null;
 
-  // 6. Most goals conceded across the entire tournament (The Sieve)
-  // Primary: team_stats.goals_conceded counts all rounds (group + knockout)
-  // Tiebreakers use group_standings (exact for eliminated teams; best available proxy for others)
-  let topSieve: TeamStats | null = null;
-  for (const t of allStats) {
-    if (!topSieve) { topSieve = t; continue; }
-    if (t.goals_conceded > topSieve.goals_conceded) { topSieve = t; continue; }
-    if (t.goals_conceded === topSieve.goals_conceded) {
-      const tGD = standingsByTeam.get(t.team_name)?.goal_difference ?? 0;
-      const bGD = standingsByTeam.get(topSieve.team_name)?.goal_difference ?? 0;
-      if (tGD < bGD) { topSieve = t; continue; }
-      if (tGD === bGD) {
-        const tGF = standingsByTeam.get(t.team_name)?.goals_for ?? 0;
-        const bGF = standingsByTeam.get(topSieve.team_name)?.goals_for ?? 0;
-        if (tGF < bGF) topSieve = t;
-      }
+  // 6. Most goals conceded (Derby County / The Sieve)
+  // All three criteria come from group_standings so they're guaranteed consistent:
+  //   goals_against  = goals conceded in group stage (= full tournament for eliminated teams)
+  //   goal_difference = GD (computed from the same match data)
+  //   goals_for       = goals scored
+  // Tiebreak 1: worst GD (most negative wins); Tiebreak 2: fewest goals scored
+  let topSieve: GroupStanding | null = null;
+  for (const s of groupStandings) {
+    if (!topSieve) { topSieve = s; continue; }
+    if (s.goals_against > topSieve.goals_against) { topSieve = s; continue; }
+    if (s.goals_against === topSieve.goals_against) {
+      if (s.goal_difference < topSieve.goal_difference) { topSieve = s; continue; }
+      if (s.goal_difference === topSieve.goal_difference && s.goals_for < topSieve.goals_for) { topSieve = s; }
     }
   }
 
@@ -192,11 +189,11 @@ export async function computePrizes(
       name: 'Derby County',
       description: 'Most goals conceded overall',
       icon: '🪣',
-      current_team: (topSieve?.goals_conceded ?? 0) > 0 ? topSieve!.team_name : null,
-      current_participant: (topSieve?.goals_conceded ?? 0) > 0 ? participant(topSieve!.team_name) : null,
-      value_label: (topSieve?.goals_conceded ?? 0) > 0 ? `${topSieve!.goals_conceded} conceded` : null,
+      current_team: (topSieve?.goals_against ?? 0) > 0 ? topSieve!.team_name : null,
+      current_participant: (topSieve?.goals_against ?? 0) > 0 ? participant(topSieve!.team_name) : null,
+      value_label: (topSieve?.goals_against ?? 0) > 0 ? `${topSieve!.goals_against} conceded` : null,
       is_manual: false,
-      confirmed: tournamentOver && (topSieve?.goals_conceded ?? 0) > 0,
+      confirmed: tournamentOver && (topSieve?.goals_against ?? 0) > 0,
     },
   ];
 }
