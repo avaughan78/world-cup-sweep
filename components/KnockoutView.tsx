@@ -9,15 +9,14 @@ const KNOWN_TEAMS = new Set(Object.values(GROUPS_2026).flat());
 
 const BRACKET_STAGES = ['ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'FINAL'];
 
-const STAGE_SHORT: Record<string, string> = {
-  ROUND_OF_32: 'R32',
-  ROUND_OF_16: 'R16',
-  QUARTER_FINALS: 'QF',
-  SEMI_FINALS: 'SF',
+const STAGE_LABEL: Record<string, string> = {
+  ROUND_OF_32: 'Round of 32',
+  ROUND_OF_16: 'Round of 16',
+  QUARTER_FINALS: 'Quarter-finals',
+  SEMI_FINALS: 'Semi-finals',
   FINAL: 'Final',
 };
 
-// How many R32 slots each round's match occupies vertically
 const MULTIPLIER: Record<string, number> = {
   ROUND_OF_32: 1,
   ROUND_OF_16: 2,
@@ -26,71 +25,139 @@ const MULTIPLIER: Record<string, number> = {
   FINAL: 16,
 };
 
-const SLOT = 72;     // px per base slot
-const CARD_H = 62;   // px actual card height
-const COL_W = 172;   // px column width
-const CONN_W = 22;   // px connector gap between columns
-const HEADER_H = 28; // px column header height
-const TOTAL_H = 16 * SLOT;
+// Layout constants
+const SLOT = 88;      // px height per R32 slot
+const DATE_H = 15;    // px date/status header inside each card
+const TEAM_H = 30;    // px per team row
+const DIV_H = 1;      // divider between team rows
+const CARD_H = DATE_H + TEAM_H + DIV_H + TEAM_H; // = 76px
+const COL_W = 182;    // px column width
+const CONN_W = 28;    // px connector gap between columns
+const HEADER_H = 38;  // px stage-label header row
+const TOTAL_H = 16 * SLOT; // = 1408px
 
-function formatKickoff(utcDate: string): string {
-  const d = new Date(utcDate);
-  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' });
+function fmtDate(utcDate: string): string {
+  return new Date(utcDate).toLocaleDateString('en-GB', {
+    weekday: 'short', day: 'numeric', month: 'short', timeZone: 'UTC',
+  });
+}
+
+function fmtTime(utcDate: string): string {
+  return new Date(utcDate).toLocaleTimeString('en-GB', {
+    hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London',
+  });
+}
+
+// ── Card sub-components ───────────────────────────────────────────────────────
+
+function CardStatusBar({ match }: { match: MatchFixture }) {
+  const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
+  const finished = match.status === 'FINISHED';
+
+  if (live) {
+    const elapsed = match.status === 'PAUSED' ? 'HT' : match.elapsed ? `${match.elapsed}'` : 'Live';
+    return (
+      <div style={{
+        height: DATE_H,
+        display: 'flex', alignItems: 'center', gap: 5,
+        padding: '0 9px',
+        background: 'rgba(239,68,68,0.1)',
+        borderBottom: '1px solid rgba(239,68,68,0.25)',
+      }}>
+        <span style={{
+          width: 5, height: 5, borderRadius: '50%',
+          background: '#ef4444', flexShrink: 0,
+          boxShadow: '0 0 4px #ef4444',
+        }} />
+        <span style={{ fontSize: '0.58rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+          {elapsed}
+        </span>
+      </div>
+    );
+  }
+
+  const dateStr = fmtDate(match.utcDate);
+  const timeStr = !finished ? fmtTime(match.utcDate) : null;
+
+  return (
+    <div style={{
+      height: DATE_H,
+      display: 'flex', alignItems: 'center',
+      padding: '0 9px',
+      background: 'var(--bg)',
+      borderBottom: `1px solid var(--border)`,
+      gap: 4,
+    }}>
+      {finished && (
+        <span style={{
+          fontSize: '0.5rem', fontWeight: 800, letterSpacing: '0.1em',
+          color: 'var(--text-muted)', textTransform: 'uppercase',
+          marginRight: 2,
+        }}>
+          FT
+        </span>
+      )}
+      <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)' }}>
+        {dateStr}
+        {timeStr && <> · <span style={{ fontWeight: 600 }}>{timeStr}</span></>}
+      </span>
+    </div>
+  );
 }
 
 function TeamRow({
-  name, score, isWinner, isKnown, isLive, participant,
+  name, score, wins, loses, known, live,
 }: {
   name: string;
   score: number | null | undefined;
-  isWinner: boolean;
-  isKnown: boolean;
-  isLive: boolean;
-  participant: string | null;
+  wins: boolean;
+  loses: boolean;
+  known: boolean;
+  live: boolean;
 }) {
-  const rowH = (CARD_H - 1) / 2;
+  const textColor = wins
+    ? 'var(--text-primary)'
+    : loses
+    ? 'var(--text-muted)'
+    : known
+    ? 'var(--text-secondary)'
+    : 'var(--text-muted)';
+
+  const scoreColor = live ? '#ef4444' : wins ? 'var(--green)' : 'var(--text-muted)';
+  const rowBg = wins ? 'rgba(34,197,94,0.09)' : 'transparent';
+
   return (
-    <div style={{ display: 'flex', alignItems: 'center', height: rowH, gap: 5, padding: '0 8px' }}>
-      {isKnown ? (
-        <Flag team={name} height="0.62rem" width="0.88rem" />
+    <div style={{
+      height: TEAM_H,
+      display: 'flex', alignItems: 'center', gap: 6,
+      padding: '0 9px',
+      background: rowBg,
+    }}>
+      {known ? (
+        <Flag team={name} height="0.68rem" width="0.96rem" />
       ) : (
-        <div style={{ width: '0.88rem', height: '0.62rem', borderRadius: 1, background: 'var(--border)', flexShrink: 0 }} />
+        <div style={{ width: '0.96rem', height: '0.68rem', borderRadius: 2, background: 'var(--border)', flexShrink: 0 }} />
       )}
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <span style={{
-          display: 'block',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          fontSize: '0.68rem',
-          fontWeight: isWinner ? 700 : 400,
-          color: isKnown ? (isWinner ? 'var(--text-primary)' : 'var(--text-secondary)') : 'var(--text-muted)',
-          lineHeight: 1.2,
-        }}>
-          {isKnown ? name : 'TBC'}
-        </span>
-        {participant && isKnown && (
-          <span style={{
-            display: 'block',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontSize: '0.55rem',
-            color: 'var(--text-muted)',
-            lineHeight: 1.1,
-          }}>
-            {participant}
-          </span>
-        )}
-      </div>
+      <span style={{
+        flex: 1, minWidth: 0,
+        fontSize: '0.72rem',
+        fontWeight: wins ? 700 : 500,
+        color: textColor,
+        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        letterSpacing: '-0.01em',
+      }}>
+        {known ? name : 'TBC'}
+      </span>
       {score != null && (
         <span style={{
-          fontSize: '0.7rem',
-          fontWeight: isWinner ? 700 : 400,
-          color: isLive ? '#ef4444' : (isWinner ? 'var(--text-primary)' : 'var(--text-muted)'),
+          fontSize: '0.8rem',
+          fontWeight: wins ? 800 : 600,
+          color: scoreColor,
           fontVariantNumeric: 'tabular-nums',
           flexShrink: 0,
-          paddingLeft: 3,
+          minWidth: '1rem',
+          textAlign: 'right',
+          lineHeight: 1,
         }}>
           {score}
         </span>
@@ -99,46 +166,45 @@ function TeamRow({
   );
 }
 
-function BracketCard({ match, participantMap }: { match: MatchFixture; participantMap: Record<string, string | null> }) {
+function BracketCard({ match }: { match: MatchFixture }) {
   const finished = match.status === 'FINISHED';
   const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
   const hasScore = match.homeScore != null && match.awayScore != null;
+
   const homeWins = finished && hasScore && match.homeScore! > match.awayScore!;
   const awayWins = finished && hasScore && match.awayScore! > match.homeScore!;
   const homeKnown = !!match.homeTeam && KNOWN_TEAMS.has(match.homeTeam);
   const awayKnown = !!match.awayTeam && KNOWN_TEAMS.has(match.awayTeam);
+  const showScore = finished || live;
 
   return (
     <div style={{
-      width: COL_W,
-      height: CARD_H,
+      width: COL_W, height: CARD_H,
       background: 'var(--card)',
-      border: `1px solid ${live ? '#ef4444' : 'var(--border)'}`,
-      borderRadius: 7,
+      border: `1px solid ${live ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`,
+      borderRadius: 9,
       overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
+      display: 'flex', flexDirection: 'column',
     }}>
+      <CardStatusBar match={match} />
       <TeamRow
         name={match.homeTeam}
-        score={hasScore ? match.homeScore : null}
-        isWinner={homeWins}
-        isKnown={homeKnown}
-        isLive={live}
-        participant={participantMap[match.homeTeam] ?? null}
+        score={showScore ? (match.homeScore ?? 0) : null}
+        wins={homeWins} loses={awayWins}
+        known={homeKnown} live={live}
       />
-      <div style={{ height: 1, background: 'var(--border)', flexShrink: 0 }} />
+      <div style={{ height: DIV_H, background: 'var(--border)', opacity: 0.5 }} />
       <TeamRow
         name={match.awayTeam}
-        score={hasScore ? match.awayScore : null}
-        isWinner={awayWins}
-        isKnown={awayKnown}
-        isLive={live}
-        participant={participantMap[match.awayTeam] ?? null}
+        score={showScore ? (match.awayScore ?? 0) : null}
+        wins={awayWins} loses={homeWins}
+        known={awayKnown} live={live}
       />
     </div>
   );
 }
+
+// ── Bracket connector SVG ─────────────────────────────────────────────────────
 
 function ConnectorSVG({ leftCount, rightCount, leftMult }: { leftCount: number; rightCount: number; leftMult: number }) {
   const mid = CONN_W / 2;
@@ -159,6 +225,55 @@ function ConnectorSVG({ leftCount, rightCount, leftMult }: { leftCount: number; 
     </svg>
   );
 }
+
+// ── Third-place match (inline card, not in bracket grid) ──────────────────────
+
+function ThirdPlaceCard({ match, participantMap }: { match: MatchFixture; participantMap: Record<string, string | null> }) {
+  const finished = match.status === 'FINISHED';
+  const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
+  const hasScore = match.homeScore != null && match.awayScore != null;
+  const homeWins = finished && hasScore && match.homeScore! > match.awayScore!;
+  const awayWins = finished && hasScore && match.awayScore! > match.homeScore!;
+  const homeKnown = KNOWN_TEAMS.has(match.homeTeam);
+  const awayKnown = KNOWN_TEAMS.has(match.awayTeam);
+  const showScore = finished || live;
+
+  function TeamRowInline({ name, score, wins, loses, known, participant }: {
+    name: string; score: number | null | undefined; wins: boolean; loses: boolean; known: boolean; participant: string | null;
+  }) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 9px', height: TEAM_H, background: wins ? 'rgba(34,197,94,0.09)' : 'transparent' }}>
+        {known ? <Flag team={name} height="0.68rem" width="0.96rem" /> : <div style={{ width: '0.96rem', height: '0.68rem', borderRadius: 2, background: 'var(--border)', flexShrink: 0 }} />}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: '0.72rem', fontWeight: wins ? 700 : 500, color: wins ? 'var(--text-primary)' : loses ? 'var(--text-muted)' : known ? 'var(--text-secondary)' : 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {known ? name : 'TBC'}
+          </span>
+          {participant && known && (
+            <span style={{ display: 'block', fontSize: '0.58rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {participant}
+            </span>
+          )}
+        </div>
+        {score != null && (
+          <span style={{ fontSize: '0.8rem', fontWeight: wins ? 800 : 600, color: live ? '#ef4444' : wins ? 'var(--green)' : 'var(--text-muted)', fontVariantNumeric: 'tabular-nums', flexShrink: 0, minWidth: '1rem', textAlign: 'right' }}>
+            {score}
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ width: COL_W, borderRadius: 9, overflow: 'hidden', border: `1px solid ${live ? 'rgba(239,68,68,0.5)' : 'var(--border)'}`, background: 'var(--card)' }}>
+      <CardStatusBar match={match} />
+      <TeamRowInline name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null} wins={homeWins} loses={awayWins} known={homeKnown} participant={participantMap[match.homeTeam] ?? null} />
+      <div style={{ height: 1, background: 'var(--border)', opacity: 0.5 }} />
+      <TeamRowInline name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null} wins={awayWins} loses={homeWins} known={awayKnown} participant={participantMap[match.awayTeam] ?? null} />
+    </div>
+  );
+}
+
+// ── Main component ────────────────────────────────────────────────────────────
 
 export default function KnockoutView({ participantMap }: { participantMap: Record<string, string | null> }) {
   const [fixtures, setFixtures] = useState<MatchFixture[] | null>(null);
@@ -227,16 +342,16 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
               style={{
                 position: 'absolute',
                 left: colIdx * (COL_W + CONN_W),
-                top: 0,
-                width: COL_W,
-                height: HEADER_H,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                top: 0, width: COL_W, height: HEADER_H,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
-              <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>
-                {STAGE_SHORT[stage] ?? stage}
+              <span style={{
+                fontSize: '0.62rem', fontWeight: 800,
+                textTransform: 'uppercase', letterSpacing: '0.09em',
+                color: 'var(--text-muted)',
+              }}>
+                {STAGE_LABEL[stage] ?? stage}
               </span>
             </div>
           ))}
@@ -250,7 +365,7 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
               const top = HEADER_H + matchIdx * mult * SLOT + (mult * SLOT - CARD_H) / 2;
               return (
                 <div key={match.id} style={{ position: 'absolute', left: colX, top }}>
-                  <BracketCard match={match} participantMap={participantMap} />
+                  <BracketCard match={match} />
                 </div>
               );
             });
@@ -280,65 +395,15 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
 
       {/* Third place play-off */}
       {thirdPlace.length > 0 && (
-        <div className="mt-5">
-          <p className="font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)', fontSize: '0.65rem' }}>
+        <div className="mt-6">
+          <p className="font-black uppercase tracking-widest mb-2" style={{ color: 'var(--text-muted)', fontSize: '0.62rem' }}>
             Third Place Play-off
           </p>
-          {thirdPlace.map(m => {
-            const finished = m.status === 'FINISHED';
-            const live = m.status === 'IN_PLAY' || m.status === 'LIVE' || m.status === 'PAUSED';
-            const hasScore = m.homeScore != null && m.awayScore != null;
-            return (
-              <div
-                key={m.id}
-                className="rounded-xl px-4 py-3"
-                style={{ background: 'var(--card)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '0.75rem' }}
-              >
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-semibold" style={{ color: KNOWN_TEAMS.has(m.homeTeam) ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      {m.homeTeam || 'TBC'}
-                    </span>
-                    {KNOWN_TEAMS.has(m.homeTeam) && <Flag team={m.homeTeam} height="0.95rem" width="1.4rem" />}
-                  </div>
-                  {participantMap[m.homeTeam] && (
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{participantMap[m.homeTeam]}</span>
-                  )}
-                </div>
-                <div className="flex flex-col items-center justify-center rounded-lg px-3 py-1.5" style={{ background: 'var(--bg)', border: '1px solid var(--border)', minWidth: '5rem' }}>
-                  {finished && hasScore ? (
-                    <span className="font-black tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '1rem', letterSpacing: '0.05em' }}>
-                      {m.homeScore} – {m.awayScore}
-                    </span>
-                  ) : live && hasScore ? (
-                    <>
-                      <span className="font-black tabular-nums" style={{ color: '#ef4444', fontSize: '1rem' }}>
-                        {m.homeScore ?? 0} – {m.awayScore ?? 0}
-                      </span>
-                      <span className="font-bold uppercase" style={{ color: '#ef4444', fontSize: '0.55rem', letterSpacing: '0.08em' }}>
-                        {m.status === 'PAUSED' ? 'HT' : m.elapsed ? `${m.elapsed}'` : 'Live'}
-                      </span>
-                    </>
-                  ) : (
-                    <span className="font-bold" style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                      {formatKickoff(m.utcDate)}
-                    </span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                  <div className="flex items-center gap-1.5">
-                    {KNOWN_TEAMS.has(m.awayTeam) && <Flag team={m.awayTeam} height="0.95rem" width="1.4rem" />}
-                    <span className="font-semibold" style={{ color: KNOWN_TEAMS.has(m.awayTeam) ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      {m.awayTeam || 'TBC'}
-                    </span>
-                  </div>
-                  {participantMap[m.awayTeam] && (
-                    <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>{participantMap[m.awayTeam]}</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+          <div className="flex gap-3 flex-wrap">
+            {thirdPlace.map(m => (
+              <ThirdPlaceCard key={m.id} match={m} participantMap={participantMap} />
+            ))}
+          </div>
         </div>
       )}
     </div>
