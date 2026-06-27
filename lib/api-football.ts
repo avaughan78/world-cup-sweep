@@ -25,6 +25,7 @@ export interface WCFixture {
   statusShort: string;
   elapsed: number | null;
   round: string;
+  roundSlot: number | null;  // bracket slot parsed from "Round of 32 - 3" → 3
   homeTeam: string;
   awayTeam: string;
   homeGoals: number | null;
@@ -67,19 +68,24 @@ export interface WCTopScorer {
 export async function getAllWCFixtures(): Promise<WCFixture[]> {
   const data = await apiFetch(`/fixtures?league=${WC_LEAGUE}&season=${WC_SEASON}`);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data.response ?? []).map((f: any) => ({
-    id: f.fixture.id,
-    date: f.fixture.date,
-    statusShort: f.fixture.status.short,
-    elapsed: f.fixture.status.elapsed ?? null,
-    round: f.league.round ?? '',
-    homeTeam: f.teams.home.name,
-    awayTeam: f.teams.away.name,
-    homeGoals: f.goals.home,
-    awayGoals: f.goals.away,
-    penaltyHome: f.score?.penalty?.home ?? null,
-    penaltyAway: f.score?.penalty?.away ?? null,
-  }));
+  return (data.response ?? []).map((f: any) => {
+    const round: string = f.league.round ?? '';
+    const slotMatch = round.match(/- (\d+)$/);
+    return {
+      id: f.fixture.id,
+      date: f.fixture.date,
+      statusShort: f.fixture.status.short,
+      elapsed: f.fixture.status.elapsed ?? null,
+      round,
+      roundSlot: slotMatch ? parseInt(slotMatch[1], 10) : null,
+      homeTeam: f.teams.home.name,
+      awayTeam: f.teams.away.name,
+      homeGoals: f.goals.home,
+      awayGoals: f.goals.away,
+      penaltyHome: f.score?.penalty?.home ?? null,
+      penaltyAway: f.score?.penalty?.away ?? null,
+    };
+  });
 }
 
 // Returns currently live WC matches only. Empty array when nothing is live.

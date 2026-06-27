@@ -253,7 +253,16 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
     arr.push(m);
     byStage.set(m.stage, arr);
   }
-  for (const [s, ms] of byStage) byStage.set(s, [...ms].sort((a, b) => a.id - b.id));
+  for (const [s, ms] of byStage) {
+    byStage.set(s, [...ms].sort((a, b) => {
+      // Prefer bracket slot (matchday) which encodes the draw position;
+      // fall back to fixture ID which is arbitrary but at least stable.
+      if (a.matchday != null && b.matchday != null) return a.matchday - b.matchday;
+      if (a.matchday != null) return -1;
+      if (b.matchday != null) return 1;
+      return a.id - b.id;
+    }));
+  }
 
   // Pad each round with placeholders so the bracket always shows the full structure
   const r32 = pad(byStage.get('ROUND_OF_32')   ?? [], 16, 'ROUND_OF_32');

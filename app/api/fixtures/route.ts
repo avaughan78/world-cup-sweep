@@ -40,7 +40,7 @@ export async function GET() {
           status: mapStatus(f.statusShort),
           stage,
           group,
-          matchday: null,
+          matchday: f.roundSlot,
           homeTeam: home,
           awayTeam: away,
           homeScore: f.homeGoals,
