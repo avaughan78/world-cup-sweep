@@ -96,7 +96,7 @@ export default function AdminPage() {
   const bicycleTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   // Highlights
-  interface HighlightRow { id: number; title: string; url: string; image_url: string | null; description: string | null; source: string | null; type: string; display_order: number; created_at: string; }
+  interface HighlightRow { id: number; title: string; url: string | null; image_url: string | null; description: string | null; source: string | null; type: string; display_order: number; created_at: string; }
   const [highlights, setHighlights] = useState<HighlightRow[]>([]);
   const [hlTitle, setHlTitle] = useState('');
   const [hlUrl, setHlUrl] = useState('');
@@ -267,7 +267,7 @@ export default function AdminPage() {
   function handleEditHighlight(h: HighlightRow) {
     setHlEditingId(h.id);
     setHlTitle(h.title);
-    setHlUrl(h.url);
+    setHlUrl(h.url ?? '');
     setHlImage(h.image_url ?? '');
     setHlDesc(h.description ?? '');
     setHlSource(h.source ?? '');
