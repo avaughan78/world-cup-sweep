@@ -334,7 +334,13 @@ export default function StatsView({
 
   const goalsConcededEntries: StatEntry[] = allTeams
     .map(team => ({ team, participant: participantMap[team] ?? null, value: conceded.get(team) ?? 0 }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => {
+      if (b.value !== a.value) return b.value - a.value;
+      const aGD = (scored.get(a.team) ?? 0) - (conceded.get(a.team) ?? 0);
+      const bGD = (scored.get(b.team) ?? 0) - (conceded.get(b.team) ?? 0);
+      if (aGD !== bGD) return aGD - bGD; // more negative GD ranks higher
+      return (scored.get(a.team) ?? 0) - (scored.get(b.team) ?? 0); // fewer goals scored ranks higher
+    });
 
   // Cards: still from DB (sync-backed), accurate after each match
   const cards: StatEntry[] = [...teamStats]
