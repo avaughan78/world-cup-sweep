@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import type { MatchFixture } from '@/app/api/fixtures/route';
+import { GROUPS_2026 } from '@/lib/groups';
 import Flag from './Flag';
+
+const KNOWN_TEAMS = new Set(Object.values(GROUPS_2026).flat());
 
 const STAGE_ORDER = ['ROUND_OF_32', 'ROUND_OF_16', 'QUARTER_FINALS', 'SEMI_FINALS', 'THIRD_PLACE', 'FINAL'];
 
@@ -67,7 +70,7 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
   if (knockoutFixtures.length === 0) {
     return (
       <div className="rounded-xl p-10 text-center text-sm" style={{ background: 'var(--card)', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
-        Knockout fixtures not available yet — check back soon.
+        Knockout fixtures will appear here as the group stage concludes.
       </div>
     );
   }
@@ -117,10 +120,13 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
                       {/* Home */}
                       <div className="flex-1 min-w-0 flex flex-col items-end gap-0.5">
                         <div className="flex items-center gap-1.5">
-                          <span className="font-semibold truncate" style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>
-                            {m.homeTeam}
+                          <span
+                            className="font-semibold truncate"
+                            style={{ color: KNOWN_TEAMS.has(m.homeTeam) ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: '0.85rem' }}
+                          >
+                            {m.homeTeam || 'TBC'}
                           </span>
-                          <Flag team={m.homeTeam} height="0.95rem" width="1.4rem" />
+                          {KNOWN_TEAMS.has(m.homeTeam) && <Flag team={m.homeTeam} height="0.95rem" width="1.4rem" />}
                         </div>
                         {homeParticipant && (
                           <span className="truncate" style={{ color: 'var(--text-muted)', fontSize: '0.7rem' }}>
@@ -157,9 +163,12 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
                       {/* Away */}
                       <div className="flex-1 min-w-0 flex flex-col items-start gap-0.5">
                         <div className="flex items-center gap-1.5">
-                          <Flag team={m.awayTeam} height="0.95rem" width="1.4rem" />
-                          <span className="font-semibold truncate" style={{ color: 'var(--text-primary)', fontSize: '0.85rem' }}>
-                            {m.awayTeam}
+                          {KNOWN_TEAMS.has(m.awayTeam) && <Flag team={m.awayTeam} height="0.95rem" width="1.4rem" />}
+                          <span
+                            className="font-semibold truncate"
+                            style={{ color: KNOWN_TEAMS.has(m.awayTeam) ? 'var(--text-primary)' : 'var(--text-muted)', fontSize: '0.85rem' }}
+                          >
+                            {m.awayTeam || 'TBC'}
                           </span>
                         </div>
                         {awayParticipant && (

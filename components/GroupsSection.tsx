@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Prize } from '@/lib/prizes';
 import type { GroupStanding, TeamStats } from '@/lib/db';
-import { KNOCKOUT_START } from '@/lib/groups';
+import { TOURNAMENT_START, KNOCKOUT_START } from '@/lib/groups';
 import GroupsGrid from './GroupsGrid';
 import FixturesList from './FixturesList';
 import KnockoutView from './KnockoutView';
@@ -18,12 +18,8 @@ function readStoredView(isKnockout: boolean): View {
   if (typeof window === 'undefined') return 'standings';
   const v = localStorage.getItem(STORAGE_KEY);
   const valid: View[] = ['standings', 'fixtures', 'knockout', 'stats', 'highlights'];
-  if (valid.includes(v as View)) {
-    // If they had 'knockout' saved but we're not in knockout phase yet, fall back
-    if (v === 'knockout' && !isKnockout) return 'standings';
-    return v as View;
-  }
-  return 'standings';
+  if (valid.includes(v as View)) return v as View;
+  return isKnockout ? 'knockout' : 'standings';
 }
 
 export default function GroupsSection({
@@ -43,7 +39,9 @@ export default function GroupsSection({
   teamCount: number;
   inRunning: number;
 }) {
-  const isKnockout = Date.now() >= KNOCKOUT_START.getTime();
+  const now = Date.now();
+  const isKnockout = now >= KNOCKOUT_START.getTime();
+  const showKnockout = now >= TOURNAMENT_START.getTime();
   const [view, setView] = useState<View>(() => readStoredView(isKnockout));
 
   function handleSetView(v: View) {
@@ -54,7 +52,7 @@ export default function GroupsSection({
   const tabs: { id: View; label: string }[] = [
     { id: 'standings', label: isKnockout ? 'Group Stage' : 'Tables' },
     { id: 'fixtures',  label: 'Fixtures' },
-    ...(isKnockout ? [{ id: 'knockout' as View, label: 'Knockout' }] : []),
+    ...(showKnockout ? [{ id: 'knockout' as View, label: 'Knockout' }] : []),
     { id: 'stats',      label: 'Stats' },
     { id: 'highlights', label: 'Highlights' },
   ];
