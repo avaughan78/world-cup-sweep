@@ -82,27 +82,24 @@ export async function computePrizes(
   const goldenBootPlayerName = goldenBootResult?.winner?.player_name ?? topScorer?.player_name ?? null;
   const goldenBootTiedPlayers = goldenBootResult?.tiedPlayers ?? null;
 
-  // 6. Most goals conceded (The Sieve); tie-break: worst goal difference, then fewest goals scored
-  // Use group_standings.goals_against as primary source so it's consistent with the GD tiebreaker
-  // (falls back to team_stats.goals_conceded for teams not in standings)
+  // 6. Most goals conceded across the entire tournament (The Sieve)
+  // Primary: team_stats.goals_conceded counts all rounds (group + knockout)
+  // Tiebreakers use group_standings (exact for eliminated teams; best available proxy for others)
   let topSieve: TeamStats | null = null;
   for (const t of allStats) {
     if (!topSieve) { topSieve = t; continue; }
-    const tGA = standingsByTeam.get(t.team_name)?.goals_against ?? t.goals_conceded;
-    const bGA = standingsByTeam.get(topSieve.team_name)?.goals_against ?? topSieve.goals_conceded;
-    if (tGA > bGA) { topSieve = t; continue; }
-    if (tGA === bGA) {
-      const tGD  = standingsByTeam.get(t.team_name)?.goal_difference  ?? 0;
-      const bGD  = standingsByTeam.get(topSieve.team_name)?.goal_difference ?? 0;
+    if (t.goals_conceded > topSieve.goals_conceded) { topSieve = t; continue; }
+    if (t.goals_conceded === topSieve.goals_conceded) {
+      const tGD = standingsByTeam.get(t.team_name)?.goal_difference ?? 0;
+      const bGD = standingsByTeam.get(topSieve.team_name)?.goal_difference ?? 0;
       if (tGD < bGD) { topSieve = t; continue; }
       if (tGD === bGD) {
-        const tGF = standingsByTeam.get(t.team_name)?.goals_for  ?? 0;
+        const tGF = standingsByTeam.get(t.team_name)?.goals_for ?? 0;
         const bGF = standingsByTeam.get(topSieve.team_name)?.goals_for ?? 0;
         if (tGF < bGF) topSieve = t;
       }
     }
   }
-  const topSieveGA = topSieve ? (standingsByTeam.get(topSieve.team_name)?.goals_against ?? topSieve.goals_conceded) : 0;
 
   const now = new Date();
   const tournamentOver = now >= TOURNAMENT_END;
@@ -195,11 +192,11 @@ export async function computePrizes(
       name: 'Derby County',
       description: 'Most goals conceded overall',
       icon: '🪣',
-      current_team: topSieveGA > 0 ? topSieve!.team_name : null,
-      current_participant: topSieveGA > 0 ? participant(topSieve!.team_name) : null,
-      value_label: topSieveGA > 0 ? `${topSieveGA} conceded` : null,
+      current_team: (topSieve?.goals_conceded ?? 0) > 0 ? topSieve!.team_name : null,
+      current_participant: (topSieve?.goals_conceded ?? 0) > 0 ? participant(topSieve!.team_name) : null,
+      value_label: (topSieve?.goals_conceded ?? 0) > 0 ? `${topSieve!.goals_conceded} conceded` : null,
       is_manual: false,
-      confirmed: tournamentOver && topSieveGA > 0,
+      confirmed: tournamentOver && (topSieve?.goals_conceded ?? 0) > 0,
     },
   ];
 }
