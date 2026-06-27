@@ -7,6 +7,28 @@ import Flag from './Flag';
 
 const KNOWN_TEAMS = new Set(Object.values(GROUPS_2026).flat());
 
+// 2026 WC R32 bracket draw — maps each qualifying team to their bracket slot (1-16).
+// Slots 1-8 = left bracket (top→bottom), slots 9-16 = right bracket (top→bottom).
+// Pairs that share a slot play each other in R32 and their winner advances to R16.
+const R32_SLOT: Record<string, number> = {
+  'Germany': 1, 'Paraguay': 1,
+  'France': 2, 'Sweden': 2,
+  'South Africa': 3, 'Canada': 3,
+  'Netherlands': 4, 'Morocco': 4,
+  'Portugal': 5, 'Ghana': 5,
+  'Spain': 6, 'Austria': 6,
+  'United States': 7, 'Bosnia and Herzegovina': 7,
+  'Belgium': 8, 'South Korea': 8,
+  'Brazil': 9, 'Japan': 9,
+  'Ivory Coast': 10, 'Norway': 10,
+  'Mexico': 11, 'Ecuador': 11,
+  'England': 12, 'Senegal': 12,
+  'Argentina': 13, 'Cape Verde': 13,
+  'Australia': 14, 'Egypt': 14,
+  'Switzerland': 15, 'Iran': 15,
+  'Colombia': 16, 'Croatia': 16,
+};
+
 const CODE: Record<string, string> = {
   'Mexico': 'MEX', 'South Africa': 'RSA', 'South Korea': 'KOR', 'Czechia': 'CZE',
   'Canada': 'CAN', 'Bosnia and Herzegovina': 'BIH', 'Qatar': 'QAT', 'Switzerland': 'SUI',
@@ -51,27 +73,30 @@ function slotTop(i: number, mult: number) {
   return i * mult * SLOT + (mult * SLOT - CARD_H) / 2;
 }
 
-// Generate placeholder MatchFixture entries for rounds not yet in the API
 let _pid = 0;
-function placeholders(n: number, stage: string): MatchFixture[] {
-  return Array.from({ length: n }, () => ({
-    id: --_pid,
-    utcDate: '',
-    status: 'SCHEDULED',
-    stage,
-    group: null,
-    matchday: null,
-    homeTeam: '',
-    awayTeam: '',
-    homeScore: null,
-    awayScore: null,
-    elapsed: null,
-  }));
+function makePlaceholder(stage: string): MatchFixture {
+  return {
+    id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
+    group: null, matchday: null,
+    homeTeam: '', awayTeam: '',
+    homeScore: null, awayScore: null, elapsed: null,
+  };
+}
+
+// Build the R32 array in correct bracket order using the hardcoded slot draw.
+// Fixtures are looked up by team name; unscheduled slots get placeholders.
+function buildR32(fixtures: MatchFixture[]): MatchFixture[] {
+  const bySlot = new Map<number, MatchFixture>();
+  for (const m of fixtures) {
+    const slot = R32_SLOT[m.homeTeam] ?? R32_SLOT[m.awayTeam];
+    if (slot != null) bySlot.set(slot, m);
+  }
+  return Array.from({ length: 16 }, (_, i) => bySlot.get(i + 1) ?? makePlaceholder('ROUND_OF_32'));
 }
 
 function pad(real: MatchFixture[], expected: number, stage: string): MatchFixture[] {
   if (real.length >= expected) return real.slice(0, expected);
-  return [...real, ...placeholders(expected - real.length, stage)];
+  return [...real, ...Array.from({ length: expected - real.length }, () => makePlaceholder(stage))];
 }
 
 // ── Formatting ────────────────────────────────────────────────────────────────
@@ -253,20 +278,19 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
     arr.push(m);
     byStage.set(m.stage, arr);
   }
+  // For R16+ sort by matchday (if set) then utcDate then id
   for (const [s, ms] of byStage) {
+    if (s === 'ROUND_OF_32') continue;
     byStage.set(s, [...ms].sort((a, b) => {
-      // Prefer bracket slot (matchday) which encodes the draw position;
-      // fall back to fixture ID which is arbitrary but at least stable.
       if (a.matchday != null && b.matchday != null) return a.matchday - b.matchday;
-      if (a.matchday != null) return -1;
-      if (b.matchday != null) return 1;
+      if (a.utcDate && b.utcDate) return a.utcDate.localeCompare(b.utcDate);
       return a.id - b.id;
     }));
   }
 
-  // Pad each round with placeholders so the bracket always shows the full structure
-  const r32 = pad(byStage.get('ROUND_OF_32')   ?? [], 16, 'ROUND_OF_32');
-  const r16 = pad(byStage.get('ROUND_OF_16')   ?? [], 8,  'ROUND_OF_16');
+  // R32: place fixtures in bracket slots using the hardcoded draw
+  const r32 = buildR32(byStage.get('ROUND_OF_32') ?? []);
+  const r16 = pad(byStage.get('ROUND_OF_16')    ?? [], 8,  'ROUND_OF_16');
   const qf  = pad(byStage.get('QUARTER_FINALS') ?? [], 4,  'QUARTER_FINALS');
   const sf  = pad(byStage.get('SEMI_FINALS')    ?? [], 2,  'SEMI_FINALS');
   const fin = pad(byStage.get('FINAL')          ?? [], 1,  'FINAL');
