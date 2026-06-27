@@ -839,6 +839,7 @@ export default function AdminPage() {
             <div className="flex items-center gap-4">
               <ThemeToggle />
               <a href="/admin/audit" className="text-sm" style={{ color: 'var(--text-muted)' }}>Audit log</a>
+              <a href="https://analytics.google.com" target="_blank" rel="noopener noreferrer" className="text-sm" style={{ color: 'var(--text-muted)' }}>Analytics ↗</a>
               <a href="/" className="text-sm" style={{ color: 'var(--text-muted)' }}>← Back to site</a>
               <button
                 type="button"
