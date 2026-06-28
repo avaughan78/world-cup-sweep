@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GROUPS_2026 } from '@/lib/groups';
+import { GROUPS_2026, R32_TEAMS } from '@/lib/groups';
 import type { Prize } from '@/lib/prizes';
 import type { GroupStanding } from '@/lib/db';
 import Flag from './Flag';
@@ -110,8 +110,11 @@ export default function GroupsGrid({
                 const isLast = i === rows.length - 1;
                 const gd = row.goal_difference;
                 const gdColor = gd > 0 ? 'var(--green)' : gd < 0 ? '#ef4444' : 'var(--text-muted)';
-                const qualified = groupComplete && row.position <= 2;
+                const qualified = groupComplete && R32_TEAMS.has(team);
+                const knockedOut = groupComplete && !R32_TEAMS.has(team);
                 const qualifiedBg = 'rgba(34,197,94,0.06)';
+                const eliminatedBg = 'rgba(239,68,68,0.04)';
+                const rowBg = qualified ? qualifiedBg : knockedOut ? eliminatedBg : 'transparent';
 
                 return (
                   <button
@@ -120,14 +123,14 @@ export default function GroupsGrid({
                     className={`team-row w-full text-left transition-colors${wonPrizes.length ? ' has-prize' : ''}`}
                     style={{
                       borderBottom: isLast ? 'none' : '1px solid var(--border)',
-                      borderLeft: qualified ? '2px solid rgba(34,197,94,0.45)' : '2px solid transparent',
+                      borderLeft: qualified ? '2px solid rgba(34,197,94,0.45)' : knockedOut ? '2px solid rgba(239,68,68,0.25)' : '2px solid transparent',
                       opacity: 1,
-                      background: qualified ? qualifiedBg : 'transparent',
+                      background: rowBg,
                       display: 'block',
                       cursor: 'pointer',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.background = qualified ? 'rgba(34,197,94,0.11)' : 'var(--border)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = qualified ? qualifiedBg : 'transparent')}
+                    onMouseEnter={e => (e.currentTarget.style.background = qualified ? 'rgba(34,197,94,0.11)' : knockedOut ? 'rgba(239,68,68,0.08)' : 'var(--border)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = rowBg)}
                   >
                     <div className="flex items-center gap-1 px-4 py-2">
                       {/* Position */}

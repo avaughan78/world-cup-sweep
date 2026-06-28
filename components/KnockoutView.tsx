@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { MatchFixture } from '@/app/api/fixtures/route';
-import { GROUPS_2026 } from '@/lib/groups';
+import { GROUPS_2026, R32_TEAMS } from '@/lib/groups';
 import Flag from './Flag';
 
 const KNOWN_TEAMS = new Set(Object.values(GROUPS_2026).flat());
@@ -15,18 +15,18 @@ const R32_SLOT: Record<string, number> = {
   'France': 2, 'Sweden': 2,
   'South Africa': 3, 'Canada': 3,
   'Netherlands': 4, 'Morocco': 4,
-  'Portugal': 5, 'Ghana': 5,
+  'Portugal': 5, 'Croatia': 5,
   'Spain': 6, 'Austria': 6,
   'United States': 7, 'Bosnia and Herzegovina': 7,
-  'Belgium': 8, 'South Korea': 8,
+  'Belgium': 8, 'Senegal': 8,
   'Brazil': 9, 'Japan': 9,
   'Ivory Coast': 10, 'Norway': 10,
   'Mexico': 11, 'Ecuador': 11,
-  'England': 12, 'Senegal': 12,
+  'England': 12, 'DR Congo': 12,
   'Argentina': 13, 'Cape Verde': 13,
   'Australia': 14, 'Egypt': 14,
-  'Switzerland': 15, 'Iran': 15,
-  'Colombia': 16, 'Croatia': 16,
+  'Switzerland': 15, 'Algeria': 15,
+  'Colombia': 16, 'Ghana': 16,
 };
 
 const CODE: Record<string, string> = {
