@@ -227,9 +227,9 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
       borderRadius: 8, overflow: 'hidden',
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      gap: 4, padding: '7px 5px 6px',
+      gap: 4, padding: '7px 3px 6px',
     }}>
-      <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 3 }}>
+      <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 1 }}>
         <TeamCol name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null}
           wins={homeWins} loses={awayWins} known={homeKnown} live={live} participant={homeParticipant} />
         <span style={{ fontSize: '0.54rem', color: 'var(--text-muted)', paddingTop: 10, flexShrink: 0 }}>
