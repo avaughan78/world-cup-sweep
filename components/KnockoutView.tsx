@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { MatchFixture } from '@/app/api/fixtures/route';
-import { GROUPS_2026, R32_TEAMS } from '@/lib/groups';
+import { GROUPS_2026 } from '@/lib/groups';
 import Flag from './Flag';
 
 const KNOWN_TEAMS = new Set(Object.values(GROUPS_2026).flat());

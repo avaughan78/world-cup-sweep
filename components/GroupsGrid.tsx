@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { GROUPS_2026, R32_TEAMS } from '@/lib/groups';
+import { GROUPS_2026 } from '@/lib/groups';
 import type { Prize } from '@/lib/prizes';
 import type { GroupStanding } from '@/lib/db';
 import Flag from './Flag';
@@ -25,11 +25,13 @@ export default function GroupsGrid({
   eliminatedTeams,
   prizes,
   groupStandings,
+  qualifiedTeams,
 }: {
   participantMap: Record<string, string | null>;
   eliminatedTeams: string[];
   prizes: Prize[];
   groupStandings: GroupStanding[];
+  qualifiedTeams: Set<string>;
 }) {
   const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const eliminatedSet = new Set(eliminatedTeams);
@@ -110,8 +112,8 @@ export default function GroupsGrid({
                 const isLast = i === rows.length - 1;
                 const gd = row.goal_difference;
                 const gdColor = gd > 0 ? 'var(--green)' : gd < 0 ? '#ef4444' : 'var(--text-muted)';
-                const qualified = groupComplete && R32_TEAMS.has(team);
-                const knockedOut = groupComplete && !R32_TEAMS.has(team);
+                const qualified = groupComplete && qualifiedTeams.has(team);
+                const knockedOut = groupComplete && qualifiedTeams.size > 0 && !qualifiedTeams.has(team);
                 const qualifiedBg = 'rgba(34,197,94,0.06)';
                 const eliminatedBg = 'rgba(239,68,68,0.04)';
                 const rowBg = qualified ? qualifiedBg : knockedOut ? eliminatedBg : 'transparent';

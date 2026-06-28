@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Prize } from '@/lib/prizes';
 import type { GroupStanding, TeamStats } from '@/lib/db';
+import type { MatchFixture } from '@/app/api/fixtures/route';
 import { TOURNAMENT_START, KNOCKOUT_START } from '@/lib/groups';
 import GroupsGrid from './GroupsGrid';
 import FixturesList from './FixturesList';
@@ -43,6 +44,25 @@ export default function GroupsSection({
   const isKnockout = now >= KNOCKOUT_START.getTime();
   const showKnockout = now >= TOURNAMENT_START.getTime();
   const [view, setView] = useState<View>(() => readStoredView(isKnockout));
+
+  // Derive which teams qualified for the knockout stage from R32 fixture data.
+  // This avoids hardcoding the qualifier list — it works for any future tournament
+  // as long as the API returns Round of 32 fixtures.
+  const [qualifiedTeams, setQualifiedTeams] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    fetch('/api/fixtures')
+      .then(r => r.json())
+      .then((d: { fixtures?: MatchFixture[] }) => {
+        const teams = new Set(
+          (d.fixtures ?? [])
+            .filter(f => f.stage === 'ROUND_OF_32')
+            .flatMap(f => [f.homeTeam, f.awayTeam])
+            .filter(Boolean)
+        );
+        setQualifiedTeams(teams);
+      })
+      .catch(() => {});
+  }, []);
 
   function handleSetView(v: View) {
     setView(v);
@@ -113,6 +133,7 @@ export default function GroupsSection({
           eliminatedTeams={eliminatedTeams}
           prizes={prizes}
           groupStandings={groupStandings}
+          qualifiedTeams={qualifiedTeams}
         />
       )}
       {view === 'fixtures' && (
