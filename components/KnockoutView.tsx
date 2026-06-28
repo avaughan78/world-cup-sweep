@@ -45,16 +45,16 @@ const CODE: Record<string, string> = {
 };
 function teamCode(name: string) { return CODE[name] ?? name.slice(0, 3).toUpperCase(); }
 
-// ── Layout — tuned to fit max-w-[1080px] container with px-4/px-6 padding ───
-// 9 card columns + 6 narrow connector gaps + 2 wide center gaps = ~1022px
-const SLOT   = 106;  // px per R32 slot (8 per side = full height)
-const CARD_W = 96;   // px card width
-const CARD_H = 90;   // px card height (enlarged to fit participant names)
-const CGAP   = 15;   // px connector gap between round columns
-const XGAP   = 34;   // px gap either side of center Final column
-const HDR    = 34;   // px stage-label header row
+// ── Layout — bracket scrolls horizontally so TOTAL_W can exceed the container ─
+// 9 card columns + 6 connector gaps + 2 center gaps = ~1084px
+const SLOT   = 116;  // px per R32 slot (8 per side = full height)
+const CARD_W = 106;  // px card width
+const CARD_H = 98;   // px card height
+const CGAP   = 13;   // px connector gap between round columns
+const XGAP   = 26;   // px gap either side of center Final column
+const HDR    = 36;   // px stage-label header row
 
-const TOTAL_H = 8 * SLOT; // 848px
+const TOTAL_H = 8 * SLOT; // 928px
 
 // Column left-edge positions
 const LR32 = 0;
@@ -161,20 +161,20 @@ function TeamCol({ name, score, wins, loses, known, live, participant }: {
         : <div style={{ width: '1.22rem', height: '0.85rem', borderRadius: 2, background: 'var(--border)' }} />
       }
       <span style={{
-        fontSize: '0.6rem', fontWeight: wins ? 700 : 500, color: nameCol,
+        fontSize: '0.68rem', fontWeight: wins ? 700 : 500, color: nameCol,
         letterSpacing: '0.03em', overflow: 'hidden', textOverflow: 'ellipsis',
         whiteSpace: 'nowrap', maxWidth: '100%',
       }}>
         {code}
       </span>
       {score != null && (
-        <span style={{ fontSize: '0.8rem', fontWeight: wins ? 800 : 600, color: scoreCol, lineHeight: 1 }}>
+        <span style={{ fontSize: '0.9rem', fontWeight: wins ? 800 : 600, color: scoreCol, lineHeight: 1 }}>
           {score}
         </span>
       )}
       {known && participant && (
         <span style={{
-          fontSize: '0.5rem', color: 'var(--text-muted)', lineHeight: 1,
+          fontSize: '0.58rem', color: 'var(--text-muted)', lineHeight: 1,
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
         }}>
           {participant.split(' ')[0]}
@@ -205,14 +205,14 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
     dateNode = (
       <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
         <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ef4444', flexShrink: 0, boxShadow: '0 0 4px #ef4444' }} />
-        <span style={{ fontSize: '0.55rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
           {elapsed}
         </span>
       </div>
     );
   } else if (dateStr) {
     dateNode = (
-      <span style={{ fontSize: '0.55rem', color: 'var(--text-muted)', textAlign: 'center' }}>
+      <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textAlign: 'center' }}>
         {finished && <span style={{ fontWeight: 700, marginRight: 3 }}>FT ·</span>}
         {dateStr}{timeStr ? ` · ${timeStr}` : ''}
       </span>
@@ -232,7 +232,7 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
       <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 3 }}>
         <TeamCol name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null}
           wins={homeWins} loses={awayWins} known={homeKnown} live={live} participant={homeParticipant} />
-        <span style={{ fontSize: '0.48rem', color: 'var(--text-muted)', paddingTop: 9, flexShrink: 0 }}>
+        <span style={{ fontSize: '0.54rem', color: 'var(--text-muted)', paddingTop: 10, flexShrink: 0 }}>
           {showScore ? '–' : 'v'}
         </span>
         <TeamCol name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null}
@@ -368,7 +368,7 @@ export default function KnockoutView({ participantMap }: { participantMap: Recor
           {/* Stage label headers */}
           {HEADERS.map(({ label, x }, i) => (
             <div key={i} style={{ position: 'absolute', left: x, top: 0, width: CARD_W, height: HDR, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: '0.54rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.3 }}>
+              <span style={{ fontSize: '0.6rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.3 }}>
                 {label}
               </span>
             </div>
