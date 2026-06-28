@@ -3,8 +3,8 @@ import type { NextConfig } from "next";
 const csp = [
   "default-src 'self'",
   // Next.js requires 'unsafe-inline' for hydration scripts and inline __NEXT_DATA__
-  // googletagmanager.com serves the GA4 tag; cloud.umami.is serves the Umami script
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cloud.umami.is",
+  // googletagmanager.com serves the GA4 tag; gc.zgo.at serves the GoatCounter script
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://gc.zgo.at",
   // Tailwind + React inline style props require 'unsafe-inline'
   "style-src 'self' 'unsafe-inline'",
   // Allow any HTTPS image — TheSportsDB uses multiple CDN subdomains (r2.thesportsdb.com etc.)
@@ -20,8 +20,8 @@ const csp = [
   // canvas-confetti spawns a Web Worker from a blob URL for off-thread rendering
   "worker-src blob:",
   // Same-origin API calls + GA4 data collection + Umami data collection
-  // Umami sends beacons to gateway.umami.is (not cloud.umami.is)
-  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://cloud.umami.is https://gateway.umami.is",
+  // GoatCounter sends beacons to wcsweep.goatcounter.com
+  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://wcsweep.goatcounter.com",
   // Disallow <object>, <embed>, <applet>
   "object-src 'none'",
   // Prevent base-tag injection attacks
