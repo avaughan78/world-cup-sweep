@@ -94,9 +94,43 @@ function buildR32(fixtures: MatchFixture[]): MatchFixture[] {
   return Array.from({ length: 16 }, (_, i) => bySlot.get(i + 1) ?? makePlaceholder('ROUND_OF_32'));
 }
 
-function pad(real: MatchFixture[], expected: number, stage: string): MatchFixture[] {
-  if (real.length >= expected) return real.slice(0, expected);
-  return [...real, ...Array.from({ length: expected - real.length }, () => makePlaceholder(stage))];
+function getKOWinner(m: MatchFixture): string {
+  if (m.status !== 'FINISHED') return '';
+  if (m.homeScore == null || m.awayScore == null) return '';
+  if (m.homeScore > m.awayScore) return m.homeTeam;
+  if (m.awayScore > m.homeScore) return m.awayTeam;
+  return '';
+}
+
+// Build a knockout round by cascading winners from prevRound (2n entries → n entries).
+// Uses actual API fixtures when they exist (matched by team name), otherwise synthesises
+// a placeholder showing known winner(s) vs TBD.
+function buildDerivedRound(
+  prevRound: MatchFixture[],
+  actualFixtures: MatchFixture[],
+  stage: string
+): MatchFixture[] {
+  const count = prevRound.length / 2;
+  const usedIdxs = new Set<number>();
+  return Array.from({ length: count }, (_, i) => {
+    const w1 = getKOWinner(prevRound[i * 2]);
+    const w2 = getKOWinner(prevRound[i * 2 + 1]);
+    const actualIdx = actualFixtures.findIndex((m, idx) => {
+      if (usedIdxs.has(idx)) return false;
+      const teams = [m.homeTeam, m.awayTeam];
+      return (w1 && teams.includes(w1)) || (w2 && teams.includes(w2));
+    });
+    if (actualIdx !== -1) {
+      usedIdxs.add(actualIdx);
+      return actualFixtures[actualIdx];
+    }
+    return {
+      id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
+      group: null, matchday: null,
+      homeTeam: w1, awayTeam: w2,
+      homeScore: null, awayScore: null, elapsed: null,
+    };
+  });
 }
 
 // ── Formatting ────────────────────────────────────────────────────────────────
@@ -290,10 +324,11 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
   // R32: place fixtures in bracket slots using the hardcoded draw
   const r32 = buildR32(byStage.get('ROUND_OF_32') ?? []);
-  const r16 = pad(byStage.get('ROUND_OF_16')    ?? [], 8,  'ROUND_OF_16');
-  const qf  = pad(byStage.get('QUARTER_FINALS') ?? [], 4,  'QUARTER_FINALS');
-  const sf  = pad(byStage.get('SEMI_FINALS')    ?? [], 2,  'SEMI_FINALS');
-  const fin = pad(byStage.get('FINAL')          ?? [], 1,  'FINAL');
+  // R16+: cascade winners from previous round; use actual API fixtures when available
+  const r16 = buildDerivedRound(r32, byStage.get('ROUND_OF_16')    ?? [], 'ROUND_OF_16');
+  const qf  = buildDerivedRound(r16, byStage.get('QUARTER_FINALS') ?? [], 'QUARTER_FINALS');
+  const sf  = buildDerivedRound(qf,  byStage.get('SEMI_FINALS')    ?? [], 'SEMI_FINALS');
+  const fin = buildDerivedRound(sf,  byStage.get('FINAL')          ?? [], 'FINAL');
   const tp  = byStage.get('THIRD_PLACE') ?? [];
 
   // Split each round into left half (first) and right half (second)
