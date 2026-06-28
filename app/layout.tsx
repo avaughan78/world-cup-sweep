@@ -43,6 +43,11 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${bungee.variable} ${oswald.variable} h-full antialiased`}
     >
+      <head>
+        {/* Umami must be a static <script> tag so document.currentScript works */}
+        {/* eslint-disable-next-line @next/next/no-before-interactive-script-component */}
+        <script defer src="https://cloud.umami.is/script.js" data-website-id="eef7f81a-f4f6-4e4d-9990-71cd7bbd999f" />
+      </head>
       <body className="min-h-full flex flex-col">
         <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`} strategy="afterInteractive" />
         <Script id="ga4-init" strategy="afterInteractive">{`
@@ -51,12 +56,6 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', '${GA_ID}');
         `}</Script>
-        <Script
-          defer
-          src="https://cloud.umami.is/script.js"
-          data-website-id="eef7f81a-f4f6-4e4d-9990-71cd7bbd999f"
-          strategy="afterInteractive"
-        />
         <FootballPhysicsGate />
         {children}
       </body>
