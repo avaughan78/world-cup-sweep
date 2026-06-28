@@ -20,7 +20,8 @@ const csp = [
   // canvas-confetti spawns a Web Worker from a blob URL for off-thread rendering
   "worker-src blob:",
   // Same-origin API calls + GA4 data collection + Umami data collection
-  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://cloud.umami.is",
+  // Umami sends beacons to gateway.umami.is (not cloud.umami.is)
+  "connect-src 'self' https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://cloud.umami.is https://gateway.umami.is",
   // Disallow <object>, <embed>, <applet>
   "object-src 'none'",
   // Prevent base-tag injection attacks
