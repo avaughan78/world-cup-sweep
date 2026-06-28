@@ -46,15 +46,15 @@ const CODE: Record<string, string> = {
 function teamCode(name: string) { return CODE[name] ?? name.slice(0, 3).toUpperCase(); }
 
 // ── Layout — tuned to fit max-w-[1080px] container with px-4/px-6 padding ───
-// 9 card columns + 6 narrow connector gaps + 2 wide center gaps = ~982px
-const SLOT   = 96;   // px per R32 slot (8 per side = full height)
-const CARD_W = 90;   // px card width
-const CARD_H = 80;   // px card height
-const CGAP   = 16;   // px connector gap between round columns
-const XGAP   = 38;   // px gap either side of center Final column
+// 9 card columns + 6 narrow connector gaps + 2 wide center gaps = ~1022px
+const SLOT   = 106;  // px per R32 slot (8 per side = full height)
+const CARD_W = 96;   // px card width
+const CARD_H = 90;   // px card height (enlarged to fit participant names)
+const CGAP   = 15;   // px connector gap between round columns
+const XGAP   = 34;   // px gap either side of center Final column
 const HDR    = 34;   // px stage-label header row
 
-const TOTAL_H = 8 * SLOT; // 768px
+const TOTAL_H = 8 * SLOT; // 848px
 
 // Column left-edge positions
 const LR32 = 0;
@@ -145,9 +145,10 @@ function fmtTime(utcDate: string) {
 
 // ── Card components ───────────────────────────────────────────────────────────
 
-function TeamCol({ name, score, wins, loses, known, live }: {
+function TeamCol({ name, score, wins, loses, known, live, participant }: {
   name: string; score: number | null | undefined;
   wins: boolean; loses: boolean; known: boolean; live: boolean;
+  participant: string | null;
 }) {
   const code = known ? teamCode(name) : 'TBD';
   const nameCol = wins ? 'var(--text-primary)' : loses ? 'var(--text-muted)' : known ? 'var(--text-secondary)' : 'var(--text-muted)';
@@ -171,11 +172,19 @@ function TeamCol({ name, score, wins, loses, known, live }: {
           {score}
         </span>
       )}
+      {known && participant && (
+        <span style={{
+          fontSize: '0.5rem', color: 'var(--text-muted)', lineHeight: 1,
+          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%',
+        }}>
+          {participant.split(' ')[0]}
+        </span>
+      )}
     </div>
   );
 }
 
-function MatchCard({ match }: { match: MatchFixture }) {
+function MatchCard({ match, participantMap }: { match: MatchFixture; participantMap: Record<string, string | null> }) {
   const finished = match.status === 'FINISHED';
   const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
   const hasScore = match.homeScore != null && match.awayScore != null;
@@ -184,6 +193,8 @@ function MatchCard({ match }: { match: MatchFixture }) {
   const homeKnown = !!match.homeTeam && KNOWN_TEAMS.has(match.homeTeam);
   const awayKnown = !!match.awayTeam && KNOWN_TEAMS.has(match.awayTeam);
   const showScore = finished || live;
+  const homeParticipant = match.homeTeam ? (participantMap[match.homeTeam] ?? null) : null;
+  const awayParticipant = match.awayTeam ? (participantMap[match.awayTeam] ?? null) : null;
 
   const dateStr = fmtDate(match.utcDate);
   const timeStr = match.utcDate && !finished ? fmtTime(match.utcDate) : '';
@@ -220,12 +231,12 @@ function MatchCard({ match }: { match: MatchFixture }) {
     }}>
       <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 3 }}>
         <TeamCol name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null}
-          wins={homeWins} loses={awayWins} known={homeKnown} live={live} />
+          wins={homeWins} loses={awayWins} known={homeKnown} live={live} participant={homeParticipant} />
         <span style={{ fontSize: '0.48rem', color: 'var(--text-muted)', paddingTop: 9, flexShrink: 0 }}>
           {showScore ? '–' : 'v'}
         </span>
         <TeamCol name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null}
-          wins={awayWins} loses={homeWins} known={awayKnown} live={live} />
+          wins={awayWins} loses={homeWins} known={awayKnown} live={live} participant={awayParticipant} />
       </div>
       {dateNode && <div style={{ lineHeight: 1 }}>{dateNode}</div>}
     </div>
@@ -266,7 +277,7 @@ function ConnR({ innerCount, outerMult }: { innerCount: number; outerMult: numbe
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 
-export default function KnockoutView({ participantMap: _pm }: { participantMap: Record<string, string | null> }) {
+export default function KnockoutView({ participantMap }: { participantMap: Record<string, string | null> }) {
   const [fixtures, setFixtures] = useState<MatchFixture[] | null>(null);
 
   useEffect(() => {
@@ -367,7 +378,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {r32L.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: LR32, top: HDR + slotTop(i, 1) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -377,7 +388,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {r16L.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: LR16, top: HDR + slotTop(i, 2) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -387,7 +398,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {qfL.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: LQF, top: HDR + slotTop(i, 4) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -397,7 +408,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {sfL.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: LSF, top: HDR + slotTop(i, 8) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -408,7 +419,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {r32R.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: RR32, top: HDR + slotTop(i, 1) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -418,7 +429,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {r16R.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: RR16, top: HDR + slotTop(i, 2) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -428,7 +439,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {qfR.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: RQF, top: HDR + slotTop(i, 4) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -438,7 +449,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
 
           {sfR.map((m, i) => (
             <div key={m.id} style={{ position: 'absolute', left: RSF, top: HDR + slotTop(i, 8) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
 
@@ -463,7 +474,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
           {/* Final card */}
           {fin.map(m => (
             <div key={m.id} style={{ position: 'absolute', left: CEN, top: HDR + slotTop(0, 8) }}>
-              <MatchCard match={m} />
+              <MatchCard match={m} participantMap={participantMap} />
             </div>
           ))}
         </div>
@@ -476,7 +487,7 @@ export default function KnockoutView({ participantMap: _pm }: { participantMap: 
             Third Place Play-off
           </p>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {tp.map(m => <MatchCard key={m.id} match={m} />)}
+            {tp.map(m => <MatchCard key={m.id} match={m} participantMap={participantMap} />)}
           </div>
         </div>
       )}
