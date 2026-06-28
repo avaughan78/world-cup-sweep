@@ -51,6 +51,12 @@ export default function RootLayout({
           gtag('js', new Date());
           gtag('config', '${GA_ID}');
         `}</Script>
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="eef7f81a-f4f6-4e4d-9990-71cd7bbd999f"
+          strategy="afterInteractive"
+        />
         <FootballPhysicsGate />
         {children}
       </body>
