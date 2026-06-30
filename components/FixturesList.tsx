@@ -183,11 +183,15 @@ export default function FixturesList({ participantMap }: { participantMap: Recor
                       {finished ? (
                         <>
                           <span className="font-black tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '1rem', letterSpacing: '0.05em' }}>
-                            {m.homeScore} – {m.awayScore}
+                            {m.homeScore}
+                            <span style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--text-muted)', margin: '0 0.3em', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              {m.penaltyHome != null ? 'Pens' : m.statusDetail === 'AET' ? 'AET' : 'FT'}
+                            </span>
+                            {m.awayScore}
                           </span>
                           {m.penaltyHome != null && m.penaltyAway != null && (
                             <span className="tabular-nums" style={{ color: 'var(--text-muted)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.03em' }}>
-                              ({m.penaltyHome} – {m.penaltyAway}) pens
+                              {m.penaltyHome} – {m.penaltyAway}
                             </span>
                           )}
                         </>

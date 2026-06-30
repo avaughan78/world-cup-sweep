@@ -84,14 +84,24 @@ function makePlaceholder(stage: string): MatchFixture {
 }
 
 // Build the R32 array in correct bracket order using the hardcoded slot draw.
-// Fixtures are looked up by team name; unscheduled slots get placeholders.
+// Primary lookup: team name → R32_SLOT. Fallback: matchday number (api-football
+// encodes "Round of 32 - 3" → matchday 3) so scheduled-but-TBD fixtures still
+// land in the right slot and contribute their date/time.
 function buildR32(fixtures: MatchFixture[]): MatchFixture[] {
   const bySlot = new Map<number, MatchFixture>();
+  const byMatchday = new Map<number, MatchFixture>();
   for (const m of fixtures) {
     const slot = R32_SLOT[m.homeTeam] ?? R32_SLOT[m.awayTeam];
     if (slot != null) bySlot.set(slot, m);
+    else if (m.matchday != null) byMatchday.set(m.matchday, m);
   }
-  return Array.from({ length: 16 }, (_, i) => bySlot.get(i + 1) ?? makePlaceholder('ROUND_OF_32'));
+  return Array.from({ length: 16 }, (_, i) => {
+    const slot = i + 1;
+    if (bySlot.has(slot)) return bySlot.get(slot)!;
+    const sched = byMatchday.get(slot);
+    if (sched) return { ...makePlaceholder('ROUND_OF_32'), id: sched.id, utcDate: sched.utcDate, matchday: slot };
+    return makePlaceholder('ROUND_OF_32');
+  });
 }
 
 function getKOWinner(m: MatchFixture): string {
@@ -109,7 +119,8 @@ function getKOWinner(m: MatchFixture): string {
 
 // Build a knockout round by cascading winners from prevRound (2n entries → n entries).
 // Uses actual API fixtures when they exist (matched by team name), otherwise synthesises
-// a placeholder showing known winner(s) vs TBD.
+// a placeholder. When the API has a scheduled fixture for the slot (identified by
+// matchday) we pull its date/time even though the teams aren't determined yet.
 function buildDerivedRound(
   prevRound: MatchFixture[],
   actualFixtures: MatchFixture[],
@@ -117,9 +128,18 @@ function buildDerivedRound(
 ): MatchFixture[] {
   const count = prevRound.length / 2;
   const usedIdxs = new Set<number>();
+  const byMatchday = new Map<number, { idx: number; m: MatchFixture }>();
+  for (let idx = 0; idx < actualFixtures.length; idx++) {
+    const m = actualFixtures[idx];
+    if (m.matchday != null) byMatchday.set(m.matchday, { idx, m });
+  }
+
   return Array.from({ length: count }, (_, i) => {
+    const slotNum = i + 1;
     const w1 = getKOWinner(prevRound[i * 2]);
     const w2 = getKOWinner(prevRound[i * 2 + 1]);
+
+    // Primary: find a fixture whose teams include a known winner
     const actualIdx = actualFixtures.findIndex((m, idx) => {
       if (usedIdxs.has(idx)) return false;
       const teams = [m.homeTeam, m.awayTeam];
@@ -129,9 +149,15 @@ function buildDerivedRound(
       usedIdxs.add(actualIdx);
       return actualFixtures[actualIdx];
     }
+
+    // Fallback: pull date/time from scheduled fixture for this bracket slot
+    const sched = byMatchday.get(slotNum);
+    if (sched && !usedIdxs.has(sched.idx)) usedIdxs.add(sched.idx);
     return {
-      id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
-      group: null, matchday: null,
+      id: sched?.m.id ?? --_pid,
+      utcDate: sched?.m.utcDate ?? '',
+      status: 'SCHEDULED', stage,
+      group: null, matchday: slotNum,
       homeTeam: w1, awayTeam: w2,
       homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
     };
@@ -150,8 +176,8 @@ function fmtTime(utcDate: string) {
 
 // ── Card components ───────────────────────────────────────────────────────────
 
-function TeamCol({ name, score, penScore, wins, loses, known, live, participant }: {
-  name: string; score: number | null | undefined; penScore: number | null | undefined;
+function TeamCol({ name, score, wins, loses, known, live, participant }: {
+  name: string; score: number | null | undefined;
   wins: boolean; loses: boolean; known: boolean; live: boolean;
   participant: string | null;
 }) {
@@ -175,11 +201,6 @@ function TeamCol({ name, score, penScore, wins, loses, known, live, participant 
       {score != null && (
         <span style={{ fontSize: '0.9rem', fontWeight: wins ? 800 : 600, color: scoreCol, lineHeight: 1 }}>
           {score}
-        </span>
-      )}
-      {penScore != null && (
-        <span style={{ fontSize: '0.9rem', fontWeight: wins ? 800 : 600, color: 'var(--text-muted)', lineHeight: 1 }}>
-          ({penScore})
         </span>
       )}
       {known && participant && (
@@ -216,29 +237,34 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
   const dateStr = fmtDate(match.utcDate);
   const timeStr = match.utcDate && !finished ? fmtTime(match.utcDate) : '';
 
-  // Label shown before the date: FT / AET / Pens (scores shown in card)
-  let resultLabel: string | null = null;
+  // Center separator: "FT" / "AET" / "Pens" for finished; elapsed for live; "v" otherwise
+  let centerSep: React.ReactNode;
   if (finished) {
-    if (hasPens) resultLabel = 'Pens';
-    else if (match.statusDetail === 'AET') resultLabel = 'AET';
-    else resultLabel = 'FT';
+    const sepLabel = hasPens ? 'Pens' : match.statusDetail === 'AET' ? 'AET' : 'FT';
+    centerSep = (
+      <span style={{ fontSize: '0.48rem', fontWeight: 800, color: 'var(--text-muted)', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1, paddingTop: 12 }}>
+        {sepLabel}
+      </span>
+    );
+  } else if (live) {
+    const elapsed = match.status === 'PAUSED' ? 'HT' : match.elapsed ? `${match.elapsed}'` : '●';
+    centerSep = (
+      <span style={{ fontSize: '0.48rem', fontWeight: 800, color: '#ef4444', flexShrink: 0, textTransform: 'uppercase', letterSpacing: '0.05em', lineHeight: 1, paddingTop: 12 }}>
+        {elapsed}
+      </span>
+    );
+  } else {
+    centerSep = (
+      <span style={{ fontSize: '0.54rem', color: 'var(--text-muted)', paddingTop: 10, flexShrink: 0 }}>v</span>
+    );
   }
 
   let dateNode: React.ReactNode = null;
   if (live) {
-    const elapsed = match.status === 'PAUSED' ? 'HT' : match.elapsed ? `${match.elapsed}'` : 'Live';
-    dateNode = (
-      <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-        <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#ef4444', flexShrink: 0, boxShadow: '0 0 4px #ef4444' }} />
-        <span style={{ fontSize: '0.62rem', fontWeight: 800, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-          {elapsed}
-        </span>
-      </div>
-    );
+    dateNode = null; // live status shown in centerSep
   } else if (dateStr) {
     dateNode = (
       <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-        {resultLabel && <span style={{ fontWeight: 700, marginRight: 3 }}>{resultLabel} ·</span>}
         {dateStr}{timeStr ? ` · ${timeStr}` : ''}
       </span>
     );
@@ -256,15 +282,22 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
     }}>
       <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 1 }}>
         <TeamCol name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null}
-          penScore={finished && hasPens ? match.penaltyHome : null}
           wins={homeWins} loses={awayWins} known={homeKnown} live={live} participant={homeParticipant} />
-        <span style={{ fontSize: '0.54rem', color: 'var(--text-muted)', paddingTop: 10, flexShrink: 0 }}>
-          {showScore ? '–' : 'v'}
-        </span>
+        {centerSep}
         <TeamCol name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null}
-          penScore={finished && hasPens ? match.penaltyAway : null}
           wins={awayWins} loses={homeWins} known={awayKnown} live={live} participant={awayParticipant} />
       </div>
+      {finished && hasPens && (
+        <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 1 }}>
+          <span style={{ flex: 1, textAlign: 'center', fontSize: '0.72rem', fontWeight: homeWins ? 700 : 500, color: 'var(--text-muted)', lineHeight: 1 }}>
+            {match.penaltyHome}
+          </span>
+          <span style={{ fontSize: '0.52rem', color: 'var(--border)', flexShrink: 0 }}>·</span>
+          <span style={{ flex: 1, textAlign: 'center', fontSize: '0.72rem', fontWeight: awayWins ? 700 : 500, color: 'var(--text-muted)', lineHeight: 1 }}>
+            {match.penaltyAway}
+          </span>
+        </div>
+      )}
       {dateNode && <div style={{ lineHeight: 1 }}>{dateNode}</div>}
     </div>
   );
