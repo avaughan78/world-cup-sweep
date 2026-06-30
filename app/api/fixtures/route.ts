@@ -14,6 +14,8 @@ export interface MatchFixture {
   awayTeam: string;
   homeScore: number | null;
   awayScore: number | null;
+  penaltyHome: number | null;
+  penaltyAway: number | null;
   elapsed: number | null;
 }
 
@@ -45,6 +47,8 @@ export async function GET() {
           awayTeam: away,
           homeScore: f.homeGoals,
           awayScore: f.awayGoals,
+          penaltyHome: f.penaltyHome,
+          penaltyAway: f.penaltyAway,
           elapsed: f.elapsed,
         };
       });
@@ -90,6 +94,8 @@ export async function GET() {
       awayTeam: normaliseTeamName(m.awayTeam.name),
       homeScore: m.score.fullTime.home,
       awayScore: m.score.fullTime.away,
+      penaltyHome: null,
+      penaltyAway: null,
       elapsed: null,
     }));
     return NextResponse.json({ fixtures }, {

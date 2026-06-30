@@ -181,9 +181,16 @@ export default function FixturesList({ participantMap }: { participantMap: Recor
                       }}
                     >
                       {finished ? (
-                        <span className="font-black tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '1rem', letterSpacing: '0.05em' }}>
-                          {m.homeScore} – {m.awayScore}
-                        </span>
+                        <>
+                          <span className="font-black tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '1rem', letterSpacing: '0.05em' }}>
+                            {m.homeScore} – {m.awayScore}
+                          </span>
+                          {m.penaltyHome != null && m.penaltyAway != null && (
+                            <span className="tabular-nums" style={{ color: 'var(--text-muted)', fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.03em' }}>
+                              ({m.penaltyHome} – {m.penaltyAway}) pens
+                            </span>
+                          )}
+                        </>
                       ) : live ? (
                         <>
                           <span className="font-black tabular-nums" style={{ color: '#ef4444', fontSize: '1rem', letterSpacing: '0.05em' }}>

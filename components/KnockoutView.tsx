@@ -79,7 +79,7 @@ function makePlaceholder(stage: string): MatchFixture {
     id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
     group: null, matchday: null,
     homeTeam: '', awayTeam: '',
-    homeScore: null, awayScore: null, elapsed: null,
+    homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, elapsed: null,
   };
 }
 
@@ -128,7 +128,7 @@ function buildDerivedRound(
       id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
       group: null, matchday: null,
       homeTeam: w1, awayTeam: w2,
-      homeScore: null, awayScore: null, elapsed: null,
+      homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, elapsed: null,
     };
   });
 }
