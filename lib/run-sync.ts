@@ -425,9 +425,10 @@ function computeEliminationsFromFixtures(fixtures: WCFixture[]): Map<string, str
       if (!eliminated.has(home)) eliminated.set(home, f.date);
     } else if (f.awayGoals < f.homeGoals) {
       if (!eliminated.has(away)) eliminated.set(away, f.date);
-    } else if (f.statusShort === 'PEN') {
-      // Prefer explicit penalty scores; fall back to the winner flag the API sets
-      // immediately (penalty scores can lag behind the PEN status by a sync cycle).
+    } else {
+      // Goals level after ET — decide via penalty scores or winner flag.
+      // Don't guard on statusShort === 'PEN': the API sometimes returns 'AET'
+      // for matches that went to a shootout.
       if (f.penaltyHome != null && f.penaltyAway != null) {
         if (f.penaltyHome < f.penaltyAway && !eliminated.has(home)) eliminated.set(home, f.date);
         else if (f.penaltyAway < f.penaltyHome && !eliminated.has(away)) eliminated.set(away, f.date);
