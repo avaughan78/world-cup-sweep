@@ -150,13 +150,36 @@ function buildDerivedRound(
       return actualFixtures[actualIdx];
     }
 
-    // Fallback: pull date/time from scheduled fixture for this bracket slot
+    // Fallback 1: scheduled fixture matching bracket slot by matchday number
     const sched = byMatchday.get(slotNum);
-    if (sched && !usedIdxs.has(sched.idx)) usedIdxs.add(sched.idx);
+    if (sched && !usedIdxs.has(sched.idx)) {
+      usedIdxs.add(sched.idx);
+      return {
+        id: sched.m.id, utcDate: sched.m.utcDate,
+        status: 'SCHEDULED', stage,
+        group: null, matchday: slotNum,
+        homeTeam: w1, awayTeam: w2,
+        homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
+      };
+    }
+
+    // Fallback 2: i-th unmatched fixture in sorted order (handles rounds with no matchday suffix)
+    for (let idx = 0; idx < actualFixtures.length; idx++) {
+      if (!usedIdxs.has(idx)) {
+        usedIdxs.add(idx);
+        const fm = actualFixtures[idx];
+        return {
+          id: fm.id, utcDate: fm.utcDate,
+          status: 'SCHEDULED', stage,
+          group: null, matchday: slotNum,
+          homeTeam: w1, awayTeam: w2,
+          homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
+        };
+      }
+    }
+
     return {
-      id: sched?.m.id ?? --_pid,
-      utcDate: sched?.m.utcDate ?? '',
-      status: 'SCHEDULED', stage,
+      id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
       group: null, matchday: slotNum,
       homeTeam: w1, awayTeam: w2,
       homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
