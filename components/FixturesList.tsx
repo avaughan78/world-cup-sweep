@@ -183,23 +183,14 @@ export default function FixturesList({ participantMap }: { participantMap: Recor
                       {finished ? (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'baseline', columnGap: '0.3em' }}>
                           <span className="font-black tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '1rem', letterSpacing: '0.05em', textAlign: 'right' }}>
-                            {m.homeScore}
+                            {m.homeScore}{m.penaltyHome != null && <span className="tabular-nums" style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: 700 }}> ({m.penaltyHome})</span>}
                           </span>
                           <span style={{ fontSize: '0.6rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                             {m.penaltyHome != null ? 'Pens' : m.statusDetail === 'AET' ? 'AET' : 'FT'}
                           </span>
                           <span className="font-black tabular-nums" style={{ color: 'var(--text-primary)', fontSize: '1rem', letterSpacing: '0.05em', textAlign: 'left' }}>
-                            {m.awayScore}
+                            {m.penaltyAway != null && <span className="tabular-nums" style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: 700 }}>({m.penaltyAway}) </span>}{m.awayScore}
                           </span>
-                          {m.penaltyHome != null && m.penaltyAway != null && <>
-                            <span className="tabular-nums" style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: 700, textAlign: 'right' }}>
-                              {m.penaltyHome}
-                            </span>
-                            <span />
-                            <span className="tabular-nums" style={{ color: 'var(--text-muted)', fontSize: '0.65rem', fontWeight: 700, textAlign: 'left' }}>
-                              {m.penaltyAway}
-                            </span>
-                          </>}
                         </div>
                       ) : live ? (
                         <>
