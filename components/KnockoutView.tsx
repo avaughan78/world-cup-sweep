@@ -117,10 +117,38 @@ function getKOWinner(m: MatchFixture): string {
   return '';
 }
 
+// Hardcoded kick-off times (UTC) for every knockout slot.
+// Slot = bracket position (1-based, left→right then top→bottom within each half).
+// R16 slots 1-4 = left bracket pairs (R32 slots 1-8); slots 5-8 = right (R32 slots 9-16).
+const KNOCKOUT_DATES: Record<string, Record<number, string>> = {
+  ROUND_OF_16: {
+    1: '2026-07-04T21:00:00Z', // R32 s1 winner vs s2 winner (GER/PAR vs FRA/SWE path)
+    2: '2026-07-04T17:00:00Z', // R32 s3 winner vs s4 winner (RSA/CAN vs NED/MAR path)
+    3: '2026-07-06T19:00:00Z', // R32 s5 winner vs s6 winner (POR/CRO vs ESP/AUT path)
+    4: '2026-07-06T21:00:00Z', // R32 s7 winner vs s8 winner (USA/BIH vs BEL/SEN path)
+    5: '2026-07-05T20:00:00Z', // R32 s9 winner vs s10 winner (BRA/JPN vs CIV/NOR path)
+    6: '2026-07-06T00:00:00Z', // R32 s11 winner vs s12 winner (MEX/ECU vs ENG/COD path)
+    7: '2026-07-07T16:00:00Z', // R32 s13 winner vs s14 winner (ARG/CPV vs AUS/EGY path)
+    8: '2026-07-07T20:00:00Z', // R32 s15 winner vs s16 winner (SUI/ALG vs COL/GHA path)
+  },
+  QUARTER_FINALS: {
+    1: '2026-07-09T20:00:00Z', // R16 slot 1 winner vs slot 2 winner
+    2: '2026-07-10T19:00:00Z', // R16 slot 3 winner vs slot 4 winner
+    3: '2026-07-11T21:00:00Z', // R16 slot 5 winner vs slot 6 winner
+    4: '2026-07-12T01:00:00Z', // R16 slot 7 winner vs slot 8 winner
+  },
+  SEMI_FINALS: {
+    1: '2026-07-14T19:00:00Z', // QF slot 1 winner vs slot 2 winner
+    2: '2026-07-15T19:00:00Z', // QF slot 3 winner vs slot 4 winner
+  },
+  FINAL: {
+    1: '2026-07-19T19:00:00Z',
+  },
+};
+
 // Build a knockout round by cascading winners from prevRound (2n entries → n entries).
-// Uses actual API fixtures when they exist (matched by team name), otherwise synthesises
-// a placeholder. When the API has a scheduled fixture for the slot (identified by
-// matchday) we pull its date/time even though the teams aren't determined yet.
+// Uses actual API fixtures when they exist (matched by team name), otherwise falls
+// back to the hardcoded date for that bracket slot.
 function buildDerivedRound(
   prevRound: MatchFixture[],
   actualFixtures: MatchFixture[],
@@ -128,11 +156,6 @@ function buildDerivedRound(
 ): MatchFixture[] {
   const count = prevRound.length / 2;
   const usedIdxs = new Set<number>();
-  const byMatchday = new Map<number, { idx: number; m: MatchFixture }>();
-  for (let idx = 0; idx < actualFixtures.length; idx++) {
-    const m = actualFixtures[idx];
-    if (m.matchday != null) byMatchday.set(m.matchday, { idx, m });
-  }
 
   return Array.from({ length: count }, (_, i) => {
     const slotNum = i + 1;
@@ -150,36 +173,11 @@ function buildDerivedRound(
       return actualFixtures[actualIdx];
     }
 
-    // Fallback 1: scheduled fixture matching bracket slot by matchday number
-    const sched = byMatchday.get(slotNum);
-    if (sched && !usedIdxs.has(sched.idx)) {
-      usedIdxs.add(sched.idx);
-      return {
-        id: sched.m.id, utcDate: sched.m.utcDate,
-        status: 'SCHEDULED', stage,
-        group: null, matchday: slotNum,
-        homeTeam: w1, awayTeam: w2,
-        homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
-      };
-    }
-
-    // Fallback 2: i-th unmatched fixture in sorted order (handles rounds with no matchday suffix)
-    for (let idx = 0; idx < actualFixtures.length; idx++) {
-      if (!usedIdxs.has(idx)) {
-        usedIdxs.add(idx);
-        const fm = actualFixtures[idx];
-        return {
-          id: fm.id, utcDate: fm.utcDate,
-          status: 'SCHEDULED', stage,
-          group: null, matchday: slotNum,
-          homeTeam: w1, awayTeam: w2,
-          homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
-        };
-      }
-    }
-
+    // Fallback: hardcoded date for this bracket slot
+    const utcDate = KNOCKOUT_DATES[stage]?.[slotNum] ?? '';
     return {
-      id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
+      id: --_pid, utcDate,
+      status: 'SCHEDULED', stage,
       group: null, matchday: slotNum,
       homeTeam: w1, awayTeam: w2,
       homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
