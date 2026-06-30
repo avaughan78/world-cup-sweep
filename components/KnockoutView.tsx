@@ -150,8 +150,8 @@ function fmtTime(utcDate: string) {
 
 // ── Card components ───────────────────────────────────────────────────────────
 
-function TeamCol({ name, score, wins, loses, known, live, participant }: {
-  name: string; score: number | null | undefined;
+function TeamCol({ name, score, penScore, wins, loses, known, live, participant }: {
+  name: string; score: number | null | undefined; penScore: number | null | undefined;
   wins: boolean; loses: boolean; known: boolean; live: boolean;
   participant: string | null;
 }) {
@@ -175,6 +175,11 @@ function TeamCol({ name, score, wins, loses, known, live, participant }: {
       {score != null && (
         <span style={{ fontSize: '0.9rem', fontWeight: wins ? 800 : 600, color: scoreCol, lineHeight: 1 }}>
           {score}
+        </span>
+      )}
+      {penScore != null && (
+        <span style={{ fontSize: '0.9rem', fontWeight: wins ? 800 : 600, color: 'var(--text-muted)', lineHeight: 1 }}>
+          ({penScore})
         </span>
       )}
       {known && participant && (
@@ -211,16 +216,12 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
   const dateStr = fmtDate(match.utcDate);
   const timeStr = match.utcDate && !finished ? fmtTime(match.utcDate) : '';
 
-  // Label shown before the date: FT / AET / (x–y p)
+  // Label shown before the date: FT / AET / Pens (scores shown in card)
   let resultLabel: string | null = null;
   if (finished) {
-    if (hasPens) {
-      resultLabel = `(${match.penaltyHome}–${match.penaltyAway} p)`;
-    } else if (match.statusDetail === 'AET') {
-      resultLabel = 'AET';
-    } else {
-      resultLabel = 'FT';
-    }
+    if (hasPens) resultLabel = 'Pens';
+    else if (match.statusDetail === 'AET') resultLabel = 'AET';
+    else resultLabel = 'FT';
   }
 
   let dateNode: React.ReactNode = null;
@@ -255,11 +256,13 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
     }}>
       <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 1 }}>
         <TeamCol name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null}
+          penScore={finished && hasPens ? match.penaltyHome : null}
           wins={homeWins} loses={awayWins} known={homeKnown} live={live} participant={homeParticipant} />
         <span style={{ fontSize: '0.54rem', color: 'var(--text-muted)', paddingTop: 10, flexShrink: 0 }}>
           {showScore ? '–' : 'v'}
         </span>
         <TeamCol name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null}
+          penScore={finished && hasPens ? match.penaltyAway : null}
           wins={awayWins} loses={homeWins} known={awayKnown} live={live} participant={awayParticipant} />
       </div>
       {dateNode && <div style={{ lineHeight: 1 }}>{dateNode}</div>}
