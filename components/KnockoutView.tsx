@@ -99,6 +99,11 @@ function getKOWinner(m: MatchFixture): string {
   if (m.homeScore == null || m.awayScore == null) return '';
   if (m.homeScore > m.awayScore) return m.homeTeam;
   if (m.awayScore > m.homeScore) return m.awayTeam;
+  // Level after ET — decide by penalty scores
+  if (m.penaltyHome != null && m.penaltyAway != null) {
+    if (m.penaltyHome > m.penaltyAway) return m.homeTeam;
+    if (m.penaltyAway > m.penaltyHome) return m.awayTeam;
+  }
   return '';
 }
 
