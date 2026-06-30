@@ -7,6 +7,7 @@ export interface MatchFixture {
   id: number;
   utcDate: string;
   status: string;
+  statusDetail: 'FT' | 'AET' | 'PEN' | null; // how the match was decided
   stage: string;
   group: string | null;
   matchday: number | null;
@@ -36,10 +37,12 @@ export async function GET() {
         const stage = mapRound(f.round);
         const groupLetter = stage === 'GROUP_STAGE' ? (teamToGroup[home] ?? null) : null;
         const group = groupLetter ? `GROUP_${groupLetter}` : null;
+        const sd = f.statusShort;
         return {
           id: f.id,
           utcDate: f.date,
-          status: mapStatus(f.statusShort),
+          status: mapStatus(sd),
+          statusDetail: (sd === 'FT' || sd === 'AET' || sd === 'PEN') ? sd : null,
           stage,
           group,
           matchday: f.roundSlot,
@@ -96,6 +99,7 @@ export async function GET() {
       awayScore: m.score.fullTime.away,
       penaltyHome: null,
       penaltyAway: null,
+      statusDetail: null,
       elapsed: null,
     }));
     return NextResponse.json({ fixtures }, {

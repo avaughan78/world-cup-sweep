@@ -79,7 +79,7 @@ function makePlaceholder(stage: string): MatchFixture {
     id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
     group: null, matchday: null,
     homeTeam: '', awayTeam: '',
-    homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, elapsed: null,
+    homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
   };
 }
 
@@ -133,7 +133,7 @@ function buildDerivedRound(
       id: --_pid, utcDate: '', status: 'SCHEDULED', stage,
       group: null, matchday: null,
       homeTeam: w1, awayTeam: w2,
-      homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, elapsed: null,
+      homeScore: null, awayScore: null, penaltyHome: null, penaltyAway: null, statusDetail: null, elapsed: null,
     };
   });
 }
@@ -193,8 +193,15 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
   const finished = match.status === 'FINISHED';
   const live = match.status === 'IN_PLAY' || match.status === 'LIVE' || match.status === 'PAUSED';
   const hasScore = match.homeScore != null && match.awayScore != null;
-  const homeWins = finished && hasScore && match.homeScore! > match.awayScore!;
-  const awayWins = finished && hasScore && match.awayScore! > match.homeScore!;
+  const hasPens = match.penaltyHome != null && match.penaltyAway != null;
+  const homeWins = finished && hasScore && (
+    match.homeScore! > match.awayScore! ||
+    (match.homeScore === match.awayScore && hasPens && match.penaltyHome! > match.penaltyAway!)
+  );
+  const awayWins = finished && hasScore && (
+    match.awayScore! > match.homeScore! ||
+    (match.homeScore === match.awayScore && hasPens && match.penaltyAway! > match.penaltyHome!)
+  );
   const homeKnown = !!match.homeTeam && KNOWN_TEAMS.has(match.homeTeam);
   const awayKnown = !!match.awayTeam && KNOWN_TEAMS.has(match.awayTeam);
   const showScore = finished || live;
@@ -203,6 +210,18 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
 
   const dateStr = fmtDate(match.utcDate);
   const timeStr = match.utcDate && !finished ? fmtTime(match.utcDate) : '';
+
+  // Label shown before the date: FT / AET / (x–y p)
+  let resultLabel: string | null = null;
+  if (finished) {
+    if (hasPens) {
+      resultLabel = `(${match.penaltyHome}–${match.penaltyAway} p)`;
+    } else if (match.statusDetail === 'AET') {
+      resultLabel = 'AET';
+    } else {
+      resultLabel = 'FT';
+    }
+  }
 
   let dateNode: React.ReactNode = null;
   if (live) {
@@ -218,7 +237,7 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
   } else if (dateStr) {
     dateNode = (
       <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textAlign: 'center' }}>
-        {finished && <span style={{ fontWeight: 700, marginRight: 3 }}>FT ·</span>}
+        {resultLabel && <span style={{ fontWeight: 700, marginRight: 3 }}>{resultLabel} ·</span>}
         {dateStr}{timeStr ? ` · ${timeStr}` : ''}
       </span>
     );
