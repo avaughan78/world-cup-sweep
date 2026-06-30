@@ -425,9 +425,17 @@ function computeEliminationsFromFixtures(fixtures: WCFixture[]): Map<string, str
       if (!eliminated.has(home)) eliminated.set(home, f.date);
     } else if (f.awayGoals < f.homeGoals) {
       if (!eliminated.has(away)) eliminated.set(away, f.date);
-    } else if (f.statusShort === 'PEN' && f.penaltyHome != null && f.penaltyAway != null) {
-      if (f.penaltyHome < f.penaltyAway  && !eliminated.has(home)) eliminated.set(home, f.date);
-      else if (f.penaltyAway < f.penaltyHome && !eliminated.has(away)) eliminated.set(away, f.date);
+    } else if (f.statusShort === 'PEN') {
+      // Prefer explicit penalty scores; fall back to the winner flag the API sets
+      // immediately (penalty scores can lag behind the PEN status by a sync cycle).
+      if (f.penaltyHome != null && f.penaltyAway != null) {
+        if (f.penaltyHome < f.penaltyAway && !eliminated.has(home)) eliminated.set(home, f.date);
+        else if (f.penaltyAway < f.penaltyHome && !eliminated.has(away)) eliminated.set(away, f.date);
+      } else if (f.awayWinner === true && !eliminated.has(home)) {
+        eliminated.set(home, f.date);
+      } else if (f.homeWinner === true && !eliminated.has(away)) {
+        eliminated.set(away, f.date);
+      }
     }
   }
 

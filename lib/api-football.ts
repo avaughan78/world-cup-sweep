@@ -32,6 +32,8 @@ export interface WCFixture {
   awayGoals: number | null;
   penaltyHome: number | null;
   penaltyAway: number | null;
+  homeWinner: boolean | null;
+  awayWinner: boolean | null;
 }
 
 export interface FixtureEvent {
@@ -84,6 +86,8 @@ export async function getAllWCFixtures(): Promise<WCFixture[]> {
       awayGoals: f.goals.away,
       penaltyHome: f.score?.penalty?.home ?? null,
       penaltyAway: f.score?.penalty?.away ?? null,
+      homeWinner: f.teams?.home?.winner ?? null,
+      awayWinner: f.teams?.away?.winner ?? null,
     };
   });
 }
@@ -98,10 +102,15 @@ export async function getLiveWCFixtures(): Promise<WCFixture[]> {
     statusShort: f.fixture.status.short,
     elapsed: f.fixture.status.elapsed ?? null,
     round: f.league.round ?? '',
+    roundSlot: null,
     homeTeam: f.teams.home.name,
     awayTeam: f.teams.away.name,
     homeGoals: f.goals.home ?? 0,
     awayGoals: f.goals.away ?? 0,
+    penaltyHome: null,
+    penaltyAway: null,
+    homeWinner: null,
+    awayWinner: null,
   }));
 }
 
