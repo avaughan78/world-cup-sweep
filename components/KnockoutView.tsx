@@ -176,8 +176,8 @@ function fmtTime(utcDate: string) {
 
 // ── Card components ───────────────────────────────────────────────────────────
 
-function TeamCol({ name, score, wins, loses, known, live, participant }: {
-  name: string; score: number | null | undefined;
+function TeamCol({ name, score, penScore, wins, loses, known, live, participant }: {
+  name: string; score: number | null | undefined; penScore: number | null | undefined;
   wins: boolean; loses: boolean; known: boolean; live: boolean;
   participant: string | null;
 }) {
@@ -200,7 +200,7 @@ function TeamCol({ name, score, wins, loses, known, live, participant }: {
       </span>
       {score != null && (
         <span style={{ fontSize: '0.9rem', fontWeight: wins ? 800 : 600, color: scoreCol, lineHeight: 1 }}>
-          {score}
+          {score}{penScore != null && <span style={{ fontSize: '0.62rem', fontWeight: 600, color: 'var(--text-muted)' }}> ({penScore})</span>}
         </span>
       )}
       {known && participant && (
@@ -282,22 +282,13 @@ function MatchCard({ match, participantMap }: { match: MatchFixture; participant
     }}>
       <div style={{ display: 'flex', width: '100%', alignItems: 'flex-start', gap: 1 }}>
         <TeamCol name={match.homeTeam} score={showScore ? (match.homeScore ?? 0) : null}
+          penScore={hasPens ? match.penaltyHome : null}
           wins={homeWins} loses={awayWins} known={homeKnown} live={live} participant={homeParticipant} />
         {centerSep}
         <TeamCol name={match.awayTeam} score={showScore ? (match.awayScore ?? 0) : null}
+          penScore={hasPens ? match.penaltyAway : null}
           wins={awayWins} loses={homeWins} known={awayKnown} live={live} participant={awayParticipant} />
       </div>
-      {finished && hasPens && (
-        <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 1 }}>
-          <span style={{ flex: 1, textAlign: 'center', fontSize: '0.72rem', fontWeight: homeWins ? 700 : 500, color: 'var(--text-muted)', lineHeight: 1 }}>
-            {match.penaltyHome}
-          </span>
-          <span style={{ fontSize: '0.52rem', color: 'var(--border)', flexShrink: 0 }}>·</span>
-          <span style={{ flex: 1, textAlign: 'center', fontSize: '0.72rem', fontWeight: awayWins ? 700 : 500, color: 'var(--text-muted)', lineHeight: 1 }}>
-            {match.penaltyAway}
-          </span>
-        </div>
-      )}
       {dateNode && <div style={{ lineHeight: 1 }}>{dateNode}</div>}
     </div>
   );
