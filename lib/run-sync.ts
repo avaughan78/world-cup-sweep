@@ -420,6 +420,9 @@ function computeEliminationsFromFixtures(fixtures: WCFixture[]): Map<string, str
     if (stage === 'GROUP_STAGE' || stage === 'THIRD_PLACE') continue;
     if (f.homeGoals == null || f.awayGoals == null) continue;
     const home = normaliseTeamName(f.homeTeam);
+    if (home === 'Germany' || normaliseTeamName(f.awayTeam) === 'Germany') {
+      console.log('[elim-debug] Germany fixture:', JSON.stringify({ round: f.round, status: f.statusShort, home, away: normaliseTeamName(f.awayTeam), homeGoals: f.homeGoals, awayGoals: f.awayGoals, penaltyHome: f.penaltyHome, penaltyAway: f.penaltyAway, homeWinner: f.homeWinner, awayWinner: f.awayWinner }));
+    }
     const away = normaliseTeamName(f.awayTeam);
     if (f.homeGoals < f.awayGoals) {
       if (!eliminated.has(home)) eliminated.set(home, f.date);
