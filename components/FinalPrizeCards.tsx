@@ -80,12 +80,14 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
       .catch(() => setLoaded(true));
   }, []);
 
-  // Fire subtle fireworks from the winner card using the team's colours
+  // Continuous fireworks from the winner card using the team's colours
   useEffect(() => {
     if (!winner) return;
     const colors = TEAM_COLORS[winner] ?? ['#ffffff', '#dddddd'];
 
     let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
     import('canvas-confetti').then((mod) => {
       if (cancelled) return;
       const confetti = mod.default;
@@ -101,14 +103,16 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
         return { x: 0.25, y: 0.3 };
       }
 
-      function burst(spread: number, count: number) {
+      function burst() {
         if (cancelled) return;
+        const origin = getOrigin();
+        // Slight random offset each burst so it fans out naturally
         confetti({
-          particleCount: count,
-          spread,
-          startVelocity: 30,
+          particleCount: 25,
+          spread: 55 + Math.random() * 30,
+          startVelocity: 28 + Math.random() * 10,
           colors,
-          origin: getOrigin(),
+          origin: { x: origin.x + (Math.random() - 0.5) * 0.1, y: origin.y },
           ticks: 220,
           gravity: 0.75,
           scalar: 0.9,
@@ -116,13 +120,14 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
         });
       }
 
-      // Three gentle bursts, staggered
-      burst(60, 30);
-      setTimeout(() => burst(80, 25), 500);
-      setTimeout(() => burst(50, 20), 1100);
+      burst();
+      intervalId = setInterval(burst, 1800);
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (intervalId !== null) clearInterval(intervalId);
+    };
   }, [winner]);
 
   const cards = [
