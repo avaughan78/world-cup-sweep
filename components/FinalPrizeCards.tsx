@@ -26,13 +26,18 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
                f.homeScore != null && f.awayScore != null
         );
         if (final) {
+          let w: string | null = null;
+          let ru: string | null = null;
           if (final.homeScore! > final.awayScore!) {
-            setWinner(final.homeTeam);
-            setRunnerUp(final.awayTeam);
+            w = final.homeTeam; ru = final.awayTeam;
           } else if (final.awayScore! > final.homeScore!) {
-            setWinner(final.awayTeam);
-            setRunnerUp(final.homeTeam);
+            w = final.awayTeam; ru = final.homeTeam;
+          } else if (final.penaltyHome != null && final.penaltyAway != null) {
+            // Decided by penalties
+            if (final.penaltyHome > final.penaltyAway) { w = final.homeTeam; ru = final.awayTeam; }
+            else if (final.penaltyAway > final.penaltyHome) { w = final.awayTeam; ru = final.homeTeam; }
           }
+          if (w) { setWinner(w); setRunnerUp(ru); }
         }
         setLoaded(true);
       })
