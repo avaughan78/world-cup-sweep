@@ -4,6 +4,7 @@ import EnglandConfetti from '@/components/EnglandConfetti';
 import SyncTime from '@/components/SyncTime';
 import TrophyEasterEgg from '@/components/TrophyEasterEgg';
 import PrizeCard from '@/components/PrizeCard';
+import FinalPrizeCards from '@/components/FinalPrizeCards';
 import TicketBadge from '@/components/TicketBadge';
 import GroupsSection from '@/components/GroupsSection';
 import ThemeToggle from '@/components/ThemeToggle';
@@ -141,31 +142,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ c
 
           {/* Main prizes */}
           <section>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {[
-                { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: prizeAmounts?.first   ?? process.env.PRIZE_1ST ?? null },
-                { ordinal: '2', sup: 'nd', label: 'Runner-up',         amount: prizeAmounts?.second  ?? process.env.PRIZE_2ND ?? null },
-              ].map(({ ordinal, sup, label, amount }) => (
-                <div
-                  key={ordinal}
-                  className="main-prize-card rounded-xl p-6"
-                  style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
-                >
-                  <div className="flex justify-between items-start mb-6">
-                    <div className="prize-ordinal text-6xl font-black leading-none" style={{ color: 'var(--text-primary)' }}>
-                      {ordinal}<sup className="text-3xl">{sup}</sup>
-                    </div>
-                    <div className="flex flex-col items-end gap-2">
-                      {amount && <TicketBadge amount={amount} />}
-                      <span className="text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-muted)' }}>
-                        {label}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-base" style={{ color: 'var(--text-muted)' }}>Pending the final</p>
-                </div>
-              ))}
-            </div>
+            <FinalPrizeCards
+              participantMap={Object.fromEntries(displayMap)}
+              revealed={revealed}
+              firstAmount={prizeAmounts?.first ?? process.env.PRIZE_1ST ?? null}
+              secondAmount={prizeAmounts?.second ?? process.env.PRIZE_2ND ?? null}
+            />
           </section>
 
           {/* Novelty prizes */}
