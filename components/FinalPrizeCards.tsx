@@ -1,9 +1,45 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { MatchFixture } from '@/app/api/fixtures/route';
 import Flag from './Flag';
 import TicketBadge from './TicketBadge';
+
+// Primary colours for each team — used to tint the winner fireworks
+const TEAM_COLORS: Record<string, string[]> = {
+  'Spain':                  ['#c60b1e', '#ffc400'],
+  'France':                 ['#002395', '#ED2939', '#ffffff'],
+  'Brazil':                 ['#009c3b', '#FFDF00'],
+  'Germany':                ['#000000', '#DD0000', '#FFCE00'],
+  'England':                ['#CF091B', '#ffffff'],
+  'Argentina':              ['#74ACDF', '#ffffff'],
+  'Netherlands':            ['#FF6600', '#ffffff'],
+  'Portugal':               ['#006600', '#FF0000'],
+  'Belgium':                ['#000000', '#FDDA24', '#EF3340'],
+  'Morocco':                ['#C1272D', '#006233'],
+  'Japan':                  ['#BC002D', '#ffffff'],
+  'United States':          ['#B22234', '#ffffff', '#3C3B6E'],
+  'Canada':                 ['#FF0000', '#ffffff'],
+  'Mexico':                 ['#006847', '#ffffff', '#CE1126'],
+  'Australia':              ['#00008B', '#FF0000', '#ffffff'],
+  'Colombia':               ['#FCD116', '#003087', '#CE1126'],
+  'Norway':                 ['#EF2B2D', '#002868', '#ffffff'],
+  'Switzerland':            ['#FF0000', '#ffffff'],
+  'Sweden':                 ['#006AA7', '#FECC02'],
+  'Croatia':                ['#FF0000', '#ffffff', '#0032A0'],
+  'Algeria':                ['#006233', '#D21034', '#ffffff'],
+  'Ghana':                  ['#006B3F', '#FCD116', '#EF3340'],
+  'Senegal':                ['#00853F', '#FDEF42', '#E31B23'],
+  'DR Congo':               ['#007FFF', '#CE1126', '#F7D618'],
+  'Ivory Coast':            ['#FF8200', '#ffffff', '#009A44'],
+  'Ecuador':                ['#FFD100', '#003DA5'],
+  'Paraguay':               ['#D52B1E', '#ffffff', '#0038A8'],
+  'Cape Verde':             ['#003893', '#CF2027', '#F7D116'],
+  'Austria':                ['#ED2939', '#ffffff'],
+  'Bosnia and Herzegovina': ['#002395', '#FFCD00'],
+  'Egypt':                  ['#CE1126', '#ffffff'],
+  'South Africa':           ['#007A4D', '#FFB81C', '#DE3831'],
+};
 
 interface Props {
   participantMap: Record<string, string | null>;
@@ -16,6 +52,7 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
   const [winner, setWinner] = useState<string | null>(null);
   const [runnerUp, setRunnerUp] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const winnerCardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch('/api/fixtures')
@@ -33,7 +70,6 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
           } else if (final.awayScore! > final.homeScore!) {
             w = final.awayTeam; ru = final.homeTeam;
           } else if (final.penaltyHome != null && final.penaltyAway != null) {
-            // Decided by penalties
             if (final.penaltyHome > final.penaltyAway) { w = final.homeTeam; ru = final.awayTeam; }
             else if (final.penaltyAway > final.penaltyHome) { w = final.awayTeam; ru = final.homeTeam; }
           }
@@ -44,18 +80,64 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
       .catch(() => setLoaded(true));
   }, []);
 
+  // Fire subtle fireworks from the winner card using the team's colours
+  useEffect(() => {
+    if (!winner) return;
+    const colors = TEAM_COLORS[winner] ?? ['#ffffff', '#dddddd'];
+
+    let cancelled = false;
+    import('canvas-confetti').then((mod) => {
+      if (cancelled) return;
+      const confetti = mod.default;
+
+      function getOrigin() {
+        if (winnerCardRef.current) {
+          const r = winnerCardRef.current.getBoundingClientRect();
+          return {
+            x: (r.left + r.width / 2) / window.innerWidth,
+            y: (r.top + r.height / 2) / window.innerHeight,
+          };
+        }
+        return { x: 0.25, y: 0.3 };
+      }
+
+      function burst(spread: number, count: number) {
+        if (cancelled) return;
+        confetti({
+          particleCount: count,
+          spread,
+          startVelocity: 30,
+          colors,
+          origin: getOrigin(),
+          ticks: 220,
+          gravity: 0.75,
+          scalar: 0.9,
+          zIndex: 9999,
+        });
+      }
+
+      // Three gentle bursts, staggered
+      burst(60, 30);
+      setTimeout(() => burst(80, 25), 500);
+      setTimeout(() => burst(50, 20), 1100);
+    });
+
+    return () => { cancelled = true; };
+  }, [winner]);
+
   const cards = [
-    { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: firstAmount,  team: winner },
-    { ordinal: '2', sup: 'nd', label: 'Runner-up',         amount: secondAmount, team: runnerUp },
+    { ordinal: '1', sup: 'st', label: 'Tournament Winner', amount: firstAmount,  team: winner,   ref: winnerCardRef },
+    { ordinal: '2', sup: 'nd', label: 'Runner-up',         amount: secondAmount, team: runnerUp, ref: undefined },
   ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      {cards.map(({ ordinal, sup, label, amount, team }) => {
+      {cards.map(({ ordinal, sup, label, amount, team, ref }) => {
         const participant = team && revealed ? (participantMap[team] ?? null) : null;
         return (
           <div
             key={ordinal}
+            ref={ref}
             className="main-prize-card rounded-xl p-6"
             style={{ background: 'var(--card)', border: '1px solid var(--border)' }}
           >
