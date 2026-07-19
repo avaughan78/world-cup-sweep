@@ -145,7 +145,7 @@ function HighlightCard({ h, liked, onLike, onVideoClick }: {
           {isYouTube(h.url) && <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>YouTube</span>}
         </div>
         <p className="font-bold leading-snug" style={{ color: 'var(--text-primary)', fontSize: '0.95rem' }}>{h.title}</p>
-        {h.description && <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-muted)' }}>{h.description}</p>}
+        {h.description && <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--text-muted)', whiteSpace: 'pre-wrap' }}>{h.description}</p>}
         <div className="flex items-center justify-between gap-2 mt-auto pt-2" style={{ borderTop: '1px solid var(--border)' }}>
           {h.source ? <span className="text-xs font-semibold" style={{ color: 'var(--text-muted)' }}>{h.source}</span> : <span />}
           <div className="flex items-center gap-3">
