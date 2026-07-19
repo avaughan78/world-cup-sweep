@@ -108,7 +108,7 @@ export default function FinalPrizeCards({ participantMap, revealed, firstAmount,
         const origin = getOrigin();
         // Slight random offset each burst so it fans out naturally
         confetti({
-          particleCount: 25,
+          particleCount: 29,
           spread: 55 + Math.random() * 30,
           startVelocity: 28 + Math.random() * 10,
           colors,
