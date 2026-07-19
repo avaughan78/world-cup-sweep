@@ -1139,7 +1139,7 @@ export default function AdminPage() {
                 </div>
                 <div className="sm:col-span-2">
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--text-muted)', display: 'block', marginBottom: '0.3rem' }}>Description</label>
-                  <textarea value={hlDesc} onChange={e => setHlDesc(e.target.value)} placeholder="Optional short excerpt" maxLength={400} rows={2}
+                  <textarea value={hlDesc} onChange={e => setHlDesc(e.target.value)} placeholder="Optional short excerpt" maxLength={1000} rows={3}
                     style={{ width: '100%', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', border: '1px solid var(--border)', background: 'var(--card)', color: 'var(--text-primary)', fontSize: '0.85rem', resize: 'vertical' }} />
                 </div>
               </div>
