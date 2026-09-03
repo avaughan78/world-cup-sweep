@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WC Sweep</title>
+  <meta name="description" content="The WC Sweep has wrapped up for this tournament." />
+  <style>
+    :root {
+      --bg: #fbfaf3;
+      --card: #ffffff;
+      --border: #e5e2d8;
+      --text-primary: #1a1a17;
+      --text-secondary: #4d4a42;
+      --text-muted: #8a8678;
+      --green: #3b7a52;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      padding: 24px;
+    }
+    .card {
+      max-width: 460px;
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 48px 36px;
+      text-align: center;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+    }
+    img.trophy {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 0 0 12px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 24px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img class="trophy" src="world-cup-trophy.webp" alt="" />
+    <h1>The sweep has wrapped up</h1>
+    <p>Thanks to everyone who played. WC Sweep is closed for now — see you at the next tournament.</p>
+    <span class="badge">WC Sweep</span>
+  </div>
+</body>
+</html>
