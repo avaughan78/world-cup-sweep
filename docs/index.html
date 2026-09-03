@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WC Sweep</title>
-  <meta name="description" content="The WC Sweep has wrapped up for this tournament." />
+  <title>WC26 Sweep — Sonning Primary</title>
+  <meta name="robots" content="noindex, nofollow" />
   <style>
     :root {
       --bg: #fbfaf3;
@@ -14,64 +14,244 @@
       --text-secondary: #4d4a42;
       --text-muted: #8a8678;
       --green: #3b7a52;
+      --gold: #c9a227;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       background: var(--bg);
       color: var(--text-primary);
       font-family: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
       -webkit-font-smoothing: antialiased;
-      padding: 24px;
     }
-    .card {
-      max-width: 460px;
-      width: 100%;
-      background: var(--card);
-      border: 1px solid var(--border);
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 24px 16px 64px; }
+
+    header.banner {
+      position: relative;
       border-radius: 16px;
-      padding: 48px 36px;
-      text-align: center;
-      box-shadow: 0 2px 16px rgba(0,0,0,0.05);
+      overflow: hidden;
+      background: linear-gradient(115deg, #4c1d95 0%, #6d28d9 35%, #b91c1c 75%, #b91c1c 100%);
+      padding: 22px 28px 26px;
+      color: #fff;
     }
-    img.trophy {
-      width: 72px;
-      height: 72px;
-      object-fit: contain;
-      margin-bottom: 20px;
+    header.banner .eyebrow { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.7); margin: 0; }
+    header.banner h1 { font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 900; margin: 6px 0 0; letter-spacing: -0.02em; }
+    header.banner .closed-note {
+      display: inline-flex; align-items: center; gap: 6px; margin-top: 12px;
+      font-size: 13px; font-weight: 600; color: rgba(255,255,255,0.85);
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 999px; padding: 5px 12px;
     }
-    h1 {
-      font-size: 26px;
-      font-weight: 800;
-      margin: 0 0 12px;
+
+    section { margin-top: 32px; }
+    .section-label {
+      font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--text-muted); margin: 0 0 12px;
     }
-    p {
-      font-size: 16px;
-      line-height: 1.6;
-      color: var(--text-secondary);
-      margin: 0;
+
+    .final-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .final-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
+      padding: 20px; position: relative;
     }
-    .badge {
-      display: inline-block;
-      margin-top: 24px;
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--green);
+    .final-card .place { font-size: 2.2rem; font-weight: 900; }
+    .final-card .place sup { font-size: 1rem; font-weight: 700; }
+    .final-card .amount {
+      position: absolute; top: 16px; right: 16px; background: rgba(245,184,0,0.12);
+      border: 1px solid rgba(245,184,0,0.3); color: #92620a; font-weight: 700;
+      font-size: 12px; border-radius: 999px; padding: 3px 10px;
     }
+    .final-card .label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-top: 4px; }
+    .final-card .team { margin-top: 10px; font-size: 17px; font-weight: 700; }
+
+    .award-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    @media (min-width: 720px) { .award-grid { grid-template-columns: repeat(5, 1fr); } }
+    .award-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 14px; position: relative;
+    }
+    .award-card .icon { font-size: 18px; }
+    .award-card .amount {
+      position: absolute; top: 12px; right: 12px; background: rgba(245,184,0,0.12);
+      border: 1px solid rgba(245,184,0,0.3); color: #92620a; font-weight: 700;
+      font-size: 11px; border-radius: 999px; padding: 2px 8px;
+    }
+    .award-card .name { font-weight: 700; font-size: 14px; margin-top: 6px; }
+    .award-card .desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; min-height: 30px; }
+    .award-card .result { margin-top: 10px; font-size: 14px; font-weight: 700; }
+    .award-card .result .sub { font-size: 11px; font-weight: 500; color: var(--text-muted); display: block; }
+
+    .mystery-band {
+      border: 1px dashed var(--border); border-radius: 14px; padding: 16px;
+      display: flex; justify-content: center; gap: 24px; flex-wrap: wrap;
+    }
+    .mystery-card {
+      background: #2e1065; color: #fff; border-radius: 12px; padding: 16px 20px;
+      min-width: 220px; text-align: center;
+    }
+    .mystery-card .icon { font-size: 20px; }
+    .mystery-card .name { font-weight: 700; margin-top: 4px; }
+    .mystery-card .desc { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 4px; }
+    .mystery-card .result { margin-top: 10px; font-weight: 700; font-size: 14px; }
+    .mystery-card .result.pending { color: rgba(255,255,255,0.55); font-weight: 500; font-style: italic; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+    @media (min-width: 900px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
+    .stats-col { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+    .stats-col h3 {
+      font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+      margin: 0 0 10px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;
+    }
+    .stats-col table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .stats-col td { padding: 5px 2px; border-bottom: 1px solid var(--border); }
+    .stats-col tr:last-child td { border-bottom: none; }
+    .stats-col td.rank { color: var(--text-muted); width: 1.5em; }
+    .stats-col td.sub { color: var(--text-muted); font-size: 11px; }
+    .stats-col td.val { text-align: right; font-weight: 700; }
+
+    footer { margin-top: 48px; text-align: center; font-size: 12px; color: var(--text-muted); }
   </style>
 </head>
 <body>
-  <div class="card">
-    <img class="trophy" src="world-cup-trophy.webp" alt="" />
-    <h1>The sweep has wrapped up</h1>
-    <p>Thanks to everyone who played. WC Sweep is closed for now — see you at the next tournament.</p>
-    <span class="badge">WC Sweep</span>
+  <div class="wrap">
+
+    <header class="banner">
+      <p class="eyebrow">FIFA World Cup · 2026 · Sonning Primary</p>
+      <h1>WC26 Sweep</h1>
+      <span class="closed-note">🔒 Sweep closed — results archived below</span>
+    </header>
+
+    <section>
+      <p class="section-label">Final Results</p>
+      <div class="final-cards">
+        <div class="final-card">
+          <span class="amount">£120</span>
+          <div class="place">1<sup>st</sup></div>
+          <div class="label">Tournament Winner</div>
+          <div class="team">🇪🇸 Spain</div>
+        </div>
+        <div class="final-card">
+          <span class="amount">£60</span>
+          <div class="place">2<sup>nd</sup></div>
+          <div class="label">Runner-up</div>
+          <div class="team">🇦🇷 Argentina</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label">Award Categories</p>
+      <div class="award-grid">
+        <div class="award-card">
+          <span class="amount">£12</span>
+          <div class="icon">🟨</div>
+          <div class="name">The Josip Šimunić Award</div>
+          <div class="desc">Filthiest team (yellow &amp; red cards)</div>
+          <div class="result">🇦🇷 Argentina<span class="sub">15Y · 1R</span></div>
+        </div>
+        <div class="award-card">
+          <span class="amount">£12</span>
+          <div class="icon">✈️</div>
+          <div class="name">Early Bath :(</div>
+          <div class="desc">The first team eliminated</div>
+          <div class="result">🇭🇹 Haiti<span class="sub">Eliminated · 20 Jun</span></div>
+        </div>
+        <div class="award-card">
+          <span class="amount">£12</span>
+          <div class="icon">🚀</div>
+          <div class="name">The Thunderbastard</div>
+          <div class="desc">The longest range goal</div>
+          <div class="result">🇧🇪 Hans Vanaken<span class="sub">35 yds</span></div>
+        </div>
+        <div class="award-card">
+          <span class="amount">£12</span>
+          <div class="icon">👟</div>
+          <div class="name">The Golden Boot</div>
+          <div class="desc">The tournament's top scorer</div>
+          <div class="result">🇫🇷 Kylian Mbappe<span class="sub">10 goals</span></div>
+        </div>
+        <div class="award-card">
+          <div class="icon">🪣</div>
+          <div class="name">Derby County</div>
+          <div class="desc">Most goals conceded overall</div>
+          <div class="result">🇮🇶 Iraq<span class="sub">12 conceded</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label" style="text-align:center;">Mystery Prizes</p>
+      <div class="mystery-band">
+        <div class="mystery-card">
+          <div class="icon">🤦</div>
+          <div class="name">OG</div>
+          <div class="desc">The team conceding the most spectacular own goal</div>
+          <div class="result">🇵🇾 Damián Bobadilla</div>
+        </div>
+        <div class="mystery-card">
+          <div class="icon">🤸</div>
+          <div class="name">The Bicycle</div>
+          <div class="desc">Best overhead kick of the tournament</div>
+          <div class="result pending">Never resolved</div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <p class="section-label">Tournament Stats</p>
+      <div class="stats-grid">
+        <div class="stats-col">
+          <h3>👟 Golden Boot</h3>
+          <table>
+            <tr><td class="rank">1</td><td>Kylian Mbappe<span class="sub" style="display:block;">France</span></td><td class="val">10</td></tr>
+            <tr><td class="rank">2</td><td>Lionel Messi<span class="sub" style="display:block;">Argentina</span></td><td class="val">8</td></tr>
+            <tr><td class="rank">3</td><td>Jude Bellingham<span class="sub" style="display:block;">England</span></td><td class="val">7</td></tr>
+            <tr><td class="rank">4</td><td>Erling Haaland<span class="sub" style="display:block;">Norway</span></td><td class="val">7</td></tr>
+            <tr><td class="rank">5</td><td>Ousmane Dembele<span class="sub" style="display:block;">France</span></td><td class="val">6</td></tr>
+            <tr><td class="rank">6</td><td>Harry Kane<span class="sub" style="display:block;">England</span></td><td class="val">6</td></tr>
+            <tr><td class="rank">7</td><td>Mikel Oyarzabal<span class="sub" style="display:block;">Spain</span></td><td class="val">5</td></tr>
+            <tr><td class="rank">8</td><td>Ismaila Sarr<span class="sub" style="display:block;">Senegal</span></td><td class="val">4</td></tr>
+            <tr><td class="rank">9</td><td>Julian Quinones<span class="sub" style="display:block;">Mexico</span></td><td class="val">4</td></tr>
+            <tr><td class="rank">10</td><td>Vinicius Junior<span class="sub" style="display:block;">Brazil</span></td><td class="val">4</td></tr>
+          </table>
+        </div>
+        <div class="stats-col">
+          <h3>🪣 Goals Conceded</h3>
+          <table>
+            <tr><td class="rank">1</td><td>England</td><td class="val">12</td></tr>
+            <tr><td class="rank">2</td><td>Tunisia</td><td class="val">12</td></tr>
+            <tr><td class="rank">3</td><td>Iraq</td><td class="val">12</td></tr>
+            <tr><td class="rank">4</td><td>Uzbekistan</td><td class="val">11</td></tr>
+            <tr><td class="rank">5</td><td>Norway</td><td class="val">11</td></tr>
+            <tr><td class="rank">6</td><td>Qatar</td><td class="val">10</td></tr>
+            <tr><td class="rank">7</td><td>Sweden</td><td class="val">10</td></tr>
+            <tr><td class="rank">8</td><td>New Zealand</td><td class="val">10</td></tr>
+            <tr><td class="rank">9</td><td>France</td><td class="val">10</td></tr>
+            <tr><td class="rank">10</td><td>Curaçao</td><td class="val">9</td></tr>
+          </table>
+        </div>
+        <div class="stats-col">
+          <h3>🟨 Discipline</h3>
+          <table>
+            <tr><td class="rank">1</td><td>Argentina<span class="sub" style="display:block;">15Y 1R</span></td><td class="val">17</td></tr>
+            <tr><td class="rank">2</td><td>Paraguay<span class="sub" style="display:block;">10Y 1R</span></td><td class="val">12</td></tr>
+            <tr><td class="rank">3</td><td>Egypt<span class="sub" style="display:block;">12Y 0R</span></td><td class="val">12</td></tr>
+            <tr><td class="rank">4</td><td>Canada<span class="sub" style="display:block;">11Y 0R</span></td><td class="val">11</td></tr>
+            <tr><td class="rank">5</td><td>Bosnia and Herzegovina<span class="sub" style="display:block;">8Y 1R</span></td><td class="val">10</td></tr>
+            <tr><td class="rank">6</td><td>Switzerland<span class="sub" style="display:block;">8Y 1R</span></td><td class="val">10</td></tr>
+            <tr><td class="rank">7</td><td>England<span class="sub" style="display:block;">8Y 1R</span></td><td class="val">10</td></tr>
+            <tr><td class="rank">8</td><td>Ecuador<span class="sub" style="display:block;">8Y 1R</span></td><td class="val">10</td></tr>
+            <tr><td class="rank">9</td><td>South Africa<span class="sub" style="display:block;">5Y 2R</span></td><td class="val">9</td></tr>
+            <tr><td class="rank">10</td><td>United States<span class="sub" style="display:block;">7Y 1R</span></td><td class="val">9</td></tr>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      Thanks to everyone who played — WC26 Sweep is closed. See you at the next tournament.
+    </footer>
+
   </div>
 </body>
 </html>
