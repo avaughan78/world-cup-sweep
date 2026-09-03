@@ -1,19 +1,38 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full antialiased" data-theme="default">
+<html lang="en" class="h-full antialiased">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>World Cup 2026 Sweep</title>
-  <meta name="description" content="Tracker for the 2026 FIFA World Cup">
+  
   <!-- CSS stylesheet from your local folder -->
   <link rel="stylesheet" href="./World Cup 2026_files/0s-0zux5tx_do.css">
+
+  <!-- Injected missing color variables and theme styles -->
+  <style>
+    :root {
+      --bg: #0f0a1c;
+      --card: #18112e;
+      --border: rgba(255, 255, 255, 0.12);
+      --text-primary: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.65);
+    }
+    body {
+      background-color: var(--bg) !important;
+      color: var(--text-primary) !important;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    .main-prize-card, .prize-card {
+      background-color: var(--card) !important;
+    }
+  </style>
 </head>
 <body class="min-h-full flex flex-col">
   <main class="min-h-screen" style="background: var(--bg);">
     <div class="max-w-[1180px] mx-auto px-4 sm:px-6 pt-6">
       
       <!-- Header -->
-      <header class="relative rounded-2xl overflow-hidden" style="background-image: url('./World Cup 2026_files/wc2026-header-bg.png'); background-size: cover; background-repeat: no-repeat; background-position: center center;">
+      <header class="relative rounded-2xl overflow-hidden" style="background-image: url('./World Cup 2026_files/wc2026-header-bg.png'); background-size: cover; background-repeat: no-repeat; background-position: center center; background-color: #3a1878;">
         <div class="px-6 sm:px-8 pt-3 pb-3">
           <div class="flex items-center justify-between gap-2">
             <p class="text-sm font-semibold uppercase tracking-widest truncate min-w-0" style="color: rgba(255, 255, 255, 0.7);">FIFA World Cup · 2026 · Sonning Primary</p>
@@ -21,9 +40,9 @@
           <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between mt-1 gap-y-2">
             <div class="flex items-end gap-4">
               <div style="cursor: default; flex-shrink: 0; user-select: none; position: relative;">
-                <img alt="FIFA World Cup Trophy" loading="lazy" width="56" height="72" src="./World Cup 2026_files/world-cup-trophy.jpeg" style="color: transparent; object-fit: contain;">
+                <img alt="FIFA World Cup Trophy" loading="lazy" width="56" height="72" src="./World Cup 2026_files/world-cup-trophy.jpeg" style="object-fit: contain;">
               </div>
-              <h1 class="album-title text-4xl sm:text-6xl font-black tracking-tight" style="color: rgb(255, 255, 255);">WC26 Sweep</h1>
+              <h1 class="album-title text-4xl sm:text-6xl font-black tracking-tight" style="color: #ffffff;">WC26 Sweep</h1>
             </div>
             <div class="flex items-center gap-2 sm:gap-3 self-end sm:self-auto">
               <span class="hidden sm:flex text-base items-center gap-1.5" style="color: rgba(255, 255, 255, 0.7);">
@@ -76,7 +95,6 @@
         <section class="space-y-4">
           <div class="grid grid-cols-2 sm:grid-cols-5 gap-3">
             
-            <!-- Josip Šimunić Award -->
             <div class="prize-card rounded-xl p-4 flex flex-col h-full" style="background: var(--card); border: 1.5px solid rgb(201, 162, 39);">
               <div class="flex-1">
                 <span style="font-size: 1.5rem;">🟨</span>
@@ -90,7 +108,6 @@
               </div>
             </div>
 
-            <!-- Early Bath -->
             <div class="prize-card rounded-xl p-4 flex flex-col h-full" style="background: var(--card); border: 1.5px solid rgb(201, 162, 39);">
               <div class="flex-1">
                 <span style="font-size: 1.5rem;">✈️</span>
@@ -104,7 +121,6 @@
               </div>
             </div>
 
-            <!-- Thunderbastard -->
             <div class="prize-card rounded-xl p-4 flex flex-col h-full" style="background: var(--card); border: 1.5px solid rgb(201, 162, 39);">
               <div class="flex-1">
                 <span style="font-size: 1.5rem;">🚀</span>
@@ -118,7 +134,6 @@
               </div>
             </div>
 
-            <!-- Golden Boot -->
             <div class="prize-card rounded-xl p-4 flex flex-col h-full" style="background: var(--card); border: 1.5px solid rgb(201, 162, 39);">
               <div class="flex-1">
                 <span style="font-size: 1.5rem;">👟</span>
@@ -132,7 +147,6 @@
               </div>
             </div>
 
-            <!-- Derby County -->
             <div class="prize-card rounded-xl p-4 flex flex-col h-full" style="background: var(--card); border: 1.5px solid rgb(201, 162, 39);">
               <div class="flex-1">
                 <span style="font-size: 1.5rem;">🪣</span>
